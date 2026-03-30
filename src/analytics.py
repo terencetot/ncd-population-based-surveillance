@@ -1,0 +1,477 @@
+"""
+NCD Surveillance Intelligence Platform — WHO African Region
+Analytics: SPI computation, cycle matrix, regional KPIs
+"""
+import numpy as np
+import pandas as pd
+from src.config import (CURRENT_YEAR, CYCLE_YEARS, CURRENT_CYCLE_START,
+                        SPI_W, TIER_LABELS, TIER_COLORS, SURVEY_META)
+
+
+def compute_spi(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Surveillance Performance Index (SPI) v2 — 3 orthogonal dimensions (0–100).
+
+    BS  Breadth Score  (structural, discrete):
+         BS = |{k : instrument k completed ≥1 time}| / K
+         Range: {0, 0.2, 0.4, 0.6, 0.8, 1.0}  (K=5)
+         Measures permanent institutional capacity — not time-decaying.
+
+    CS  Currency Score  (continuous, single exponential decay):
+         c_k = exp(−μ · g_k),  μ = ln(2)/7  (7-yr half-life)
+         c_k = 0 if instrument k was never completed
+         CS = mean(c_k) over all 5 instrument types
+         Measures recency of the entire surveillance portfolio.
+
+    CA-ARI  Coverage-Adjusted Regularity Index  (structural × regularity):
+         d_k = min(1, 5 / avg_interval_k)  for instrument types k with ≥2 rounds
+         ARI = mean(d_k) over assessable types only  (0 if none assessable)
+         CA-ARI = ARI × (|A| / K)   [penalises partial assessability]
+         CA-ARI = 0 when |A|=0 — universal formula, no SPI* split.
+
+    SPI = 100 × (BS + CS + CA-ARI) / 3   [universal, no partial formula]
+
+    Tiers: Strong ≥75 · Advancing 50–74 · Developing 30–49 · Critical <30
+    """
+    done   = df[df["completed"]]
+    inprog = df[df["status"] == "In Progress"]
+
+    MU      = np.log(2) / 7    # Currency half-life: 7 years
+    CYCLE   = 5                # Recommended renewal cycle (years)
+    K       = len(SURVEY_META) # Number of instrument types (5)
+    survey_types = list(SURVEY_META.keys())
+
+    records = []
+    for country, grp in df.groupby("country_name"):
+        c_done = done[done["country_name"] == country]
+        c_inp  = inprog[inprog["country_name"] == country]
+
+        cs_weights   = []   # one per instrument type (0 if never completed)
+        ari_scores   = []   # only for instrument types with ≥2 completions
+        avg_ivl_list = []   # for avg_cycle_interval metadata
+        n_ever_done  = 0    # count of instrument types completed ≥1 time
+
+        for st in survey_types:
+            st_done = c_done[c_done["survey_type"] == st]
+            yrs     = sorted(st_done["survey_year"].tolist())
+
+            if len(yrs) > 0:
+                n_ever_done += 1
+                g = int(CURRENT_YEAR - yrs[-1])
+                cs_weights.append(float(np.exp(-MU * g)))
+                if len(yrs) >= 2:
+                    intervals = [yrs[i + 1] - yrs[i] for i in range(len(yrs) - 1)]
+                    avg_ivl   = float(np.mean(intervals))
+                    avg_ivl_list.append(avg_ivl)
+                    ari_scores.append(min(1.0, CYCLE / avg_ivl))
+            else:
+                cs_weights.append(0.0)
+
+        # ── Three orthogonal dimensions ────────────────────────────────────────
+        BS  = n_ever_done / K                              # discrete breadth
+        CS  = float(np.mean(cs_weights))                  # continuous currency
+        n_renewable    = len(ari_scores)
+        ari_assessable = n_renewable > 0
+        ARI    = float(np.mean(ari_scores)) if ari_assessable else 0.0
+        CA_ARI = ARI * (n_renewable / K)                  # coverage-adjusted
+        avg_cycle_interval = round(float(np.mean(avg_ivl_list)), 1) if avg_ivl_list else None
+
+        # ── Universal SPI (no partial formula) ────────────────────────────────
+        spi  = 100.0 * (BS + CS + CA_ARI) / 3.0
+        tier = 1 if spi >= 75 else 2 if spi >= 50 else 3 if spi >= 30 else 4
+
+        # ── Metadata for filters / display ────────────────────────────────────
+        n_done    = int(c_done.shape[0])
+        n_inprog  = int(c_inp.shape[0])
+        types_ever = n_ever_done
+
+        last_yr_any = c_done["survey_year"].max() if n_done > 0 else np.nan
+        gap = int(CURRENT_YEAR - last_yr_any) if pd.notna(last_yr_any) else None
+
+        recent_done   = int(c_done[c_done["survey_year"] >= CURRENT_CYCLE_START].shape[0])
+        recent_inprog = int(c_inp[c_inp["survey_year"]   >= CURRENT_CYCLE_START].shape[0])
+
+        if gap is None:
+            gap_cat = "No data"
+        elif gap <= 5:
+            gap_cat = "≤5 years"
+        elif gap <= 10:
+            gap_cat = "6–10 years"
+        else:
+            gap_cat = ">10 years"
+
+        if not ari_assessable:
+            reg_cat = "Not yet assessable"
+        elif CA_ARI >= 0.8 / K * n_renewable:
+            reg_cat = "High (≤6 yr avg)"
+        elif CA_ARI >= 0.55 / K * n_renewable:
+            reg_cat = "Moderate (7–9 yr avg)"
+        else:
+            reg_cat = "Low (>9 yr avg)"
+
+        records.append({
+            "country":            country,
+            "iso3":               grp["iso3"].iloc[0],
+            "total":              len(grp),
+            "n_done":             n_done,
+            "n_inprog":           n_inprog,
+            "types_done":         int(types_ever),
+            "last_year":          int(last_yr_any) if pd.notna(last_yr_any) else None,
+            "gap_years":          gap,
+            "gap_cat":            gap_cat,
+            "recent_done":        recent_done,
+            "recent_inprog":      recent_inprog,
+            "n_renewable":        n_renewable,
+            "avg_cycle_interval": avg_cycle_interval,
+            "reg_cat":            reg_cat,
+            "d_coverage":         round(BS  * 100, 1),   # BS  → breadth
+            "d_recency":          round(CS  * 100, 1),   # CS  → currency
+            "d_regularity":       round(CA_ARI * 100, 1) if ari_assessable else np.nan,
+            "ari_assessable":     ari_assessable,
+            "spi":                round(spi, 1),
+            "tier":               tier,
+            "tier_label":         TIER_LABELS[tier],
+        })
+
+    return pd.DataFrame(records).sort_values("spi", ascending=False).reset_index(drop=True)
+
+
+def compute_cycle_matrix(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    For each (country, survey_type): classify cycle status based on
+    recency of last completed survey relative to 5-year cycle expectation.
+
+    Status values:
+      Current    — last completed within 5 years (2021–2026)
+      Overdue    — last completed 6–10 years ago
+      Critical   — last completed > 10 years ago
+      In Pipeline— no completed, but in-progress survey >= 2021
+      Never      — no completed survey and no active pipeline
+    """
+    done   = df[df["completed"]]
+    inprog = df[df["status"] == "In Progress"]
+
+    countries    = sorted(df["country_name"].unique())
+    survey_types = list(SURVEY_META.keys())
+
+    rows = []
+    for c in countries:
+        for st in survey_types:
+            sub_done  = done[(done["country_name"] == c) & (done["survey_type"] == st)]
+            sub_all   = df[(df["country_name"] == c) & (df["survey_type"] == st)]
+            sub_inp   = inprog[(inprog["country_name"] == c) & (inprog["survey_type"] == st) &
+                               (inprog["survey_year"] >= CURRENT_CYCLE_START)]
+
+            if len(sub_done) > 0:
+                last_yr = sub_done["survey_year"].max()
+                gap     = CURRENT_YEAR - last_yr
+                if gap <= CYCLE_YEARS:
+                    status_c = "Current"
+                    order    = 1
+                elif gap <= CYCLE_YEARS * 2:
+                    status_c = "Overdue"
+                    order    = 2
+                else:
+                    status_c = "Critical"
+                    order    = 3
+            elif len(sub_inp) > 0:
+                last_yr  = sub_inp["survey_year"].max()
+                gap      = CURRENT_YEAR - last_yr
+                status_c = "In Pipeline"
+                order    = 4
+            else:
+                last_yr  = None
+                gap      = None
+                status_c = "Never" if len(sub_all) == 0 else "Never"
+                order    = 5
+
+            rows.append({
+                "country":     c,
+                "survey_type": st,
+                "last_year":   last_yr,
+                "gap":         gap,
+                "cycle_status": status_c,
+                "order":       order,
+                "n_surveys":   len(sub_all),
+            })
+
+    return pd.DataFrame(rows)
+
+
+def compute_exec_kpis(df: pd.DataFrame) -> dict:
+    """
+    Compute country-level executive KPIs for each survey type AND globally.
+    Categories are strictly mutually exclusive per country (per survey type).
+
+    Status priority (in order):
+      1. Never Conducted  — no completed survey ever (even if currently in a first attempt).
+                           A country that has never produced evidence goes here unconditionally.
+      2. On Cycle         — has completed AND gap <= 5 years (current, usable evidence)
+      3. Attempt to update— has completed AND gap > 5 AND has in-progress in current cycle
+                           (prior evidence exists; updating it — NOT for never-conducted)
+      4. Off Cycle        — has completed AND gap > 5 AND no active in-progress survey
+                           (surveillance idle — data ageing)
+    """
+    import logging
+    done   = df[df["completed"]]
+    inprog = df[df["status"] == "In Progress"]
+
+    countries     = sorted(df["country_name"].unique())
+    survey_types  = list(SURVEY_META.keys())
+    N             = len(countries)
+
+    result = {}
+
+    # ── Per-survey-type KPIs ──────────────────────────────────────────────────
+    for st in survey_types:
+        counts = {"On Cycle": 0, "Attempt to update": 0, "Off Cycle": 0, "Never Conducted": 0}
+        country_statuses = {}
+
+        for c in countries:
+            completed_rows = done[(done["country_name"] == c) & (done["survey_type"] == st)]
+            inprog_current = inprog[(inprog["country_name"] == c) &
+                                    (inprog["survey_type"] == st) &
+                                    (inprog["survey_year"] >= CURRENT_CYCLE_START)]
+
+            has_completed      = len(completed_rows) > 0
+            has_inprog_current = len(inprog_current) > 0
+
+            if not has_completed:
+                # Never completed — regardless of any in-progress first attempt
+                counts["Never Conducted"] += 1
+                country_statuses[c] = "Never Conducted"
+            else:
+                last_yr = int(completed_rows["survey_year"].max())
+                gap     = CURRENT_YEAR - last_yr
+                if gap <= 5:
+                    counts["On Cycle"] += 1
+                    country_statuses[c] = "On Cycle"
+                elif has_inprog_current:
+                    # Has prior evidence; currently updating with a new in-progress survey
+                    counts["Attempt to update"] += 1
+                    country_statuses[c] = "Attempt to update"
+                else:
+                    # Has prior evidence but surveillance is idle
+                    counts["Off Cycle"] += 1
+                    country_statuses[c] = "Off Cycle"
+
+        meta  = SURVEY_META[st]
+        n_on  = counts["On Cycle"]
+        n_att = counts["Attempt to update"]
+        n_off = counts["Off Cycle"]
+        n_nev = counts["Never Conducted"]
+
+        briefing = (
+            f"For the <strong>{st}</strong> survey ({meta['full']}, targeting {meta['target']}), "
+            f"<strong>{n_on} of {N} countries</strong> ({round(n_on/N*100)}%) have completed "
+            f"a {st} survey within the recommended 5-year cycle ({CURRENT_CYCLE_START}&#8211;{CURRENT_YEAR}). "
+            f"<strong>{n_att}</strong> {'country' if n_att == 1 else 'countries'} "
+            f"{'has' if n_att == 1 else 'have'} prior {st} evidence and {'is' if n_att == 1 else 'are'} currently "
+            f"conducting a new round to update {'its' if n_att == 1 else 'their'} surveillance baseline. "
+            f"<strong>{n_off}</strong> {'country' if n_off == 1 else 'countries'} "
+            f"{'has' if n_off == 1 else 'have'} conducted {st} before but {'is' if n_off == 1 else 'are'} "
+            f"not currently active \u2014 {'its' if n_off == 1 else 'their'} surveillance data is off-cycle and ageing. "
+            f"<strong>{n_nev}</strong> {'country' if n_nev == 1 else 'countries'} "
+            f"{'has' if n_nev == 1 else 'have'} <em>never completed</em> a {st} survey \u2014 "
+            f"no {st}-generated evidence yet exists to inform policy, regardless of any in-progress first attempt."
+        )
+
+        # ── Per-country gap data for the dynamic gap chart ──────────────────
+        cgap = []
+        for c in countries:
+            cr = done[(done["country_name"] == c) & (done["survey_type"] == st)]
+            if len(cr) > 0:
+                ly = int(cr["survey_year"].max())
+                cgap.append({"country": c, "last_year": ly, "gap": CURRENT_YEAR - ly,
+                             "status": country_statuses.get(c, "Never Conducted")})
+            else:
+                cgap.append({"country": c, "last_year": None, "gap": None,
+                             "status": country_statuses.get(c, "Never Conducted")})
+        cgap.sort(key=lambda x: (x["gap"] is None, x["gap"] or 999))
+
+        result[st] = {
+            "n_total":            N,
+            "n_on_cycle":         n_on,
+            "n_attempt_to_update": n_att,
+            "n_off_cycle":        n_off,
+            "n_never":            n_nev,
+            "briefing":           briefing,
+            "full_name":          meta["full"],
+            "target":             meta["target"],
+            "domain":             meta["domain"],
+            "color":              meta["color"],
+            "countries_gap":      cgap,
+        }
+
+    # ── Global KPIs (across all survey types combined) ────────────────────────
+    g_counts = {"On Cycle": 0, "Attempt to update": 0, "Off Cycle": 0, "Never Conducted": 0}
+
+    for c in countries:
+        completed_rows = done[done["country_name"] == c]
+        inprog_current = inprog[(inprog["country_name"] == c) &
+                                 (inprog["survey_year"] >= CURRENT_CYCLE_START)]
+
+        has_completed      = len(completed_rows) > 0
+        has_inprog_current = len(inprog_current) > 0
+
+        if not has_completed:
+            g_counts["Never Conducted"] += 1
+        else:
+            last_yr = int(completed_rows["survey_year"].max())
+            gap     = CURRENT_YEAR - last_yr
+            if gap <= 5:
+                g_counts["On Cycle"] += 1
+            elif has_inprog_current:
+                g_counts["Attempt to update"] += 1
+            else:
+                g_counts["Off Cycle"] += 1
+
+    gn_on  = g_counts["On Cycle"]
+    gn_att = g_counts["Attempt to update"]
+    gn_off = g_counts["Off Cycle"]
+    gn_nev = g_counts["Never Conducted"]
+
+    global_briefing = (
+        f"Across the five NCD population-based surveillance instruments, "
+        f"<strong>{gn_on} of {N} countries</strong> ({round(gn_on/N*100)}%) have completed "
+        f"at least one survey of any type within the last 5 years, generating current surveillance intelligence. "
+        f"<strong>{gn_att}</strong> additional {'country' if gn_att == 1 else 'countries'} "
+        f"{'has' if gn_att == 1 else 'have'} prior evidence and {'is' if gn_att == 1 else 'are'} actively "
+        f"conducting a new survey round in the current cycle ({CURRENT_CYCLE_START}&#8211;{CURRENT_YEAR}). "
+        f"<strong>{gn_off}</strong> countries have prior survey evidence but are not currently active \u2014 "
+        f"their surveillance systems are off-cycle and require re-engagement. "
+        f"<strong>{gn_nev}</strong> countries have <em>never completed</em> any of the five NCD survey instruments \u2014 "
+        f"representing the region\u2019s most severe evidence deficits for NCD policy and programming."
+    )
+
+    result["global"] = {
+        "n_total":            N,
+        "n_on_cycle":         gn_on,
+        "n_attempt_to_update": gn_att,
+        "n_off_cycle":        gn_off,
+        "n_never":            gn_nev,
+        "briefing":           global_briefing,
+        "full_name":          "All Survey Types \u2014 System-wide view",
+        "target":             "All 48 WHO AFRO entities",
+        "domain":             "NCD surveillance system",
+        "color":              "#003d82",
+    }
+
+    # ── Validation ────────────────────────────────────────────────────────────
+    for key, d in result.items():
+        total_check = (d["n_on_cycle"] + d["n_attempt_to_update"] +
+                       d["n_off_cycle"] + d["n_never"])
+        if total_check != d["n_total"]:
+            logging.warning(f"KPI totals mismatch for {key}: {total_check} != {d['n_total']}")
+        assert total_check == d["n_total"], \
+            f"KPI totals mismatch for {key}: {total_check} != {d['n_total']}"
+
+    return result
+
+
+def build_analytics(df: pd.DataFrame) -> dict:
+    A = {}
+
+    completed = df[df["completed"]]
+    inprog    = df[df["status"] == "In Progress"]
+
+    # ── Basic counts ──────────────────────────────────────────────────────────
+    A["n_entities"]    = df["country_name"].nunique()
+    A["n_records"]     = len(df)
+    A["n_completed"]   = int(df["completed"].sum())
+    A["n_inprog"]      = int((df["status"] == "In Progress").sum())
+    A["n_unusable"]    = int((df["status"] == "Not Usable").sum())
+    A["completion_pct"]= round(A["n_completed"] / A["n_records"] * 100, 1)
+    A["year_min"]      = int(df["survey_year"].min())
+    A["year_max"]      = int(df["survey_year"].max())
+
+    # ── SPI ───────────────────────────────────────────────────────────────────
+    spi = compute_spi(df)
+    A["spi"] = spi
+    A["regional_spi"]  = round(spi["spi"].mean(), 1)
+    A["median_spi"]    = round(spi["spi"].median(), 1)
+    A["tier_counts"]   = spi["tier_label"].value_counts().to_dict()
+    A["n_strong"]      = int((spi["tier"] == 1).sum())
+    A["n_critical"]    = int((spi["tier"] == 4).sum())
+
+    # ── Strategic KPIs (for Executive tab) ───────────────────────────────────
+    # On track: gap ≤ 5 years (R=1.0)
+    A["n_on_track"]    = int((spi["gap_years"].fillna(999) <= 5).sum())
+    # Off-cycle: gap 6–10 years
+    A["n_off_cycle"]   = int(((spi["gap_years"].fillna(999) > 5) &
+                               (spi["gap_years"].fillna(999) <= 10)).sum())
+    # Critical gap: >10 years or never
+    A["n_gap_critical"]= int((spi["gap_years"].fillna(999) > 10).sum())
+    # Active this cycle (completed or in-progress in 2021+)
+    A["n_current_cycle"] = int((spi["recent_done"] > 0).sum())
+    A["n_pipeline"]      = int(((spi["recent_done"] == 0) & (spi["recent_inprog"] > 0)).sum())
+    # Pct calculations
+    n = A["n_entities"]
+    A["pct_on_track"]     = round(A["n_on_track"]    / n * 100)
+    A["pct_off_cycle"]    = round(A["n_off_cycle"]   / n * 100)
+    A["pct_gap_critical"] = round(A["n_gap_critical"]/ n * 100)
+
+    # ── Cycle matrix ──────────────────────────────────────────────────────────
+    A["cycle_matrix"] = compute_cycle_matrix(df)
+
+    # ── Current cycle (2021–2026) ─────────────────────────────────────────────
+    curr = df[df["survey_year"] >= CURRENT_CYCLE_START]
+    A["current_cycle_df"]    = curr
+    A["current_cycle_done"]  = int(curr["completed"].sum())
+    A["current_cycle_inprog"]= int((curr["status"] == "In Progress").sum())
+
+    # ── Survey type summary ───────────────────────────────────────────────────
+    st = df.groupby("survey_type").agg(
+        total    =("status","count"),
+        done     =("completed","sum"),
+        countries=("country_name","nunique"),
+        yr_min   =("survey_year","min"),
+        yr_max   =("survey_year","max"),
+    ).reset_index()
+    st["pct_done"] = (st["done"] / st["total"] * 100).round(1)
+    A["survey_type_summary"] = st.sort_values("total", ascending=False)
+
+    # ── Timeline ──────────────────────────────────────────────────────────────
+    A["timeline"] = df.groupby(["survey_year","status"]).size().reset_index(name="count")
+    A["cumulative"] = (
+        completed.groupby("survey_year").size().sort_index()
+        .cumsum().reset_index(name="cumulative")
+    )
+
+    # ── Per-survey-type timeline: distinct countries per year (completed) ────
+    tbt = {}
+    for st_name in SURVEY_META.keys():
+        st_comp = completed[completed["survey_type"] == st_name]
+        yearly = (
+            st_comp.groupby("survey_year")["country_name"]
+            .nunique()
+            .reset_index(name="n_countries")
+            .sort_values("survey_year")
+        )
+        tbt[st_name] = [
+            {"year": int(r["survey_year"]), "n": int(r["n_countries"])}
+            for _, r in yearly.iterrows()
+        ]
+    A["timeline_by_type"] = tbt
+
+    # ── Last-year heatmap matrix (country × instrument) ───────────────────────
+    # Each cell = year of most recent *completed* survey (NaN = never completed)
+    last_yr_pivot = (
+        completed
+        .groupby(["country_name", "survey_type"])["survey_year"]
+        .max()
+        .unstack(fill_value=np.nan)
+    )
+    # Ensure all 5 instrument types appear as columns
+    for st_name in list(SURVEY_META.keys()):
+        if st_name not in last_yr_pivot.columns:
+            last_yr_pivot[st_name] = np.nan
+    last_yr_pivot = last_yr_pivot[list(SURVEY_META.keys())]
+    # Reindex to include ALL countries in dataset, even those with no completed surveys
+    all_countries = sorted(df["country_name"].unique())
+    A["last_year_matrix"] = last_yr_pivot.reindex(all_countries)
+
+    # ── Executive KPIs (mutually exclusive country-level status) ─────────────
+    A["exec_kpis"] = compute_exec_kpis(df)
+
+    return A
