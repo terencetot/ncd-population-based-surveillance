@@ -18,9 +18,9 @@ import io
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
 from pathlib import Path
-from src.config import EXCEL_PATH, DB_PATH, OUTPUT_PATH, REPORT_DATE
-from src.etl import etl_pipeline, load_flat
-from src.analytics import build_analytics
+from src.config import EXCEL_PATH, DB_PATH, OUTPUT_PATH, REPORT_DATE, STEPS_DB_PATH
+from src.etl import etl_pipeline, load_flat, etl_steps_indicators
+from src.analytics import build_analytics, build_steps_profile_data
 from src.report import build_html
 
 
@@ -33,25 +33,34 @@ def main():
     # Ensure output directory exists
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
 
-    # 1. ETL
-    print(f"\n[1/4] ETL: Extract -> Transform -> Load ...")
+    # 1. ETL — surveillance metadata
+    print(f"\n[1/5] ETL: Extract -> Transform -> Load (surveillance metadata) ...")
     etl_pipeline(EXCEL_PATH, DB_PATH)
     print("      OK: Star schema populated")
 
-    # 2. Analytics
-    print(f"\n[2/4] Analytics: Loading from SQLite ...")
+    # 2. ETL — STEPS indicators
+    print(f"\n[2/5] ETL: Merging STEPS indicator data from STEP.db ...")
+    n_steps = etl_steps_indicators(STEPS_DB_PATH, DB_PATH)
+    print(f"      OK: {n_steps} STEPS measurements loaded")
+
+    # 3. Analytics
+    print(f"\n[3/5] Analytics: Loading from SQLite ...")
     df = load_flat(DB_PATH)
     print(f"      OK: {len(df)} records loaded from fact_surveys")
 
-    print(f"\n[3/4] Analytics: Computing SPI, cycle metrics, KPIs ...")
+    print(f"\n[4/5] Analytics: Computing SPI, cycle metrics, KPIs & country profiles ...")
     A = build_analytics(df)
-    reg_spi = A["regional_spi"]
+    reg_spi  = A["regional_spi"]
     n_strong = A["n_strong"]
-    n_crit = A["n_critical"]
+    n_crit   = A["n_critical"]
     print(f"      OK: Regional SPI = {reg_spi}/100  |  Strong: {n_strong}  |  Critical: {n_crit}")
 
-    # 3. Build HTML
-    print(f"\n[4/4] Rendering charts & assembling HTML report ...")
+    A["steps_profile"] = build_steps_profile_data(DB_PATH, A["spi"])
+    n_prof = len(A["steps_profile"].get("countries", []))
+    print(f"      OK: STEPS country profiles built for {n_prof} countries")
+
+    # 4. Build HTML
+    print(f"\n[5/5] Rendering charts & assembling HTML report ...")
     html = build_html(A)
     print("      OK: All charts rendered")
 
@@ -63,6 +72,7 @@ def main():
 
     print("\n" + "=" * 62)
     print(f"  DONE. Open output/{OUTPUT_PATH.name} in your browser.")
+    print(f"  Country Profile tab: {n_prof} countries with STEPS indicator data.")
     print("=" * 62 + "\n")
 
 

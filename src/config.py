@@ -11,9 +11,10 @@ DATA_DIR     = ROOT_DIR / "data"
 ASSETS_DIR   = ROOT_DIR / "assets"
 OUTPUT_DIR   = ROOT_DIR / "output"
 
-EXCEL_PATH   = DATA_DIR  / "NCD_Surveillance_Survey_AFRO_dataset.xlsx"
-DB_PATH      = OUTPUT_DIR / "ncd_surveillance.db"
-OUTPUT_PATH  = OUTPUT_DIR / "NCD_AFRO_Dashboard.html"
+EXCEL_PATH    = DATA_DIR  / "NCD_Surveillance_Survey_AFRO_dataset.xlsx"
+STEPS_DB_PATH = DATA_DIR  / "STEP.db"
+DB_PATH       = OUTPUT_DIR / "ncd_surveillance.db"
+OUTPUT_PATH   = OUTPUT_DIR / "NCD_AFRO_Dashboard.html"
 
 REPORT_DATE  = datetime.now().strftime("%d %B %Y")
 

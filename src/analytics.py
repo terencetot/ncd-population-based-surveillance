@@ -2,8 +2,10 @@
 NCD Surveillance Intelligence Platform — WHO African Region
 Analytics: SPI computation, cycle matrix, regional KPIs
 """
+import sqlite3
 import numpy as np
 import pandas as pd
+from pathlib import Path
 from src.config import (CURRENT_YEAR, CYCLE_YEARS, CURRENT_CYCLE_START,
                         SPI_W, TIER_LABELS, TIER_COLORS, SURVEY_META)
 
@@ -367,6 +369,190 @@ def compute_exec_kpis(df: pd.DataFrame) -> dict:
             f"KPI totals mismatch for {key}: {total_check} != {d['n_total']}"
 
     return result
+
+
+def build_steps_profile_data(ncd_db_path: Path, spi_df: pd.DataFrame) -> dict:
+    """
+    Load STEPS indicator data from ncd_surveillance.db (populated by etl_steps_indicators)
+    and build the per-country profile data structure for the Country Profile tab.
+
+    Returns a dict with keys:
+      countries   : sorted list of country names that have STEPS data
+      sections    : {section_code: {id, name, step, color, icon}}
+      indicators  : {indicator_code: {label, unit, sec (section_code), hib}}
+      regional    : {indicator_code: {b, m, f, n}} — AFRO averages from latest survey/country
+      profiles    : {country_name: {iso3, spi, tier, tier_label, surveys, data}}
+        data      : {survey_year_str: {indicator_code: {b, lo, hi, m, f}}}
+    """
+    conn = sqlite3.connect(ncd_db_path)
+    tables = {r[0] for r in conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table'"
+    )}
+    if "steps_measurement" not in tables:
+        conn.close()
+        return {}
+    n_meas = conn.execute("SELECT COUNT(*) FROM steps_measurement").fetchone()[0]
+    if n_meas == 0:
+        conn.close()
+        return {}
+
+    # ── Load all measurements in one query ────────────────────────────────────
+    df_m = pd.read_sql_query("""
+        SELECT
+            c.country_name, c.iso3, c.is_zanzibar,
+            ss.survey_year, ss.sample_size, ss.response_rate, ss.source_country,
+            si.indicator_code, si.section_id, si.label_en, si.unit_sym,
+            si.higher_is_better,
+            m.sex, m.value, m.ci_lower, m.ci_upper
+        FROM steps_measurement m
+        JOIN steps_survey ss ON ss.steps_survey_id = m.steps_survey_id
+        JOIN dim_country  c  ON c.country_id        = ss.country_id
+        JOIN steps_indicator si ON si.indicator_id  = m.indicator_id
+        WHERE m.value IS NOT NULL
+        ORDER BY c.country_name, ss.survey_year, si.section_id, si.indicator_code, m.sex
+    """, conn)
+
+    sec_df  = pd.read_sql_query("SELECT * FROM steps_section",  conn)
+    ind_df  = pd.read_sql_query("SELECT * FROM steps_indicator", conn)
+    conn.close()
+
+    if df_m.empty:
+        return {}
+
+    # ── Section metadata ──────────────────────────────────────────────────────
+    _SEC_META = {
+        "S1_TOB": {"color": "#c0392b", "icon": "fa-smoking"},
+        "S1_ALC": {"color": "#8e44ad", "icon": "fa-wine-glass-alt"},
+        "S1_DIT": {"color": "#27ae60", "icon": "fa-apple-alt"},
+        "S1_PAC": {"color": "#2980b9", "icon": "fa-running"},
+        "S2_BPR": {"color": "#e74c3c", "icon": "fa-heartbeat"},
+        "S2_ANT": {"color": "#e67e22", "icon": "fa-weight"},
+        "S3_GLU": {"color": "#d35400", "icon": "fa-tint"},
+        "S3_CHO": {"color": "#16a085", "icon": "fa-vial"},
+        "S_RISK": {"color": "#2c3e50", "icon": "fa-exclamation-triangle"},
+    }
+    sid_to_code = {}
+    sections: dict = {}
+    for _, row in sec_df.iterrows():
+        code = row["section_code"]
+        sid  = int(row["section_id"])
+        sid_to_code[sid] = code
+        m = _SEC_META.get(code, {"color": "#6b7280", "icon": "fa-circle"})
+        sections[code] = {
+            "id":    sid,
+            "name":  row["section_name"],
+            "step":  row["who_step"],
+            "color": m["color"],
+            "icon":  m["icon"],
+        }
+
+    # ── Indicator metadata ────────────────────────────────────────────────────
+    indicators: dict = {}
+    for _, row in ind_df.iterrows():
+        raw_hib = row["higher_is_better"]
+        hib = None if pd.isna(raw_hib) else bool(int(raw_hib))
+        indicators[row["indicator_code"]] = {
+            "label": row["label_en"],
+            "unit":  row["unit_sym"] or "%",
+            "sec":   sid_to_code.get(int(row["section_id"]), ""),
+            "hib":   hib,
+        }
+
+    # ── SPI lookup by ISO3 ────────────────────────────────────────────────────
+    spi_by_iso3: dict = {}
+    if spi_df is not None and len(spi_df) > 0:
+        for _, row in spi_df.iterrows():
+            if row["iso3"]:
+                spi_by_iso3[str(row["iso3"])] = {
+                    "spi":        float(row["spi"]),
+                    "tier":       int(row["tier"]),
+                    "tier_label": str(row["tier_label"]),
+                }
+
+    # ── Build per-country profiles ────────────────────────────────────────────
+    profiles: dict = {}
+    countries_list: list = []
+
+    for (cname, iso3, is_zan), cgrp in df_m.groupby(
+        ["country_name", "iso3", "is_zanzibar"], sort=False
+    ):
+        spi_info = spi_by_iso3.get(str(iso3) if iso3 else "", {})
+
+        # surveys list (sorted by year)
+        surveys = []
+        for yr, yg in cgrp.groupby("survey_year"):
+            row0 = yg.iloc[0]
+            n  = row0["sample_size"]
+            rr = row0["response_rate"]
+            surveys.append({
+                "year": int(yr),
+                "n":    int(n)  if pd.notna(n)  else None,
+                "rr":   round(float(rr), 1) if pd.notna(rr) else None,
+            })
+        surveys.sort(key=lambda x: x["year"])
+
+        # data: {year_str: {indicator_code: {b, lo, hi, m, f}}}
+        data: dict = {}
+        for yr, yg in cgrp.groupby("survey_year"):
+            yd: dict = {}
+            for ind_code, ig in yg.groupby("indicator_code"):
+                ind_vals: dict = {}
+                for _, r in ig.iterrows():
+                    sk = {"both_sexes": "b", "males": "m", "females": "f"}.get(r["sex"], "b")
+                    v  = round(float(r["value"]),    2) if pd.notna(r["value"])    else None
+                    lo = round(float(r["ci_lower"]), 2) if pd.notna(r["ci_lower"]) else None
+                    hi = round(float(r["ci_upper"]), 2) if pd.notna(r["ci_upper"]) else None
+                    if sk == "b":
+                        ind_vals["b"]  = v
+                        ind_vals["lo"] = lo
+                        ind_vals["hi"] = hi
+                    else:
+                        ind_vals[sk] = v
+                if ind_vals:
+                    yd[str(ind_code)] = ind_vals
+            data[str(int(yr))] = yd
+
+        profiles[cname] = {
+            "iso3":       iso3,
+            "spi":        spi_info.get("spi"),
+            "tier":       spi_info.get("tier"),
+            "tier_label": spi_info.get("tier_label"),
+            "surveys":    surveys,
+            "data":       data,
+        }
+        countries_list.append(cname)
+
+    countries_list = sorted(countries_list)
+
+    # ── Regional averages (latest survey per country, mean across region) ─────
+    regional: dict = {}
+    for ind_code in indicators:
+        bv, mv, fv = [], [], []
+        for cname, p in profiles.items():
+            if not p["surveys"]:
+                continue
+            latest_yr = str(p["surveys"][-1]["year"])
+            d = p["data"].get(latest_yr, {}).get(ind_code, {})
+            if d.get("b") is not None:
+                bv.append(d["b"])
+            if d.get("m") is not None:
+                mv.append(d["m"])
+            if d.get("f") is not None:
+                fv.append(d["f"])
+        regional[ind_code] = {
+            "b":          round(sum(bv) / len(bv), 1) if bv else None,
+            "m":          round(sum(mv) / len(mv), 1) if mv else None,
+            "f":          round(sum(fv) / len(fv), 1) if fv else None,
+            "n_countries": len(bv),
+        }
+
+    return {
+        "countries":  countries_list,
+        "sections":   sections,
+        "indicators": indicators,
+        "regional":   regional,
+        "profiles":   profiles,
+    }
 
 
 def build_analytics(df: pd.DataFrame) -> dict:

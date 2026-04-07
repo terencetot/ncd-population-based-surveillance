@@ -281,6 +281,35 @@ hr.section-divider{border:none;border-top:1px solid var(--border);margin:32px 0}
 /* ══ SECTION DIVIDER LABEL ═══════════════════════════════════════════════ */
 .section-divider-label{display:flex;align-items:center;gap:12px;margin:28px 0 18px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);}
 .section-divider-label::before,.section-divider-label::after{content:'';flex:1;height:1px;background:var(--border);}
+/* ══ COUNTRY PROFILE TAB ═════════════════════════════════════════════════ */
+.profile-header-card{background:linear-gradient(135deg,#f4f7fc 0%,#eef2f8 100%);border:1.5px solid var(--border);border-radius:var(--radius);padding:24px 28px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden;}
+.profile-header-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--primary),var(--accent),#56d0ff);border-radius:var(--radius) var(--radius) 0 0;}
+.profile-iso-badge{display:inline-flex;align-items:center;justify-content:center;width:60px;height:44px;background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;border-radius:10px;font-size:11px;font-weight:800;letter-spacing:.5px;flex-shrink:0;box-shadow:0 4px 12px rgba(0,61,130,.25);}
+.profile-kpi-row{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:22px;}
+.profile-kpi-card{flex:1;min-width:150px;background:#fff;border-radius:var(--radius);padding:18px 16px 14px;box-shadow:var(--shadow-sm);border:1.5px solid var(--border);position:relative;overflow:hidden;transition:transform .28s,box-shadow .28s;}
+.profile-kpi-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);}
+.profile-kpi-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:currentColor;opacity:.25;}
+.profile-kpi-icon{font-size:20px;margin-bottom:8px;}
+.profile-kpi-value{font-size:1.9rem;font-weight:900;line-height:1;letter-spacing:-.03em;margin-bottom:4px;}
+.profile-kpi-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.9px;color:var(--muted);}
+.profile-kpi-trend{font-size:12px;margin-top:6px;font-weight:700;}
+.profile-kpi-sex{display:flex;gap:6px;margin-top:8px;}
+.profile-kpi-sex span{font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:8px;}
+.profile-section-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:16px;margin-bottom:24px;}
+.profile-section-card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow-sm);border:1.5px solid var(--border);overflow:hidden;transition:transform .28s,box-shadow .28s;}
+.profile-section-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md);}
+.profile-section-head{padding:10px 15px;display:flex;align-items:center;gap:8px;}
+.profile-section-head span.sec-title{font-size:12px;font-weight:700;color:#fff;flex:1;}
+.profile-section-head span.sec-step{font-size:9.5px;color:rgba(255,255,255,.65);font-style:italic;}
+.profile-ind-table{width:100%;border-collapse:collapse;font-size:11px;}
+.profile-ind-table th{padding:6px 8px;font-size:9px;text-transform:uppercase;letter-spacing:.5px;font-weight:700;background:#f7f9ff;border-bottom:1px solid var(--border);white-space:nowrap;}
+.profile-ind-table td{padding:6px 8px;border-bottom:1px solid #f3f5fb;vertical-align:middle;line-height:1.45;}
+.profile-ind-table tbody tr:last-child td{border-bottom:none;}
+.profile-ind-table tbody tr:hover td{background:#f0f5ff;}
+.profile-no-data{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:64px 20px;color:var(--muted);text-align:center;gap:16px;}
+.profile-no-data i{font-size:40px;opacity:.28;}
+.profile-survey-pill{display:inline-flex;align-items:center;gap:5px;background:rgba(0,61,130,.08);border:1px solid rgba(0,61,130,.18);border-radius:20px;padding:3px 11px;font-size:10.5px;font-weight:600;color:var(--primary);}
+.profile-cmp-badge{display:inline-block;font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px;vertical-align:middle;}
 """
 
 # ── JavaScript ─────────────────────────────────────────────────────────────────
@@ -763,6 +792,12 @@ JS = """
       if(btn.dataset.tab==='tab-priority'){
         setTimeout(function(){filterPriority(_prioCurSurvey);},80);
       }
+      if(btn.dataset.tab==='tab-profile'){
+        setTimeout(function(){
+          var s=document.getElementById('profile-country-select');
+          if(s&&s.value) renderCountryProfile(s.value);
+        },80);
+      }
     });
   });
   // ── Strategic Priority: pill & slider event listeners ─────────────────────
@@ -773,6 +808,415 @@ JS = """
     var el=document.getElementById(id);
     if(el) el.addEventListener('input',function(){filterPriority(_prioCurSurvey);});
   });
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // COUNTRY PROFILE TAB
+  // ════════════════════════════════════════════════════════════════════════════
+  var STEPS_PROFILE_DATA = __STEPS_PROFILE_PLACEHOLDER__;
+  var _profileCurrent = '';
+
+  var _SECTION_ORDER = ['S1_TOB','S1_ALC','S1_DIT','S1_PAC','S2_BPR','S2_ANT','S3_GLU','S3_CHO','S_RISK'];
+  var _RADAR_CFG = [
+    {code:'tobacco_current_smoke_pct',     label:'Tobacco'},
+    {code:'alcohol_current_drinker_pct',   label:'Alcohol'},
+    {code:'diet_less5_servings_pct',       label:'Diet'},
+    {code:'pa_low_activity_pct',           label:'Inactivity'},
+    {code:'bp_raised_140_pct',             label:'Hypertension'},
+    {code:'bmi_obese_pct',                 label:'Obesity'},
+    {code:'glucose_raised_7_pct',          label:'Diabetes'},
+    {code:'cholesterol_raised_5_pct',      label:'Cholesterol'},
+    {code:'risk_3plus_pct',                label:'Multi-Risk'},
+  ];
+  var _KPI_CFG = [
+    {code:'tobacco_current_smoke_pct',  icon:'fa-smoking',            label:'Tobacco Use',         col:'#c0392b'},
+    {code:'bp_raised_140_pct',          icon:'fa-heartbeat',          label:'Raised Blood Pressure',col:'#e74c3c'},
+    {code:'bmi_obese_pct',              icon:'fa-weight',             label:'Obesity (BMI\u226530)',col:'#e67e22'},
+    {code:'glucose_raised_7_pct',       icon:'fa-tint',               label:'Raised Glucose',      col:'#d35400'},
+    {code:'risk_3plus_pct',             icon:'fa-exclamation-circle', label:'3+ Risk Factors',     col:'#2c3e50'},
+  ];
+  var _TIER_CLR = {1:'#00a651',2:'#4a90e2',3:'#f7941d',4:'#c0392b'};
+
+  function _trendArrow(cur, prev, hib) {
+    if(cur===null||cur===undefined||prev===null||prev===undefined) return '';
+    var diff=cur-prev, abs=Math.abs(diff);
+    if(abs<0.5) return '<span style="color:#6b7280;font-size:12px;">\u2248</span>';
+    var up=diff>0;
+    var good= hib===null||hib===undefined ? null : (hib?up:!up);
+    var clr= good===null?'#6b7280':(good?'#00a651':'#c0392b');
+    return '<span style="color:'+clr+';font-weight:700;">'+(up?'\u2191':'\u2193')+' '+abs.toFixed(1)+'</span>';
+  }
+
+  function _cmpRegional(val, reg, hib, unit) {
+    if(val===null||val===undefined||reg===null||reg===undefined) return '<span style="color:#ccc;">&#8212;</span>';
+    var diff=val-reg, abs=Math.abs(diff);
+    var better= hib===null||hib===undefined ? null : (hib?diff>1:diff<-1);
+    var worse = hib===null||hib===undefined ? null : (hib?diff<-1:diff>1);
+    var clr = worse?'#c0392b':(better?'#00a651':'#6b7280');
+    var sym = worse?'\u25b2':(better?'\u25bc':'\u2248');
+    return '<span class="profile-cmp-badge" style="background:'+(worse?'#fce8e6':(better?'#e6f5ec':'#f0f0f5'))+';color:'+clr+';">'+sym+' '+reg.toFixed(1)+unit+'</span>';
+  }
+
+  function renderCountryProfile(country) {
+    if(!STEPS_PROFILE_DATA||!STEPS_PROFILE_DATA.profiles){
+      document.getElementById('country-profile-content').innerHTML=
+        '<div class="profile-no-data"><i class="fas fa-database"></i><p>No STEPS indicator data available.</p></div>';
+      return;
+    }
+    _profileCurrent=country;
+    var p=STEPS_PROFILE_DATA.profiles[country];
+    if(!p||!p.surveys||p.surveys.length===0){
+      document.getElementById('country-profile-content').innerHTML=
+        '<div class="profile-no-data"><i class="fas fa-info-circle"></i><p>No STEPS data available for <strong>'+country+'</strong>.</p></div>';
+      return;
+    }
+    var ind=STEPS_PROFILE_DATA.indicators||{};
+    var sec=STEPS_PROFILE_DATA.sections||{};
+    var reg=STEPS_PROFILE_DATA.regional||{};
+    var surveys=p.surveys;
+    var latYr=surveys[surveys.length-1].year;
+    var latData=p.data[String(latYr)]||{};
+    var hasMulti=surveys.length>=2;
+    var prevYr=hasMulti?surveys[surveys.length-2].year:null;
+    var prevData=prevYr?(p.data[String(prevYr)]||{}):{};
+    var tc=_TIER_CLR[p.tier]||'#4a90e2';
+    var latS=surveys[surveys.length-1];
+    var yrsStr=surveys.map(function(s){return s.year;}).join(' \u00b7 ');
+    var nStr=latS.n?latS.n.toLocaleString():'N/A';
+
+    // ── Header ─────────────────────────────────────────────────────────────
+    var hdr='<div class="profile-header-card reveal">';
+    hdr+='<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:18px;">';
+    hdr+='<div style="display:flex;align-items:center;gap:18px;">';
+    hdr+='<div class="profile-iso-badge">'+(p.iso3||'???')+'</div>';
+    hdr+='<div>';
+    hdr+='<div style="font-size:22px;font-weight:900;color:var(--dark);letter-spacing:-.025em;">'+country+'</div>';
+    hdr+='<div style="font-size:12px;color:var(--muted);margin-top:5px;display:flex;flex-wrap:wrap;gap:10px;">';
+    hdr+='<span class="profile-survey-pill"><i class="fas fa-flask"></i>&nbsp;STEPS surveys: <strong>'+yrsStr+'</strong></span>';
+    hdr+='<span class="profile-survey-pill"><i class="fas fa-users"></i>&nbsp;Latest n\u2009=\u2009'+nStr+'</span>';
+    if(latS.rr) hdr+='<span class="profile-survey-pill"><i class="fas fa-percentage"></i>&nbsp;Response rate: '+latS.rr+'%</span>';
+    hdr+='</div></div></div>';
+    hdr+='<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">';
+    if(p.spi!==null&&p.spi!==undefined){
+      hdr+='<div style="text-align:center;padding:12px 20px;background:linear-gradient(135deg,'+tc+'18,'+tc+'0a);border:2px solid '+tc+';border-radius:12px;min-width:90px;">';
+      hdr+='<div style="font-size:1.75rem;font-weight:900;color:'+tc+';line-height:1;">'+p.spi.toFixed(1)+'</div>';
+      hdr+='<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:'+tc+';margin-top:3px;">SPI Score</div>';
+      hdr+='<div style="font-size:10.5px;color:'+tc+';font-weight:600;margin-top:2px;">'+( p.tier_label||'')+'</div></div>';
+    }
+    if(hasMulti){
+      hdr+='<div style="padding:10px 18px;background:#e6f5ec;border:1.5px solid #9dd4b0;border-radius:10px;text-align:center;">';
+      hdr+='<div style="font-size:1.5rem;font-weight:900;color:#00a651;">'+surveys.length+'</div>';
+      hdr+='<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#00a651;">STEPS Rounds</div>';
+      hdr+='<div style="font-size:9.5px;color:#00a651;margin-top:1px;">Trend available</div></div>';
+    }
+    hdr+='</div></div></div>';
+
+    // ── KPI Cards ──────────────────────────────────────────────────────────
+    var kpi='<div class="profile-kpi-row">';
+    _KPI_CFG.forEach(function(k){
+      var d=latData[k.code]||{};
+      var pd=prevData[k.code]||{};
+      var ki=ind[k.code]||{};
+      var v=d.b!==undefined?d.b:null;
+      var pv=pd.b!==undefined?pd.b:null;
+      var unit=ki.unit||'%';
+      var valStr=v!==null?v.toFixed(1)+unit:'N/A';
+      var arrow=_trendArrow(v,pv,ki.hib);
+      var mV=d.m!==undefined?d.m:null, fV=d.f!==undefined?d.f:null;
+      var loStr=(d.lo!==null&&d.lo!==undefined&&d.hi!==null&&d.hi!==undefined)?
+        ' title="95% CI: '+d.lo.toFixed(1)+'\u2013'+d.hi.toFixed(1)+unit+'"':'';
+      kpi+='<div class="profile-kpi-card" style="color:'+k.col+';">';
+      kpi+='<div class="profile-kpi-icon"><i class="fas '+k.icon+'" style="color:'+k.col+';"></i></div>';
+      kpi+='<div class="profile-kpi-value" style="color:'+k.col+';"'+loStr+'>'+valStr+'</div>';
+      kpi+='<div class="profile-kpi-label">'+k.label+'</div>';
+      if(arrow){kpi+='<div class="profile-kpi-trend">'+arrow+'<span style="font-size:10px;color:var(--muted);font-weight:400;"> vs '+prevYr+'</span></div>';}
+      if(mV!==null||fV!==null){
+        kpi+='<div class="profile-kpi-sex">';
+        if(mV!==null) kpi+='<span style="background:#e8f0fb;color:#2980b9;">M: '+mV.toFixed(1)+'</span>';
+        if(fV!==null) kpi+='<span style="background:#fce8e6;color:#c0392b;">F: '+fV.toFixed(1)+'</span>';
+        kpi+='</div>';
+      }
+      kpi+='</div>';
+    });
+    kpi+='</div>';
+
+    // ── Charts row (radar + regional compare) ──────────────────────────────
+    var charts='<div class="row" style="margin-bottom:20px;">';
+    charts+='<div class="col-6"><div class="chart-card reveal">';
+    charts+='<h3 style="font-size:13px;font-weight:700;color:var(--primary);margin-bottom:4px;"><i class="fas fa-chart-area"></i>&nbsp; NCD Burden Profile \u2014 9 Risk Factor Domains</h3>';
+    charts+='<p style="font-size:11px;color:var(--muted);margin-bottom:6px;">Headline indicator per domain vs AFRO average \u2014 survey year: <strong>'+latYr+'</strong></p>';
+    charts+='<div id="profile-radar-chart" style="height:380px;"></div></div></div>';
+    charts+='<div class="col-6"><div class="chart-card reveal">';
+    charts+='<h3 style="font-size:13px;font-weight:700;color:var(--primary);margin-bottom:4px;"><i class="fas fa-balance-scale"></i>&nbsp; Regional Benchmark \u2014 vs WHO AFRO Average</h3>';
+    charts+='<p style="font-size:11px;color:var(--muted);margin-bottom:6px;">Country value (coloured) vs AFRO mean (grey). \u25b2\u2009above average \u00b7 \u25bc\u2009below average</p>';
+    charts+='<div id="profile-compare-chart" style="height:380px;"></div></div></div>';
+    charts+='</div>';
+
+    // ── Trend chart (multi only) ────────────────────────────────────────────
+    var trend='';
+    if(hasMulti){
+      trend='<div class="row" style="margin-bottom:20px;">';
+      trend+='<div class="col-12"><div class="chart-card reveal">';
+      trend+='<h3 style="font-size:13px;font-weight:700;color:var(--primary);margin-bottom:4px;"><i class="fas fa-chart-line"></i>&nbsp; Trend Analysis \u2014 Key NCD Indicators Over Time</h3>';
+      trend+='<p style="font-size:11px;color:var(--muted);margin-bottom:8px;">';
+      trend+=surveys.length+' STEPS survey rounds \u00b7 '+surveys[0].year+'\u2013'+latYr+' \u00b7 Both-sexes estimates with 95% CI bands</p>';
+      trend+='<div id="profile-trend-chart" style="height:420px;"></div></div></div></div>';
+    }
+
+    // ── Sex disaggregation chart ────────────────────────────────────────────
+    var sexC='<div class="row" style="margin-bottom:20px;">';
+    sexC+='<div class="col-12"><div class="chart-card reveal">';
+    sexC+='<h3 style="font-size:13px;font-weight:700;color:var(--primary);margin-bottom:4px;"><i class="fas fa-venus-mars"></i>&nbsp; Sex Disaggregation \u2014 Headline Risk Factors</h3>';
+    sexC+='<p style="font-size:11px;color:var(--muted);margin-bottom:8px;">Male vs Female estimates for the 9 headline NCD risk indicators \u00b7 survey year: <strong>'+latYr+'</strong></p>';
+    sexC+='<div id="profile-sex-chart" style="height:400px;"></div></div></div></div>';
+
+    // ── Section detail cards ────────────────────────────────────────────────
+    var sdiv='<div class="section-divider-label">Detailed Indicator Dashboard \u2014 All STEPS Sections</div>';
+    sdiv+='<div class="profile-section-grid">';
+    _SECTION_ORDER.forEach(function(sc){
+      var s=sec[sc]; if(!s) return;
+      var secInds=Object.entries(ind).filter(function(e){return e[1].sec===sc;});
+      sdiv+='<div class="profile-section-card reveal">';
+      sdiv+='<div class="profile-section-head" style="background:'+s.color+';">';
+      sdiv+='<i class="fas '+s.icon+'" style="color:rgba(255,255,255,.9);font-size:13px;"></i>';
+      sdiv+='<span class="sec-title">'+s.name+'</span>';
+      sdiv+='<span class="sec-step">'+s.step+'</span>';
+      sdiv+='</div>';
+      sdiv+='<div style="overflow-x:auto;">';
+      sdiv+='<table class="profile-ind-table">';
+      sdiv+='<thead><tr>';
+      sdiv+='<th style="text-align:left;min-width:130px;">Indicator</th>';
+      sdiv+='<th style="text-align:center;">Both</th>';
+      sdiv+='<th style="text-align:center;color:#2980b9;">Male</th>';
+      sdiv+='<th style="text-align:center;color:#c0392b;">Female</th>';
+      sdiv+='<th style="text-align:center;">vs AFRO</th>';
+      sdiv+='</tr></thead><tbody>';
+      secInds.forEach(function(entry,idx){
+        var code=entry[0], i2=entry[1];
+        var d=latData[code]||{}, pd=prevData[code]||{}, rv=reg[code]||{};
+        var bV=d.b!==undefined?d.b:null;
+        var mV=d.m!==undefined?d.m:null;
+        var fV=d.f!==undefined?d.f:null;
+        var rvB=rv.b!==undefined?rv.b:null;
+        var unit=i2.unit||'%';
+        var ciAttr=(d.lo!==null&&d.lo!==undefined&&d.hi!==null&&d.hi!==undefined)?
+          ' title="95% CI: '+d.lo.toFixed(1)+'\u2013'+d.hi.toFixed(1)+unit+'"':'';
+        var bStr=bV!==null?('<strong'+ciAttr+'>'+bV.toFixed(1)+'</strong><span style="font-size:9px;color:var(--muted);">'+unit+'</span>'):'<span style="color:#ccc;">\u2014</span>';
+        var mStr=mV!==null?mV.toFixed(1):'<span style="color:#ccc;">\u2014</span>';
+        var fStr=fV!==null?fV.toFixed(1):'<span style="color:#ccc;">\u2014</span>';
+        var cmpStr=_cmpRegional(bV,rvB,i2.hib,unit);
+        var tArr=_trendArrow(bV,pd.b!==undefined?pd.b:null,i2.hib);
+        var bg=idx%2===0?'#fff':'#f9fafb';
+        var lbl=i2.label.length>55?i2.label.substring(0,54)+'\u2026':i2.label;
+        sdiv+='<tr style="background:'+bg+';">';
+        sdiv+='<td style="color:var(--text);word-break:break-word;">'+lbl+(tArr?' '+tArr:'')+'</td>';
+        sdiv+='<td style="text-align:center;">'+bStr+'</td>';
+        sdiv+='<td style="text-align:center;color:#2980b9;">'+mStr+'</td>';
+        sdiv+='<td style="text-align:center;color:#c0392b;">'+fStr+'</td>';
+        sdiv+='<td style="text-align:center;">'+cmpStr+'</td>';
+        sdiv+='</tr>';
+      });
+      sdiv+='</tbody></table></div></div>';
+    });
+    sdiv+='</div>';
+
+    // ── Data notes ─────────────────────────────────────────────────────────
+    var notes='<div style="background:#fffbeb;border:1px solid #fde68a;border-left:4px solid #f59e0b;border-radius:10px;padding:12px 16px;font-size:11.5px;color:#78350f;margin-bottom:24px;line-height:1.75;">';
+    notes+='<i class="fas fa-info-circle" style="margin-right:6px;color:#f59e0b;"></i>';
+    notes+='<strong>Data notes:</strong> Values from the most recent completed STEPS survey (<strong>'+latYr+'</strong>). ';
+    notes+='AFRO average computed from latest survey per country across <strong>'+(STEPS_PROFILE_DATA.countries?STEPS_PROFILE_DATA.countries.length:'?')+' countries</strong>. ';
+    notes+='Hover over Both-Sexes values to see 95% confidence intervals. ';
+    if(hasMulti) notes+='Trend arrows (\u2191\u2193) reflect change vs <strong>'+prevYr+'</strong>; green\u2009=\u2009improvement, red\u2009=\u2009deterioration.';
+    notes+='</div>';
+
+    document.getElementById('country-profile-content').innerHTML=
+      hdr+kpi+charts+trend+sexC+sdiv+notes;
+
+    // ── Render Plotly charts ────────────────────────────────────────────────
+    setTimeout(function(){
+      _renderProfileRadar(latData,country,reg,sec,ind,p.tier);
+      _renderProfileCompare(latData,country,reg,ind,sec);
+      if(hasMulti) _renderProfileTrend(p,ind);
+      _renderProfileSexChart(latData,country,ind,reg);
+      document.querySelectorAll('#country-profile-content .reveal').forEach(function(el){
+        el.classList.add('visible');
+      });
+      window.dispatchEvent(new Event('resize'));
+    },80);
+  }
+
+  // ── Radar: NCD Burden Profile ───────────────────────────────────────────────
+  function _renderProfileRadar(latData,country,reg,sec,ind,tier){
+    var divId='profile-radar-chart';
+    if(!document.getElementById(divId)||typeof Plotly==='undefined') return;
+    var labels=_RADAR_CFG.map(function(r){return r.label;});
+    var cVals=_RADAR_CFG.map(function(r){var d=latData[r.code]||{};return d.b!==null&&d.b!==undefined?d.b:null;});
+    var rVals=_RADAR_CFG.map(function(r){var rv=reg[r.code]||{};return rv.b!==null&&rv.b!==undefined?rv.b:null;});
+    var hasData=cVals.some(function(v){return v!==null;});
+    if(!hasData){document.getElementById(divId).innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-size:13px;">No data for this country</div>';return;}
+    var cFill=cVals.map(function(v){return v!==null?v:0;});
+    var rFill=rVals.map(function(v){return v!==null?v:0;});
+    // Close polygon
+    cFill=cFill.concat([cFill[0]]); rFill=rFill.concat([rFill[0]]);
+    var theta=labels.concat([labels[0]]);
+    var tc=_TIER_CLR[tier]||'#4a90e2';
+    var tcAlpha=tc==='#00a651'?'rgba(0,166,81,.15)':tc==='#4a90e2'?'rgba(74,144,226,.15)':tc==='#f7941d'?'rgba(247,148,29,.15)':'rgba(192,57,43,.15)';
+    var maxR=Math.max(70,Math.max.apply(null,cFill.concat(rFill))+8);
+    try{Plotly.react(divId,[
+      {type:'scatterpolar',mode:'lines+markers',r:rFill,theta:theta,name:'AFRO Avg',
+       line:{color:'#adb5bd',width:1.5,dash:'dot'},marker:{color:'#adb5bd',size:4},
+       fill:'toself',fillcolor:'rgba(173,181,189,.07)',
+       hovertemplate:'<b>AFRO Avg</b><br>%{theta}: %{r:.1f}%<extra></extra>'},
+      {type:'scatterpolar',mode:'lines+markers',r:cFill,theta:theta,name:country,
+       line:{color:tc,width:2.5},marker:{color:tc,size:8,line:{color:'#fff',width:2}},
+       fill:'toself',fillcolor:tcAlpha,
+       hovertemplate:'<b>'+country+'</b><br>%{theta}: %{r:.1f}%<extra></extra>'},
+    ],{
+      polar:{
+        radialaxis:{visible:true,range:[0,maxR],tickfont:{size:9,family:_FONT,color:'#6b7280'},gridcolor:'#eef2f7'},
+        angularaxis:{tickfont:{size:11,family:_FONT,color:'#333e5c'}},
+        bgcolor:'#fff'
+      },
+      showlegend:true,
+      legend:{orientation:'h',y:-0.12,x:0.5,xanchor:'center',font:{size:11,family:_FONT},itemsizing:'constant'},
+      margin:{l:55,r:55,t:18,b:60},
+      paper_bgcolor:'#fff',plot_bgcolor:'#fff',
+      font:{family:_FONT,size:11,color:'#333e5c'},
+      hoverlabel:{bgcolor:'#14265c',font_size:12,font_family:_FONT,font_color:'#fff'},
+    },{responsive:true,displayModeBar:false});}catch(e){console.warn('Radar error',e);}
+  }
+
+  // ── Compare: Regional Benchmark ─────────────────────────────────────────────
+  function _renderProfileCompare(latData,country,reg,ind,sec){
+    var divId='profile-compare-chart';
+    if(!document.getElementById(divId)||typeof Plotly==='undefined') return;
+    var _SEC_CLR={'S1_TOB':'#c0392b','S1_ALC':'#8e44ad','S1_DIT':'#27ae60','S1_PAC':'#2980b9',
+                  'S2_BPR':'#e74c3c','S2_ANT':'#e67e22','S3_GLU':'#d35400','S3_CHO':'#16a085','S_RISK':'#2c3e50'};
+    var names=[],cVals=[],rVals=[],clrs=[];
+    _RADAR_CFG.forEach(function(r){
+      var i2=ind[r.code]; if(!i2) return;
+      var d=latData[r.code]||{}, rv=reg[r.code]||{};
+      var cv=d.b!==null&&d.b!==undefined?d.b:null;
+      var rvB=rv.b!==null&&rv.b!==undefined?rv.b:null;
+      if(cv===null&&rvB===null) return;
+      names.push(r.label);
+      cVals.push(cv); rVals.push(rvB);
+      clrs.push(_SEC_CLR[i2.sec]||'#6b7280');
+    });
+    if(!names.length) return;
+    try{Plotly.react(divId,[
+      {type:'bar',orientation:'h',x:rVals,y:names,name:'AFRO Avg',
+       marker:{color:'rgba(173,181,189,.5)',line:{color:'#adb5bd',width:1}},
+       hovertemplate:'AFRO Avg: <b>%{x:.1f}%</b><extra></extra>'},
+      {type:'bar',orientation:'h',x:cVals,y:names,name:country,
+       marker:{color:clrs,opacity:.88,line:{color:'rgba(0,0,0,.08)',width:1}},
+       hovertemplate:country+': <b>%{x:.1f}%</b><extra></extra>'},
+    ],{
+      barmode:'overlay',
+      xaxis:{title:{text:'Prevalence (%)',font:{size:11,color:'#6b7280'}},tickfont:{size:10,family:_FONT},showgrid:true,gridcolor:'#f0f4fa',zeroline:false},
+      yaxis:{tickfont:{size:11,family:_FONT,color:'#333e5c'},automargin:true},
+      showlegend:true,
+      legend:{orientation:'h',y:-0.16,x:0.5,xanchor:'center',font:{size:11,family:_FONT}},
+      margin:{l:10,r:22,t:8,b:60},height:360,
+      paper_bgcolor:'#fff',plot_bgcolor:'#fff',
+      font:{family:_FONT,size:11},
+      hoverlabel:{bgcolor:'#14265c',font_size:12,font_family:_FONT,font_color:'#fff'},
+    },{responsive:true,displayModeBar:false});}catch(e){console.warn('Compare error',e);}
+  }
+
+  // ── Trend: Key Indicators Over Time ────────────────────────────────────────
+  function _renderProfileTrend(profile,ind){
+    var divId='profile-trend-chart';
+    if(!document.getElementById(divId)||typeof Plotly==='undefined') return;
+    var surveys=profile.surveys;
+    var years=surveys.map(function(s){return s.year;});
+    var _TREND_CFG=[
+      {code:'tobacco_current_smoke_pct',  label:'Tobacco Use',       clr:'#c0392b'},
+      {code:'bp_raised_140_pct',          label:'Raised BP',         clr:'#e74c3c'},
+      {code:'bmi_obese_pct',              label:'Obesity',           clr:'#e67e22'},
+      {code:'glucose_raised_7_pct',       label:'Raised Glucose',    clr:'#d35400'},
+      {code:'risk_3plus_pct',             label:'3+ Risk Factors',   clr:'#2c3e50'},
+      {code:'pa_low_activity_pct',        label:'Low Physical Act.', clr:'#2980b9'},
+      {code:'alcohol_current_drinker_pct',label:'Alcohol Use',       clr:'#8e44ad'},
+    ];
+    var traces=[];
+    _TREND_CFG.forEach(function(t){
+      var vals=years.map(function(yr){
+        var yd=profile.data[String(yr)]||{};
+        var d=yd[t.code]; return d&&d.b!==null&&d.b!==undefined?d.b:null;
+      });
+      if(vals.every(function(v){return v===null;})) return;
+      var lo=years.map(function(yr){var yd=profile.data[String(yr)]||{};var d=yd[t.code];return d&&d.lo!==null&&d.lo!==undefined?d.lo:null;});
+      var hi=years.map(function(yr){var yd=profile.data[String(yr)]||{};var d=yd[t.code];return d&&d.hi!==null&&d.hi!==undefined?d.hi:null;});
+      // CI ribbon
+      var xCI=years.concat(years.slice().reverse());
+      var yCI=hi.concat(lo.slice().reverse());
+      if(xCI.length>0&&yCI.some(function(v){return v!==null;})){
+        traces.push({type:'scatter',mode:'none',x:xCI,y:yCI,fill:'toself',
+          fillcolor:t.clr.replace('#','rgba(').replace(/([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i,
+            function(m,r,g,b){return parseInt(r,16)+','+parseInt(g,16)+','+parseInt(b,16)+',0.12)';}),
+          line:{width:0},showlegend:false,hoverinfo:'skip'});
+      }
+      traces.push({type:'scatter',mode:'lines+markers',x:years,y:vals,name:t.label,
+        line:{color:t.clr,width:2.5},
+        marker:{color:t.clr,size:9,line:{color:'#fff',width:2}},
+        connectgaps:false,
+        hovertemplate:'<b>'+t.label+'</b><br>Year: <b>%{x}</b><br>Value: <b>%{y:.1f}%</b><extra></extra>'});
+    });
+    if(!traces.length){document.getElementById(divId).innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);">No trend data available</div>';return;}
+    try{Plotly.react(divId,traces,{
+      xaxis:{title:{text:'Survey Year',font:{size:11,color:'#6b7280'}},tickmode:'array',tickvals:years,
+        tickfont:{size:11,family:_FONT},showgrid:true,gridcolor:'#f0f4fa',zeroline:false},
+      yaxis:{title:{text:'Prevalence (%)',font:{size:11,color:'#6b7280'}},tickfont:{size:11,family:_FONT},
+        showgrid:true,gridcolor:'#f0f4fa',zeroline:false},
+      showlegend:true,
+      legend:{orientation:'h',y:-0.22,x:0.5,xanchor:'center',font:{size:11,family:_FONT},itemsizing:'constant'},
+      margin:{l:60,r:20,t:16,b:100},
+      paper_bgcolor:'#fff',plot_bgcolor:'#fff',
+      font:{family:_FONT,size:11},
+      hoverlabel:{bgcolor:'#14265c',font_size:12,font_family:_FONT,font_color:'#fff'},
+    },{responsive:true,displayModeBar:false});}catch(e){console.warn('Trend error',e);}
+  }
+
+  // ── Sex Disaggregation ──────────────────────────────────────────────────────
+  function _renderProfileSexChart(latData,country,ind,reg){
+    var divId='profile-sex-chart';
+    if(!document.getElementById(divId)||typeof Plotly==='undefined') return;
+    var names=[],mV=[],fV=[],bV=[];
+    _RADAR_CFG.forEach(function(r){
+      var d=latData[r.code]||{};
+      names.push(r.label);
+      mV.push(d.m!==null&&d.m!==undefined?d.m:null);
+      fV.push(d.f!==null&&d.f!==undefined?d.f:null);
+      bV.push(d.b!==null&&d.b!==undefined?d.b:null);
+    });
+    try{Plotly.react(divId,[
+      {type:'bar',orientation:'h',x:mV,y:names,name:'Males',
+       marker:{color:'rgba(41,128,185,.82)',line:{color:'#2980b9',width:1}},
+       hovertemplate:'Males: <b>%{x:.1f}%</b><extra></extra>'},
+      {type:'bar',orientation:'h',x:fV,y:names,name:'Females',
+       marker:{color:'rgba(192,57,43,.82)',line:{color:'#c0392b',width:1}},
+       hovertemplate:'Females: <b>%{x:.1f}%</b><extra></extra>'},
+      {type:'scatter',mode:'markers',x:bV,y:names,name:'Both Sexes',
+       marker:{color:'#14265c',symbol:'diamond',size:10,line:{color:'#fff',width:2}},
+       hovertemplate:'Both Sexes: <b>%{x:.1f}%</b><extra></extra>'},
+    ],{
+      barmode:'group',
+      xaxis:{title:{text:'Prevalence (%)',font:{size:11,color:'#6b7280'}},tickfont:{size:10,family:_FONT},showgrid:true,gridcolor:'#f0f4fa',zeroline:false},
+      yaxis:{tickfont:{size:11,family:_FONT,color:'#333e5c'},automargin:true},
+      showlegend:true,
+      legend:{orientation:'h',y:-0.16,x:0.5,xanchor:'center',font:{size:11,family:_FONT}},
+      margin:{l:10,r:22,t:8,b:60},height:380,
+      paper_bgcolor:'#fff',plot_bgcolor:'#fff',
+      font:{family:_FONT,size:11},
+      hoverlabel:{bgcolor:'#14265c',font_size:12,font_family:_FONT,font_color:'#fff'},
+    },{responsive:true,displayModeBar:false});}catch(e){console.warn('Sex chart error',e);}
+  }
+
+  // ── Profile tab: event listeners ────────────────────────────────────────────
+  var _profSel=document.getElementById('profile-country-select');
+  if(_profSel){
+    _profSel.addEventListener('change',function(){renderCountryProfile(this.value);});
+  }
 })();
 """
 
@@ -1174,18 +1618,32 @@ def build_html(A: dict) -> str:
 
     # ── Executive KPI data for JS injection ───────────────────────────────────
     import json as _json
-    exec_kpis_json      = _json.dumps(A["exec_kpis"], ensure_ascii=False)
+    exec_kpis_json        = _json.dumps(A["exec_kpis"], ensure_ascii=False)
     timeline_by_type_json = _json.dumps(A["timeline_by_type"], ensure_ascii=False)
-    spi_scores_json     = _json.dumps(
+    spi_scores_json       = _json.dumps(
         {row["country"]: round(float(row["spi"]), 1) for _, row in A["spi"].iterrows()},
         ensure_ascii=False
     )
+    # ── STEPS profile data ────────────────────────────────────────────────────
+    steps_profile = A.get("steps_profile", {})
+    steps_profile_json = _json.dumps(steps_profile, ensure_ascii=False) if steps_profile else "null"
+
+    # Build country profile dropdown options (default: Ethiopia, else first)
+    _prof_countries = steps_profile.get("countries", [])
+    _prof_default   = "Ethiopia" if "Ethiopia" in _prof_countries else (_prof_countries[0] if _prof_countries else "")
+    _prof_options   = "\n".join(
+        f'<option value="{c}"{"  selected" if c == _prof_default else ""}>{c}</option>'
+        for c in _prof_countries
+    )
+    _prof_n = len(_prof_countries)
+
     exec_global    = A["exec_kpis"]["global"]
     exec_steps     = A["exec_kpis"]["STEPS"]
     js_with_data   = (JS
-                      .replace("__EXEC_DATA_PLACEHOLDER__",    exec_kpis_json)
-                      .replace("__TIMELINE_DATA_PLACEHOLDER__", timeline_by_type_json)
-                      .replace("__SPI_SCORES_PLACEHOLDER__",   spi_scores_json))
+                      .replace("__EXEC_DATA_PLACEHOLDER__",     exec_kpis_json)
+                      .replace("__TIMELINE_DATA_PLACEHOLDER__",  timeline_by_type_json)
+                      .replace("__SPI_SCORES_PLACEHOLDER__",    spi_scores_json)
+                      .replace("__STEPS_PROFILE_PLACEHOLDER__", steps_profile_json))
 
     # Build favicon link and logo img tags (empty string if asset not found)
     fav_link = f'<link rel="icon" type="image/png" href="data:image/png;base64,{FAV_LOGO_B64}"/>' if FAV_LOGO_B64 else ""
@@ -1276,6 +1734,7 @@ def build_html(A: dict) -> str:
     <button class="tab-btn" data-tab="tab-exec"><i class="fas fa-tachometer-alt"></i> Executive Overview</button>
     <button class="tab-btn" data-tab="tab-perf"><i class="fas fa-medal"></i> Surveillance Performance</button>
     <button class="tab-btn" data-tab="tab-cycle"><i class="fas fa-sync-alt"></i> Cycle &amp; Gap</button>
+    <button class="tab-btn" data-tab="tab-profile"><i class="fas fa-user-md"></i> Country Profile</button>
     <button class="tab-btn" data-tab="tab-priority"><i class="fas fa-crosshairs"></i> Strategic Priority</button>
     <button class="tab-btn" data-tab="tab-methods"><i class="fas fa-book"></i> Methods</button>
   </div>
@@ -1579,12 +2038,52 @@ def build_html(A: dict) -> str:
     </div>
   </div>
 
-  <!-- TAB 4: STRATEGIC PRIORITY -->
-  <div id="tab-priority" class="tab-pane">
+  <!-- TAB 4: COUNTRY PROFILE -->
+  <div id="tab-profile" class="tab-pane">
     <div class="section">
       <div class="section-header">
         <div class="section-header-inner">
           <span class="section-num">4</span>
+          <h2 class="section-title">Country Profile</h2>
+        </div>
+        <p class="section-subtitle">
+          In-depth NCD risk factor profile &mdash; STEPS indicator data by domain, sex &amp; survey round &mdash;
+          {_prof_n} countries with STEPS data available
+        </p>
+      </div>
+
+      {'<div class="profile-no-data" style="padding:40px;text-align:center;color:var(--muted);"><i class="fas fa-database" style="font-size:32px;opacity:.3;margin-bottom:12px;display:block;"></i><p>No STEPS indicator data found. Ensure STEP.db is present in the data/ folder and run the pipeline.</p></div>' if not _prof_countries else ""}
+
+      <div class="filter-bar" style="{'display:none;' if not _prof_countries else ''}">
+        <span class="filter-label"><i class="fas fa-map-marker-alt"></i>&nbsp; Country</span>
+        <select id="profile-country-select" class="filter-select" style="min-width:270px;">
+          {_prof_options}
+        </select>
+        <span class="filter-label" style="margin-left:6px;">Survey</span>
+        <select id="profile-survey-select" class="filter-select" style="min-width:200px;" disabled>
+          <option value="STEPS" selected>STEPS &mdash; NCD Risk Factor Surveillance</option>
+        </select>
+        <span style="font-size:11px;color:var(--muted);font-style:italic;margin-left:4px;display:flex;align-items:center;gap:5px;">
+          <i class="fas fa-lock" style="font-size:10px;"></i>Additional survey types coming soon
+        </span>
+      </div>
+
+      <div id="country-profile-content">
+        <div class="profile-no-data">
+          <i class="fas fa-mouse-pointer" style="font-size:36px;opacity:.25;"></i>
+          <p style="font-size:14px;font-weight:600;color:var(--text);">Click the <strong>Country Profile</strong> tab to load the selected country</p>
+          <p style="font-size:12px;">Select a country from the filter above to explore its full STEPS indicator profile.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 5: STRATEGIC PRIORITY -->
+  <div id="tab-priority" class="tab-pane">
+    <div class="section">
+      <div class="section-header">
+        <div class="section-header-inner">
+          <span class="section-num">5</span>
           <h2 class="section-title">Strategic Prioritisation</h2>
         </div>
         <p class="section-subtitle">Decision matrix per survey instrument &mdash; identify countries requiring immediate support, reactivation, or sustained monitoring</p>
@@ -1644,12 +2143,12 @@ def build_html(A: dict) -> str:
     </div>
   </div>
 
-  <!-- TAB 5: METHODS -->
+  <!-- TAB 6: METHODS -->
   <div id="tab-methods" class="tab-pane">
     <div class="section">
       <div class="section-header">
         <div class="section-header-inner">
-          <span class="section-num">5</span>
+          <span class="section-num">6</span>
           <h2 class="section-title">Methodology &amp; Definitions</h2>
         </div>
         <p class="section-subtitle">Analytical framework, key definitions, and data model underpinning this platform</p>
