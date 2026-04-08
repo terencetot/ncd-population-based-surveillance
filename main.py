@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-NCD Surveillance Intelligence Platform — WHO African Region
+NCD Surveillance Intelligence Platform - WHO African Region
 Main entry point: runs ETL pipeline -> analytics -> HTML report generation
 
 Usage:
@@ -26,19 +26,19 @@ from src.report import build_html
 
 def main():
     print("=" * 62)
-    print("  NCD Surveillance Intelligence Platform — WHO AFRO")
+    print("  NCD Surveillance Intelligence Platform - WHO AFRO")
     print("  Build Pipeline")
     print("=" * 62)
 
     # Ensure output directory exists
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
 
-    # 1. ETL — surveillance metadata
+    # 1. ETL - surveillance metadata
     print(f"\n[1/5] ETL: Extract -> Transform -> Load (surveillance metadata) ...")
     etl_pipeline(EXCEL_PATH, DB_PATH)
     print("      OK: Star schema populated")
 
-    # 2. ETL — STEPS indicators
+    # 2. ETL - STEPS indicators
     print(f"\n[2/5] ETL: Merging STEPS indicator data from STEP.db ...")
     n_steps = etl_steps_indicators(STEPS_DB_PATH, DB_PATH)
     print(f"      OK: {n_steps} STEPS measurements loaded")

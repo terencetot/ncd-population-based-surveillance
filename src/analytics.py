@@ -1,5 +1,5 @@
 """
-NCD Surveillance Intelligence Platform — WHO African Region
+NCD Surveillance Intelligence Platform - WHO African Region
 Analytics: SPI computation, cycle matrix, regional KPIs
 """
 import sqlite3
@@ -12,12 +12,12 @@ from src.config import (CURRENT_YEAR, CYCLE_YEARS, CURRENT_CYCLE_START,
 
 def compute_spi(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Surveillance Performance Index (SPI) v2 — 3 orthogonal dimensions (0–100).
+    Surveillance Performance Index (SPI) v2 - 3 orthogonal dimensions (0–100).
 
     BS  Breadth Score  (structural, discrete):
          BS = |{k : instrument k completed ≥1 time}| / K
          Range: {0, 0.2, 0.4, 0.6, 0.8, 1.0}  (K=5)
-         Measures permanent institutional capacity — not time-decaying.
+         Measures permanent institutional capacity - not time-decaying.
 
     CS  Currency Score  (continuous, single exponential decay):
          c_k = exp(−μ · g_k),  μ = ln(2)/7  (7-yr half-life)
@@ -29,7 +29,7 @@ def compute_spi(df: pd.DataFrame) -> pd.DataFrame:
          d_k = min(1, 5 / avg_interval_k)  for instrument types k with ≥2 rounds
          ARI = mean(d_k) over assessable types only  (0 if none assessable)
          CA-ARI = ARI × (|A| / K)   [penalises partial assessability]
-         CA-ARI = 0 when |A|=0 — universal formula, no SPI* split.
+         CA-ARI = 0 when |A|=0 - universal formula, no SPI* split.
 
     SPI = 100 × (BS + CS + CA-ARI) / 3   [universal, no partial formula]
 
@@ -144,11 +144,11 @@ def compute_cycle_matrix(df: pd.DataFrame) -> pd.DataFrame:
     recency of last completed survey relative to 5-year cycle expectation.
 
     Status values:
-      Current    — last completed within 5 years (2021–2026)
-      Overdue    — last completed 6–10 years ago
-      Critical   — last completed > 10 years ago
-      In Pipeline— no completed, but in-progress survey >= 2021
-      Never      — no completed survey and no active pipeline
+      Current    - last completed within 5 years (2021–2026)
+      Overdue    - last completed 6–10 years ago
+      Critical   - last completed > 10 years ago
+      In Pipeline- no completed, but in-progress survey >= 2021
+      Never      - no completed survey and no active pipeline
     """
     done   = df[df["completed"]]
     inprog = df[df["status"] == "In Progress"]
@@ -206,13 +206,13 @@ def compute_exec_kpis(df: pd.DataFrame) -> dict:
     Categories are strictly mutually exclusive per country (per survey type).
 
     Status priority (in order):
-      1. Never Conducted  — no completed survey ever (even if currently in a first attempt).
+      1. Never Conducted  - no completed survey ever (even if currently in a first attempt).
                            A country that has never produced evidence goes here unconditionally.
-      2. On Cycle         — has completed AND gap <= 5 years (current, usable evidence)
-      3. Attempt to update— has completed AND gap > 5 AND has in-progress in current cycle
-                           (prior evidence exists; updating it — NOT for never-conducted)
-      4. Off Cycle        — has completed AND gap > 5 AND no active in-progress survey
-                           (surveillance idle — data ageing)
+      2. On Cycle         - has completed AND gap <= 5 years (current, usable evidence)
+      3. Attempt to update- has completed AND gap > 5 AND has in-progress in current cycle
+                           (prior evidence exists; updating it - NOT for never-conducted)
+      4. Off Cycle        - has completed AND gap > 5 AND no active in-progress survey
+                           (surveillance idle - data ageing)
     """
     import logging
     done   = df[df["completed"]]
@@ -239,7 +239,7 @@ def compute_exec_kpis(df: pd.DataFrame) -> dict:
             has_inprog_current = len(inprog_current) > 0
 
             if not has_completed:
-                # Never completed — regardless of any in-progress first attempt
+                # Never completed - regardless of any in-progress first attempt
                 counts["Never Conducted"] += 1
                 country_statuses[c] = "Never Conducted"
             else:
@@ -380,7 +380,7 @@ def build_steps_profile_data(ncd_db_path: Path, spi_df: pd.DataFrame) -> dict:
       countries   : sorted list of country names that have STEPS data
       sections    : {section_code: {id, name, step, color, icon}}
       indicators  : {indicator_code: {label, unit, sec (section_code), hib}}
-      regional    : {indicator_code: {b, m, f, n}} — AFRO averages from latest survey/country
+      regional    : {indicator_code: {b, m, f, n}} - AFRO averages from latest survey/country
       profiles    : {country_name: {iso3, spi, tier, tier_label, surveys, data}}
         data      : {survey_year_str: {indicator_code: {b, lo, hi, m, f}}}
     """

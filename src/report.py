@@ -1,5 +1,5 @@
 """
-NCD Surveillance Intelligence Platform — WHO African Region
+NCD Surveillance Intelligence Platform - WHO African Region
 Report builder: CSS, JavaScript, HTML assembly
 """
 import base64
@@ -116,11 +116,12 @@ body{font-family:var(--font);background:#f0f4fa;color:var(--text);line-height:1.
 .hero-quick-stats{display:flex;flex-wrap:wrap;gap:8px;animation:fadeScale .9s ease .25s both}
 .hero-qs{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:var(--muted);background:#f4f7fb;border:1px solid var(--border);border-radius:20px;padding:4px 12px;white-space:nowrap}
 .hero-qs i{font-size:9px}
-/* ── Reveal animation ── */
-.reveal{opacity:0;transform:translateY(28px);transition:opacity .65s ease,transform .65s ease}
+/* ── Reveal animation (hidden only when JS adds .will-animate) ── */
+.reveal{transition:opacity .65s ease,transform .65s ease}
+.reveal.will-animate{opacity:0;transform:translateY(28px)}
 .reveal.visible{opacity:1;transform:translateY(0)}
 /* ── Container ── */
-.container{max-width:1400px;margin:0 auto;padding:0 28px;position:relative;overflow:hidden}
+.container{max-width:1400px;margin:0 auto;padding:0 28px;position:relative}
 /* ── Wide-screen centering (>1400px): all frame elements stay centered ── */
 @media(min-width:1500px){
   .topnav-inner,.tab-nav-inner,.footer-inner{max-width:1480px}
@@ -215,8 +216,8 @@ hr.section-divider{border:none;border-top:1px solid var(--border);margin:32px 0}
 .tab-btn i{font-size:12px;opacity:.65;transition:opacity .2s,color .2s}
 .tab-btn.active i{opacity:1;color:var(--accent)}
 .tab-btn:hover i{opacity:.9}
-.tab-pane{position:absolute;top:0;left:0;right:0;opacity:0;pointer-events:none;z-index:0}
-.tab-pane.active{position:relative;top:auto;left:auto;right:auto;opacity:1;pointer-events:auto;z-index:1}
+.tab-pane{display:none}
+.tab-pane.active{display:block}
 /* ══ FILTER BAR ═════════════════════════════════════════════════════════════ */
 .filter-bar{background:#fff;border:1.5px solid var(--border);border-radius:var(--radius);padding:14px 20px;margin-bottom:22px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;box-shadow:var(--shadow-sm)}
 .filter-label{font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;white-space:nowrap}
@@ -310,12 +311,6 @@ hr.section-divider{border:none;border-top:1px solid var(--border);margin:32px 0}
 .profile-no-data i{font-size:40px;opacity:.28;}
 .profile-survey-pill{display:inline-flex;align-items:center;gap:5px;background:rgba(0,61,130,.08);border:1px solid rgba(0,61,130,.18);border-radius:20px;padding:3px 11px;font-size:10.5px;font-weight:600;color:var(--primary);}
 .profile-cmp-badge{display:inline-block;font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px;vertical-align:middle;}
-/* Compare toggle */
-.profile-compare-toggle-active{background:var(--primary)!important;color:#fff!important;}
-.profile-ind-table th.col-latest{color:var(--primary);font-weight:800;}
-.profile-ind-table th.col-prev{color:var(--muted);}
-.profile-ind-table td.change-cell-up-good{background:#e6f5ec;color:#00a651;font-weight:700;border-radius:8px;}
-.profile-ind-table td.change-cell-up-bad{background:#fce8e6;color:#c0392b;font-weight:700;border-radius:8px;}
 """
 
 # ── JavaScript ─────────────────────────────────────────────────────────────────
@@ -331,6 +326,8 @@ JS = """
     },{passive:true});
     btn.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
   }
+  // Mark reveal elements for animation only when JS is running
+  document.querySelectorAll('.reveal').forEach(el=>el.classList.add('will-animate'));
   const ro=new IntersectionObserver((es)=>{
     es.forEach((e,i)=>{if(e.isIntersecting){setTimeout(()=>e.target.classList.add('visible'),i*55);ro.unobserve(e.target);}});
   },{threshold:0.04});
@@ -368,7 +365,7 @@ JS = """
     if(btn)btn.classList.add('active');
     window.scrollTo({top:62,behavior:'smooth'});
     if(pane){
-      pane.querySelectorAll('.reveal:not(.visible)').forEach((el,i)=>setTimeout(()=>el.classList.add('visible'),i*45));
+      pane.querySelectorAll('.reveal:not(.visible)').forEach((el,i)=>{el.classList.add('will-animate');setTimeout(()=>el.classList.add('visible'),i*45);});
       pane.querySelectorAll('.signal-grid,.kpi-row').forEach(el=>{
         if(!el.dataset.counted){el.dataset.counted='1';el.querySelectorAll('[data-count]').forEach(e=>animCount(e,parseFloat(e.dataset.count),1400));}
       });
@@ -428,10 +425,10 @@ JS = """
   // ── Executive Overview dynamic filter ────────────────────────────────────
   const EXEC_DATA = __EXEC_DATA_PLACEHOLDER__;
 
-  // ── Cycle & Gap — Historical Activity Timeline ────────────────────────────
+  // ── Cycle & Gap - Historical Activity Timeline ────────────────────────────
   const TIMELINE_DATA = __TIMELINE_DATA_PLACEHOLDER__;
 
-  // ── Strategic Priority — overall SPI scores per country ──────────────────
+  // ── Strategic Priority - overall SPI scores per country ──────────────────
   const SPI_SCORES = __SPI_SCORES_PLACEHOLDER__;
 
   const _FONT = "Poppins,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
@@ -681,7 +678,7 @@ JS = """
       {type:'rect',x0:gapCut,x1:MAXGAP,y0:spiCut,y1:100,  xref:'x',yref:'y',fillcolor:'rgba(247,148,29,.10)',line:{width:0}},
       {type:'rect',x0:-2,    x1:gapCut,y0:spiCut,y1:100,  xref:'x',yref:'y',fillcolor:'rgba(0,166,81,.10)',  line:{width:0}},
       {type:'rect',x0:-2,    x1:gapCut,y0:0,    y1:spiCut,xref:'x',yref:'y',fillcolor:'rgba(74,144,226,.10)',line:{width:0}},
-      // Threshold lines — dotted navy
+      // Threshold lines - dotted navy
       {type:'line',x0:gapCut,x1:gapCut,y0:-6,y1:106,xref:'x',yref:'y',line:{color:'#14265c',width:2,dash:'dot'}},
       {type:'line',x0:-2,x1:MAXGAP,y0:spiCut,y1:spiCut,xref:'x',yref:'y',line:{color:'#14265c',width:2,dash:'dot'}}
     ];
@@ -959,29 +956,14 @@ JS = """
       ind: ind, sec: sec, reg: reg, hasMulti: hasMulti, tier: p.tier,
       country: country
     };
-    _secShowCompare = false;
-
-    // ── Section divider with toggle button ─────────────────────────────────
-    var sdivLabel='<div style="display:flex;align-items:center;gap:16px;margin:28px 0 18px;flex-wrap:wrap;">';
-    sdivLabel+='<div class="section-divider-label" style="flex:1;margin:0;">Detailed Indicator Dashboard \u2014 All STEPS Sections</div>';
-    if(hasMulti){
-      sdivLabel+='<button id="sec-compare-toggle" onclick="_toggleSectionCompare()" '
-        +'style="display:inline-flex;align-items:center;gap:7px;font-family:var(--font);font-size:11.5px;font-weight:700;'
-        +'padding:7px 16px;border-radius:22px;border:2px solid var(--primary);background:#fff;color:var(--primary);'
-        +'cursor:pointer;transition:all .22s;white-space:nowrap;" '
-        +'onmouseover="this.style.background=\'var(--primary)\';this.style.color=\'#fff\'" '
-        +'onmouseout="if(!_secShowCompare){this.style.background=\'#fff\';this.style.color=\'var(--primary)\'}">'
-        +'<i class="fas fa-exchange-alt"></i> Compare vs '+prevYr+'</button>';
-    }
-    sdivLabel+='</div>';
-
-    // ── Section grid placeholder (filled by _renderSectionDetail) ──────────
-    var sdiv=sdivLabel+'<div id="profile-section-detail-grid"></div>';
+    // ── Section divider label ──────────────────────────────────────────────
+    var sdiv='<div class="section-divider-label" style="margin:28px 0 18px;">Detailed Indicator Dashboard \u2014 All STEPS Sections</div>';
+    sdiv+='<div id="profile-section-detail-grid"></div>';
 
     document.getElementById('country-profile-content').innerHTML=
       hdr+kpi+charts+sdiv;
 
-    _renderSectionDetail(false);
+    _renderSectionDetail();
 
     // ── Render Plotly charts ────────────────────────────────────────────────
     setTimeout(function(){
@@ -995,23 +977,8 @@ JS = """
 
   // ── Section state ───────────────────────────────────────────────────────────
   var _profileState = {};
-  var _secShowCompare = false;
 
-  function _toggleSectionCompare() {
-    _secShowCompare = !_secShowCompare;
-    var btn = document.getElementById('sec-compare-toggle');
-    if(btn) {
-      btn.style.background   = _secShowCompare ? 'var(--primary)' : '#fff';
-      btn.style.color        = _secShowCompare ? '#fff'           : 'var(--primary)';
-      btn.innerHTML = '<i class="fas fa-exchange-alt"></i> '
-        + (_secShowCompare
-            ? 'Latest (' + _profileState.latYr + ') view'
-            : 'Compare vs ' + _profileState.prevYr);
-    }
-    _renderSectionDetail(_secShowCompare);
-  }
-
-  function _renderSectionDetail(showCompare) {
+  function _renderSectionDetail() {
     var el = document.getElementById('profile-section-detail-grid');
     if(!el) return;
     var s   = _profileState;
@@ -1032,37 +999,17 @@ JS = """
       grid += '<div class="profile-section-head" style="background:'+sv.color+';">';
       grid += '<i class="fas '+sv.icon+'" style="color:rgba(255,255,255,.9);font-size:13px;"></i>';
       grid += '<span class="sec-title">'+sv.name+'</span>';
-
-      if(showCompare && prevYr) {
-        grid += '<span class="sec-step" style="background:rgba(255,255,255,.18);border-radius:8px;padding:2px 8px;font-size:9px;font-weight:700;">'
-               + latYr + ' vs ' + prevYr + '</span>';
-      } else {
-        grid += '<span class="sec-step">'+sv.step+'</span>';
-      }
+      grid += '<span class="sec-step">'+sv.step+'</span>';
       grid += '</div>';
 
       grid += '<div style="overflow-x:auto;">';
       grid += '<table class="profile-ind-table">';
       grid += '<thead><tr>';
       grid += '<th style="text-align:left;min-width:140px;">Indicator</th>';
-
-      if(showCompare && prevYr) {
-        // Comparison mode columns
-        grid += '<th style="text-align:center;color:#003d82;font-weight:800;">'
-               + latYr + '<br><span style="font-size:8px;font-weight:600;opacity:.75;">(latest)</span></th>';
-        grid += '<th style="text-align:center;color:#6b7280;">'
-               + prevYr + '<br><span style="font-size:8px;font-weight:600;opacity:.75;">(previous)</span></th>';
-        grid += '<th style="text-align:center;min-width:72px;">Change</th>';
-        grid += '<th style="text-align:center;font-size:9px;white-space:nowrap;">'
-               + '<span style="color:#2980b9;">M</span> &middot; '
-               + '<span style="color:#c0392b;">F</span></th>';
-      } else {
-        // Default mode columns
-        grid += '<th style="text-align:center;">Both</th>';
-        grid += '<th style="text-align:center;color:#2980b9;">Male</th>';
-        grid += '<th style="text-align:center;color:#c0392b;">Female</th>';
-        grid += '<th style="text-align:center;">vs AFRO</th>';
-      }
+      grid += '<th style="text-align:center;">Both</th>';
+      grid += '<th style="text-align:center;color:#2980b9;">Male</th>';
+      grid += '<th style="text-align:center;color:#c0392b;">Female</th>';
+      grid += '<th style="text-align:center;">vs AFRO</th>';
       grid += '</tr></thead><tbody>';
 
       secInds.forEach(function(entry, idx){
@@ -1074,8 +1021,6 @@ JS = """
         var mV  = d.m  !== undefined ? d.m  : null;
         var fV  = d.f  !== undefined ? d.f  : null;
         var pbV = pd.b !== undefined ? pd.b : null;
-        var pmV = pd.m !== undefined ? pd.m : null;
-        var pfV = pd.f !== undefined ? pd.f : null;
         var rvB = rv.b !== undefined ? rv.b : null;
         var unit = i2.unit || '%';
         var hib  = i2.hib;
@@ -1084,70 +1029,21 @@ JS = """
         var ciAttr = (d.lo !== null && d.lo !== undefined && d.hi !== null && d.hi !== undefined)
           ? ' title="95% CI: ' + d.lo.toFixed(1) + '\u2013' + d.hi.toFixed(1) + unit + '"' : '';
 
+        var bStr = bV !== null
+          ? '<strong' + ciAttr + '>' + bV.toFixed(1) + '</strong>'
+            + '<span style="font-size:9px;color:var(--muted);">' + unit + '</span>'
+          : '<span style="color:#ccc;">\u2014</span>';
+        var mStr = mV !== null ? mV.toFixed(1)  : '<span style="color:#ccc;">\u2014</span>';
+        var fStr = fV !== null ? fV.toFixed(1)  : '<span style="color:#ccc;">\u2014</span>';
+        var cmpStr = _cmpRegional(bV, rvB, hib, unit);
+        var tArr   = _trendArrow(bV, pbV, hib);
+
         grid += '<tr style="background:' + bg + ';">';
         grid += '<td style="color:var(--text);word-break:break-word;font-size:11px;">' + lbl + '</td>';
-
-        if(showCompare && prevYr) {
-          // Latest value
-          var latStr = bV !== null
-            ? '<strong' + ciAttr + '>' + bV.toFixed(1) + '</strong>'
-              + '<span style="font-size:8.5px;color:var(--muted);">' + unit + '</span>'
-            : '<span style="color:#ccc;">\u2014</span>';
-          // Previous value
-          var prevStr = pbV !== null
-            ? '<span style="color:#6b7280;">' + pbV.toFixed(1)
-              + '<span style="font-size:8.5px;"> ' + unit + '</span></span>'
-            : '<span style="color:#ccc;">\u2014</span>';
-          // Change cell
-          var changeStr = '';
-          if(bV !== null && pbV !== null) {
-            var diff = bV - pbV;
-            var absDiff = Math.abs(diff);
-            var up = diff > 0;
-            // good = direction that is beneficial
-            var good = (hib === null || hib === undefined) ? null : (hib ? up : !up);
-            var clr = good === null ? '#6b7280' : (good ? '#00a651' : '#c0392b');
-            var bgClr = good === null ? '#f5f5f5' : (good ? '#e6f5ec' : '#fce8e6');
-            var sym = up ? '\u2191' : '\u2193';
-            if(absDiff < 0.1) {
-              changeStr = '<span style="color:#6b7280;font-size:12px;">\u2248</span>';
-            } else {
-              changeStr = '<span style="display:inline-flex;align-items:center;gap:3px;'
-                + 'background:' + bgClr + ';color:' + clr + ';font-weight:700;font-size:11px;'
-                + 'padding:2px 7px;border-radius:8px;">'
-                + sym + ' ' + absDiff.toFixed(1) + '</span>';
-            }
-          } else {
-            changeStr = '<span style="color:#ccc;">\u2014</span>';
-          }
-          // M · F (latest)
-          var mfStr = '';
-          if(mV !== null || fV !== null) {
-            if(mV !== null) mfStr += '<span style="color:#2980b9;font-weight:600;">'  + mV.toFixed(1) + '</span>';
-            if(mV !== null && fV !== null) mfStr += '<span style="color:#ccc;font-size:9px;"> / </span>';
-            if(fV !== null) mfStr += '<span style="color:#c0392b;font-weight:600;">' + fV.toFixed(1) + '</span>';
-          } else {
-            mfStr = '<span style="color:#ccc;">\u2014</span>';
-          }
-          grid += '<td style="text-align:center;">' + latStr + '</td>';
-          grid += '<td style="text-align:center;">' + prevStr + '</td>';
-          grid += '<td style="text-align:center;">' + changeStr + '</td>';
-          grid += '<td style="text-align:center;font-size:11px;">' + mfStr + '</td>';
-        } else {
-          // Default mode
-          var bStr = bV !== null
-            ? '<strong' + ciAttr + '>' + bV.toFixed(1) + '</strong>'
-              + '<span style="font-size:9px;color:var(--muted);">' + unit + '</span>'
-            : '<span style="color:#ccc;">\u2014</span>';
-          var mStr = mV !== null ? mV.toFixed(1)  : '<span style="color:#ccc;">\u2014</span>';
-          var fStr = fV !== null ? fV.toFixed(1)  : '<span style="color:#ccc;">\u2014</span>';
-          var cmpStr = _cmpRegional(bV, rvB, hib, unit);
-          var tArr   = _trendArrow(bV, pbV, hib);
-          grid += '<td style="text-align:center;">' + bStr + '</td>';
-          grid += '<td style="text-align:center;color:#2980b9;">' + mStr + '</td>';
-          grid += '<td style="text-align:center;color:#c0392b;">' + fStr + '</td>';
-          grid += '<td style="text-align:center;">' + (tArr || cmpStr) + '</td>';
-        }
+        grid += '<td style="text-align:center;">' + bStr + '</td>';
+        grid += '<td style="text-align:center;color:#2980b9;">' + mStr + '</td>';
+        grid += '<td style="text-align:center;color:#c0392b;">' + fStr + '</td>';
+        grid += '<td style="text-align:center;">' + (tArr || cmpStr) + '</td>';
         grid += '</tr>';
       });
       grid += '</tbody></table></div></div>';
@@ -1442,18 +1338,18 @@ def scorecard_table(spi):
     rows = ""
     for i, (_, r) in enumerate(spi.iterrows(), 1):
         tc  = TIER_COLORS[r["tier"]]
-        gap_s  = f"{int(r['gap_years'])} yrs" if pd.notna(r["gap_years"]) and r["gap_years"] else "—"
-        last_s = str(int(r["last_year"])) if pd.notna(r["last_year"]) and r["last_year"] else "—"
+        gap_s  = f"{int(r['gap_years'])} yrs" if pd.notna(r["gap_years"]) and r["gap_years"] else "-"
+        last_s = str(int(r["last_year"])) if pd.notna(r["last_year"]) and r["last_year"] else "-"
         cycle_val = 1 if r["recent_done"] > 0 else 0
         cycle_s = (f"{int(r['recent_done'])} done" if r["recent_done"] > 0
-                   else (f"{int(r['recent_inprog'])} in prog." if r["recent_inprog"] > 0 else "—"))
+                   else (f"{int(r['recent_inprog'])} in prog." if r["recent_inprog"] > 0 else "-"))
         bw = int(r["spi"])
         map_img = (f'<img class="country-map" src="data:image/png;base64,{COUNTRY_MAPS[r["iso3"]]}" '
                    f'alt="{r["iso3"]}"/>'
                    if r["iso3"] in COUNTRY_MAPS else "")
         reg_s  = (f"{r['d_regularity']:.1f}" if r["n_renewable"] > 0
                   else '<span style="color:#aaa;font-style:italic;font-size:10px;" title="No instrument has been conducted twice yet">n/a</span>')
-        avg_iv = (f"~{r['avg_cycle_interval']:.0f} yr" if r["avg_cycle_interval"] else "—")
+        avg_iv = (f"~{r['avg_cycle_interval']:.0f} yr" if r["avg_cycle_interval"] else "-")
         rows += f"""
 <tr data-country="{r['country'].lower()}" data-tier="{r['tier']}" data-gap="{r['gap_cat']}" data-cycle="{cycle_val}" data-reg="{r['reg_cat']}">
   <td class="rank-cell" style="padding:8px 10px;">{i}</td>
@@ -1481,9 +1377,9 @@ def scorecard_table(spi):
   <th style="padding:9px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">#</th>
   <th style="padding:9px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Country</th>
   <th style="padding:9px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">SPI / Tier</th>
-  <th style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;" title="Breadth Score — count of instrument types completed ≥1 time / 5">BS</th>
-  <th style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;" title="Currency Score — mean exp decay μ=ln2/7 over all 5 instruments">CS</th>
-  <th style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;" title="Coverage-Adjusted Regularity — ARI × (assessable / 5); n/a if no instrument has ≥2 rounds">CA-ARI</th>
+  <th style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;" title="Breadth Score - count of instrument types completed ≥1 time / 5">BS</th>
+  <th style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;" title="Currency Score - mean exp decay μ=ln2/7 over all 5 instruments">CS</th>
+  <th style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;" title="Coverage-Adjusted Regularity - ARI × (assessable / 5); n/a if no instrument has ≥2 rounds">CA-ARI</th>
   <th style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;" title="Average years between consecutive survey rounds">Avg Interval</th>
   <th style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Last Survey</th>
   <th style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Gap</th>
@@ -1649,7 +1545,7 @@ def per_survey_sections(A):
         for i, (_, row) in enumerate(sub.iterrows(), 1):
             sc     = STATUS_COLORS.get(row["cycle_status"], "#adb5bd")
             last_s = str(int(row["last_year"])) if pd.notna(row["last_year"]) and row["last_year"] else "Never"
-            gap_s  = f"{int(row['gap'])} yrs"   if pd.notna(row["gap"]) and row["gap"] else "—"
+            gap_s  = f"{int(row['gap'])} yrs"   if pd.notna(row["gap"]) and row["gap"] else "-"
             bg     = "#fafbff" if i % 2 == 0 else "#ffffff"
             rows_html += f"""<tr style="background:{bg};">
   <td style="padding:6px 12px;font-size:12px;">{row['country']}</td>
@@ -1692,7 +1588,7 @@ def per_survey_sections(A):
 
 
 def build_html(A: dict) -> str:
-    # All figures use include_plotlyjs=False — Plotly CDN is loaded once in <head>
+    # All figures use include_plotlyjs=False - Plotly CDN is loaded once in <head>
     def R(fig):
         return fig.to_html(full_html=False,
                            include_plotlyjs=False,
@@ -1774,7 +1670,7 @@ def build_html(A: dict) -> str:
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>NCD Population-based Surveillance Intelligence Platform — WHO AFRO</title>
+<title>NCD Population-based Surveillance Intelligence Platform - WHO AFRO</title>
 {fav_link}
 <script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -1855,7 +1751,7 @@ def build_html(A: dict) -> str:
 <div class="container">
 
   <!-- ═══════════════════ TAB 1: EXECUTIVE OVERVIEW ═══════════════════ -->
-  <div id="tab-exec" class="tab-pane">
+  <div id="tab-exec" class="tab-pane active">
     <div class="section">
 
       <!-- Section header -->
@@ -1867,7 +1763,7 @@ def build_html(A: dict) -> str:
         <p class="section-subtitle">Country-level surveillance status &mdash; unit of analysis: unique WHO AFRO countries and territories (N&nbsp;=&nbsp;48)</p>
       </div>
 
-      <!-- ① SURVEY INSTRUMENT STATUS — Static, shown first, not affected by filter -->
+      <!-- ① SURVEY INSTRUMENT STATUS - Static, shown first, not affected by filter -->
       <div class="row">
         <div class="col-12">
           <div class="chart-card reveal">
@@ -1879,7 +1775,7 @@ def build_html(A: dict) -> str:
         </div>
       </div>
 
-      <!-- Filter bar — STEPS default, no "All Survey Types" option -->
+      <!-- Filter bar - STEPS default, no "All Survey Types" option -->
       <div class="filter-bar">
         <span class="filter-label"><i class="fas fa-filter"></i>&nbsp; View by Survey</span>
         <select id="exec-survey-filter" class="filter-select" style="min-width:240px;">
@@ -1962,7 +1858,7 @@ def build_html(A: dict) -> str:
 
       </div>
 
-      <!-- ③ SURVEILLANCE STATUS DISTRIBUTION — Dynamic donut -->
+      <!-- ③ SURVEILLANCE STATUS DISTRIBUTION - Dynamic donut -->
       <div class="row">
         <div class="col-12">
           <div class="chart-card reveal">
@@ -1974,7 +1870,7 @@ def build_html(A: dict) -> str:
         </div>
       </div>
 
-      <!-- ④ YEARS SINCE MOST RECENT SURVEY — Dynamic gap chart -->
+      <!-- ④ YEARS SINCE MOST RECENT SURVEY - Dynamic gap chart -->
       <div class="row">
         <div class="col-12">
           <div class="chart-card reveal">
@@ -2040,14 +1936,14 @@ def build_html(A: dict) -> str:
         </div>
       </div>
 
-      {insight_box(f"<strong>Regional SPI: {reg_spi}/100</strong> — Median: {A['median_spi']} &nbsp;·&nbsp; <strong>{n_strong}</strong> countries achieve Strong status (SPI ≥ 75), while <strong>{n_crit}</strong> remain Critical (SPI < 30). The SPI is a composite of three equally-weighted dimensions: <strong>Coverage</strong> (how many of 5 instruments used), <strong>Recency</strong> (currency of evidence), and <strong>Regularity</strong> (cycle adherence). Scroll down to explore dimension-level breakdowns.", "info")}
+      {insight_box(f"<strong>Regional SPI: {reg_spi}/100</strong> - Median: {A['median_spi']} &nbsp;·&nbsp; <strong>{n_strong}</strong> countries achieve Strong status (SPI ≥ 75), while <strong>{n_crit}</strong> remain Critical (SPI < 30). The SPI is a composite of three equally-weighted dimensions: <strong>Coverage</strong> (how many of 5 instruments used), <strong>Recency</strong> (currency of evidence), and <strong>Regularity</strong> (cycle adherence). Scroll down to explore dimension-level breakdowns.", "info")}
 
       <!-- SPI bar chart -->
       <div class="row">
         <div class="col-12">
           <div class="chart-card reveal">
             {ch_spi_bar}
-            <div class="chart-commentary">Full country ranking by SPI score (0–100). Dashed threshold lines mark the four performance tiers. Countries in the Critical tier show compound weaknesses across all three SPI dimensions — they lack breadth of instruments, currency of evidence, and cycle regularity simultaneously.</div>
+            <div class="chart-commentary">Full country ranking by SPI score (0–100). Dashed threshold lines mark the four performance tiers. Countries in the Critical tier show compound weaknesses across all three SPI dimensions - they lack breadth of instruments, currency of evidence, and cycle regularity simultaneously.</div>
           </div>
         </div>
       </div>
@@ -2119,15 +2015,15 @@ def build_html(A: dict) -> str:
       </div>
 
       <!-- Historical Activity Timeline (dynamic, filterable) -->
-      <div class="section-divider-label">Historical Activity Timeline — By Survey Instrument</div>
+      <div class="section-divider-label">Historical Activity Timeline - By Survey Instrument</div>
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;flex-wrap:wrap;">
         <label style="font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;">Survey instrument:</label>
         <select id="cycle-timeline-filter" style="font-family:var(--font);font-size:13px;font-weight:600;border:1.5px solid var(--border);border-radius:8px;padding:7px 14px;background:#fff;color:var(--text);cursor:pointer;transition:border-color .2s;" onchange="updateTimeline(this.value)">
-          <option value="STEPS" selected>STEPS — NCD Risk Factor Survey</option>
-          <option value="GYTS">GYTS — Global Youth Tobacco Survey</option>
-          <option value="GSHS">GSHS — Global School Health Survey</option>
-          <option value="GATS">GATS — Global Adult Tobacco Survey</option>
-          <option value="GSHPP">GSHPP — School Health Policies &amp; Practices</option>
+          <option value="STEPS" selected>STEPS - NCD Risk Factor Survey</option>
+          <option value="GYTS">GYTS - Global Youth Tobacco Survey</option>
+          <option value="GSHS">GSHS - Global School Health Survey</option>
+          <option value="GATS">GATS - Global Adult Tobacco Survey</option>
+          <option value="GSHPP">GSHPP - School Health Policies &amp; Practices</option>
         </select>
         <button onclick="(function(){{var f=document.getElementById('cycle-timeline-filter');f.value='STEPS';updateTimeline('STEPS');}})();" style="font-family:var(--font);font-size:11px;font-weight:600;border:1.5px solid var(--border);border-radius:8px;padding:7px 14px;background:#f4f7fb;color:var(--muted);cursor:pointer;transition:all .2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f4f7fb'"><i class="fas fa-undo" style="margin-right:5px;"></i>Reset</button>
       </div>
@@ -2273,7 +2169,7 @@ def build_html(A: dict) -> str:
           <h4 style="color:#003d82;"><i class="fas fa-globe-africa"></i>&nbsp; Data Source</h4>
           <ul>
             <li><strong>Source:</strong> WHO Noncommunicable Diseases Country Tracking</li>
-            <li><strong>Coverage:</strong> {n_ent} entities &mdash; 47 WHO AFRO Member States + Zanzibar</li>
+            <li><strong>Coverage:</strong> {n_ent} entities (47 WHO AFRO Member States + Zanzibar)</li>
             <li><strong>Instruments:</strong> 5 NCD population-based surveillance systems</li>
             <li><strong>Period:</strong> {A['year_min']}&ndash;{CURRENT_YEAR} &nbsp;&middot;&nbsp; {A['n_records']} survey records</li>
 
@@ -2287,9 +2183,9 @@ def build_html(A: dict) -> str:
             The SPI is a composite score from <strong>0 to 100</strong> that summarises how well a country&rsquo;s NCD surveillance system is performing across three equally weighted dimensions. It is designed for <strong>relative ranking and trend monitoring</strong> across WHO AFRO Member States.
           </p>
           <ul>
-            <li style="margin-bottom:8px;"><strong style="color:#003d82;">Breadth</strong> &mdash; Has the country ever completed each of the five NCD surveillance instruments? A country that has used more instruments scores higher on this dimension, reflecting the <em>institutional range</em> of its surveillance system.</li>
-            <li style="margin-bottom:8px;"><strong style="color:#003d82;">Currency</strong> &mdash; How recent is the available evidence? Older surveys contribute progressively less, with evidence value halving roughly every seven years. This dimension rewards countries that keep their data fresh and penalises those whose most recent survey is distant in time.</li>
-            <li><strong style="color:#003d82;">Regularity</strong> &mdash; Does the country survey on schedule? Countries that complete each instrument close to the WHO-recommended five-year cycle score well. This dimension is only applicable when a country has conducted a given instrument at least twice &mdash; a single round is not enough to assess cycling behaviour.</li>
+            <li style="margin-bottom:8px;"><strong style="color:#003d82;">Breadth:</strong> Has the country ever completed each of the five NCD surveillance instruments? A country that has used more instruments scores higher on this dimension, reflecting the <em>institutional range</em> of its surveillance system.</li>
+            <li style="margin-bottom:8px;"><strong style="color:#003d82;">Currency:</strong> How recent is the available evidence? Older surveys contribute progressively less, with evidence value halving roughly every seven years. This dimension rewards countries that keep their data fresh and penalises those whose most recent survey is distant in time.</li>
+            <li><strong style="color:#003d82;">Regularity:</strong> Does the country survey on schedule? Countries that complete each instrument close to the WHO-recommended five-year cycle score well. This dimension is only applicable when a country has conducted a given instrument at least twice, as a single round is not enough to assess cycling behaviour.</li>
           </ul>
           <p style="font-size:11.5px;color:var(--muted);margin-top:12px;margin-bottom:12px;line-height:1.75;font-style:italic;">
             The three dimensions are equally weighted and combined into a single score. Countries that have never conducted any survey score zero. Countries with broad, current, and regular surveillance score toward 100.
@@ -2306,13 +2202,13 @@ def build_html(A: dict) -> str:
         <div class="method-card reveal" style="border-top:4px solid #00a651;">
           <h4 style="color:#00a651;"><i class="fas fa-satellite-dish"></i>&nbsp; Surveillance Status Categories</h4>
           <p style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.7;">
-            Each country is assigned exactly <strong>one status per survey instrument</strong>. Categories are mutually exclusive and exhaustive &mdash; all 48 entities are covered.
+            Each country is assigned exactly <strong>one status per survey instrument</strong>. Categories are mutually exclusive and exhaustive; all 48 entities are covered.
           </p>
           <ul>
-            <li><strong style="color:#00a651;">On Cycle</strong> &mdash; Completed within the last 5 years. Evidence is current and policy-usable.</li>
-            <li><strong style="color:#4a90e2;">Attempt to Update</strong> &mdash; Prior completed evidence exists &amp; a new survey round is actively in progress. Countries with no prior completion are excluded even if attempting a first round.</li>
-            <li><strong style="color:#f7941d;">Off Cycle</strong> &mdash; Has completed before but no current survey process is active. Surveillance is idle and evidence is ageing.</li>
-            <li><strong style="color:#909090;">Never Conducted</strong> &mdash; No completed survey on record. Countries in a first-time attempt remain here until completion is confirmed.</li>
+            <li><strong style="color:#00a651;">On Cycle:</strong> Completed within the last 5 years. Evidence is current and policy-usable.</li>
+            <li><strong style="color:#4a90e2;">Attempt to Update:</strong> Prior completed evidence exists and a new survey round is actively in progress. Countries with no prior completion are excluded even if attempting a first round.</li>
+            <li><strong style="color:#f7941d;">Off Cycle:</strong> Has completed before but no current survey process is active. Surveillance is idle and evidence is ageing.</li>
+            <li><strong style="color:#909090;">Never Conducted:</strong> No completed survey on record. Countries in a first-time attempt remain here until completion is confirmed.</li>
           </ul>
         </div>
 
@@ -2320,11 +2216,11 @@ def build_html(A: dict) -> str:
         <div class="method-card reveal" style="border-top:4px solid #8e44ad;">
           <h4 style="color:#8e44ad;"><i class="fas fa-flask"></i>&nbsp; The 5 Population-Based Surveillance Instruments</h4>
           <ul>
-            <li><strong style="color:#003d82;">STEPS</strong> &mdash; WHO STEPwise Approach to NCD Risk Factor Surveillance &middot; Adults 18&ndash;69 &middot; NCD risk factors (flagship instrument)</li>
-            <li><strong style="color:#c0392b;">GYTS</strong> &mdash; Global Youth Tobacco Survey &middot; Students 13&ndash;15 &middot; Youth tobacco use</li>
-            <li><strong style="color:#f7941d;">GSHS</strong> &mdash; Global School-based Student Health Survey &middot; Students 13&ndash;17 &middot; Youth health behaviours</li>
-            <li><strong style="color:#8e44ad;">GATS</strong> &mdash; Global Adult Tobacco Survey &middot; Adults &#8805;&nbsp;15 yr &middot; Adult tobacco &amp; cessation</li>
-            <li><strong style="color:#00a651;">GSHPP</strong> &mdash; Global School Health Policies &amp; Practices &middot; School level &middot; Health policy environment</li>
+            <li><strong style="color:#003d82;">STEPS:</strong> WHO STEPwise Approach to NCD Risk Factor Surveillance, adults 18-69, NCD risk factors (flagship instrument)</li>
+            <li><strong style="color:#c0392b;">GYTS:</strong> Global Youth Tobacco Survey, students 13-15, youth tobacco use</li>
+            <li><strong style="color:#f7941d;">GSHS:</strong> Global School-based Student Health Survey, students 13-17, youth health behaviours</li>
+            <li><strong style="color:#8e44ad;">GATS:</strong> Global Adult Tobacco Survey, adults 15 years and older, adult tobacco and cessation</li>
+            <li><strong style="color:#00a651;">GSHPP:</strong> Global School Health Policies and Practices, school level, health policy environment</li>
           </ul>
           <p style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">All instruments operate on a WHO-recommended 5-year renewal cycle. Countries are expected to complete a new round within each 5-year window to maintain current population-based surveillance intelligence.</p>
         </div>
@@ -2337,7 +2233,7 @@ def build_html(A: dict) -> str:
             <li><strong>Data currency:</strong> Status reflects the most recent available WHO tracking data. In-progress surveys may have completed since last extraction.</li>
             <li><strong>Regularity dimension:</strong> Requires &#8805;&nbsp;2 completed rounds per instrument. Countries with a single completion score zero on Regularity by methodology, not by performance failure.</li>
             <li><strong>Gap calculation:</strong> Computed relative to {CURRENT_YEAR}. Countries with only &ldquo;Not Usable&rdquo; records are treated as having no completed survey.</li>
-            <li><strong>SPI interpretation:</strong> The index is designed for relative ranking and trend monitoring &mdash; not for absolute quality assessment of individual surveys.</li>
+            <li><strong>SPI interpretation:</strong> The index is designed for relative ranking and trend monitoring, not for absolute quality assessment of individual surveys.</li>
           </ul>
         </div>
 

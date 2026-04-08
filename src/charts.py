@@ -1,5 +1,5 @@
 """
-NCD Surveillance Intelligence Platform — WHO African Region
+NCD Surveillance Intelligence Platform - WHO African Region
 Chart factory: all Plotly figure generators
 """
 import numpy as np
@@ -78,7 +78,7 @@ def fig_spi_bar(A):
         fig.add_vline(x=thresh, line_dash="dot", line_color=col, line_width=1.5,
                       annotation_text=label, annotation_position="top right",
                       annotation_font_size=10)
-    _layout(fig, "Surveillance Performance Index (SPI) — All Countries", 900)
+    _layout(fig, "Surveillance Performance Index (SPI) - All Countries", 900)
     fig.update_layout(
         xaxis=dict(title="SPI Score (0–100)", range=[0, 110]),
         yaxis=dict(title="", tickfont=dict(size=10)),
@@ -114,7 +114,7 @@ def fig_spi_choropleth(A):
         showocean=True, oceancolor="#e8f4f8",
         projection_type="natural earth", bgcolor=C["white"],
     )
-    _layout(fig, "Surveillance Performance Index — Geographic Distribution", 520)
+    _layout(fig, "Surveillance Performance Index - Geographic Distribution", 520)
     fig.update_layout(geo=dict(bgcolor=C["white"]), margin=dict(l=0,r=0,t=50,b=0))
     return fig
 
@@ -146,18 +146,18 @@ def fig_spi_components(A):
     spi = A["spi"].copy().sort_values("spi", ascending=True)
     fig = go.Figure()
     dims = [
-        ("d_coverage",   "BS — Breadth Score",                   "#4a90e2"),
-        ("d_recency",    "CS — Currency Score",                   "#f7941d"),
-        ("d_regularity", "CA-ARI — Coverage-Adjusted Regularity", "#8e44ad"),
+        ("d_coverage",   "BS - Breadth Score",                   "#4a90e2"),
+        ("d_recency",    "CS - Currency Score",                   "#f7941d"),
+        ("d_regularity", "CA-ARI - Coverage-Adjusted Regularity", "#8e44ad"),
     ]
     for col, name, color in dims:
         fig.add_trace(go.Bar(
             y=spi["country"], x=spi[col],
             name=name, orientation="h",
             marker_color=color,
-            hovertemplate=f"<b>%{{y}}</b><br>{name.split('—')[0].strip()}: %{{x:.1f}}<extra></extra>",
+            hovertemplate=f"<b>%{{y}}</b><br>{name.split('-')[0].strip()}: %{{x:.1f}}<extra></extra>",
         ))
-    _layout(fig, "SPI Dimension Breakdown — BS · CS · CA-ARI (All Countries)", 1000)
+    _layout(fig, "SPI Dimension Breakdown - BS · CS · CA-ARI (All Countries)", 1000)
     fig.update_layout(
         barmode="stack",
         xaxis=dict(title="Weighted score contribution (0–100)", range=[0, 100]),
@@ -198,7 +198,7 @@ def fig_current_cycle(A):
 
 def fig_last_year_heatmap(A):
     """
-    Surveillance Recency Matrix — Country × Instrument.
+    Surveillance Recency Matrix - Country × Instrument.
     Colour = gap in years since last completed survey (green=recent, red=old, grey=never).
     Cell text = last completed year. Countries sorted by SPI rank (best at top).
     """
@@ -225,7 +225,7 @@ def fig_last_year_heatmap(A):
             yr = lym.loc[c, st]
             if pd.isna(yr):
                 zrow.append(SENTINEL)
-                trow.append("—")
+                trow.append("-")
                 hrow.append(f"<b>{c}</b><br><b>{st}</b><br><i>No completed survey on record</i>")
             else:
                 yr_int = int(yr)
@@ -255,13 +255,13 @@ def fig_last_year_heatmap(A):
     colorscale = [
         [_n(SENTINEL),       "#dde4ee"],   # no data: soft blue-grey
         [_n(SENTINEL)+0.025, "#dde4ee"],   # keep grey for sentinel zone
-        [_n(0),              "#00693e"],   # gap 0: deep emerald — perfectly current
+        [_n(0),              "#00693e"],   # gap 0: deep emerald - perfectly current
         [_n(3),              "#00a651"],   # gap 3: WHO green
-        [_n(5),              "#52c41a"],   # gap 5: bright lime — on-cycle boundary
-        [_n(8),              "#fadb14"],   # gap 8: yellow — approaching overdue
-        [_n(12),             "#fa8c16"],   # gap 12: orange — clearly overdue
-        [_n(18),             "#cf1322"],   # gap 18: deep red — critical
-        [_n(Z_MAX),          "#5c0011"],   # gap 28+: dark wine — very critical
+        [_n(5),              "#52c41a"],   # gap 5: bright lime - on-cycle boundary
+        [_n(8),              "#fadb14"],   # gap 8: yellow - approaching overdue
+        [_n(12),             "#fa8c16"],   # gap 12: orange - clearly overdue
+        [_n(18),             "#cf1322"],   # gap 18: deep red - critical
+        [_n(Z_MAX),          "#5c0011"],   # gap 28+: dark wine - very critical
     ]
 
     n_rows = len(countries)
@@ -281,7 +281,7 @@ def fig_last_year_heatmap(A):
             title=dict(text="Gap (years)", font=dict(size=11, family=FONT), side="right"),
             thickness=16, len=0.55, x=1.01,
             tickvals=[0, 5, 10, 15, 20, Z_MAX],
-            ticktext=["0 — Current", "5", "10", "15", "20", "28+"],
+            ticktext=["0 - Current", "5", "10", "15", "20", "28+"],
             tickfont=dict(size=10, family=FONT),
             outlinewidth=0,
             bgcolor="rgba(255,255,255,0)",
@@ -429,7 +429,7 @@ def fig_priority_scatter(A):
             bordercolor=lc, borderwidth=1,
         )
 
-    _layout(fig, "Strategic Quadrant — SPI Score vs Surveillance Gap (bubble size = surveys completed)", 700)
+    _layout(fig, "Strategic Quadrant - SPI Score vs Surveillance Gap (bubble size = surveys completed)", 700)
     fig.update_layout(
         xaxis=dict(title="Years Since Last Completed Survey",
                    range=[-0.5, x_max], zeroline=False),
@@ -466,10 +466,10 @@ def fig_survey_type_comparison(A):
             textposition="inside",
             insidetextanchor="middle",
             textfont=dict(size=11, color="white", family=FONT),
-            hovertemplate=f"<b>%{{y}}</b> — {label}: <b>%{{x}}</b> countries<extra></extra>",
+            hovertemplate=f"<b>%{{y}}</b> - {label}: <b>%{{x}}</b> countries<extra></extra>",
         ))
 
-    _layout(fig, "Survey Instrument Status — All 5 Types (N = 48 countries per instrument)", 320)
+    _layout(fig, "Survey Instrument Status - All 5 Types (N = 48 countries per instrument)", 320)
     fig.update_layout(
         barmode="stack",
         xaxis=dict(title="Number of Countries", range=[0, 52]),
@@ -514,7 +514,7 @@ def fig_timeline(A):
         legend=dict(orientation="h", y=-0.18),
         margin=dict(l=10, r=80, t=50, b=60),   # right margin for y2 axis labels
     )
-    # Shade current cycle (no inline annotation — add separately for clean placement)
+    # Shade current cycle (no inline annotation - add separately for clean placement)
     fig.add_vrect(x0=CURRENT_CYCLE_START - 0.5, x1=CURRENT_YEAR + 0.5,
                   fillcolor="rgba(0,166,81,0.07)", line_width=0)
     fig.add_annotation(

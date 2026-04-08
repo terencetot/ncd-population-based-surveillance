@@ -1,5 +1,5 @@
 """
-NCD Surveillance Intelligence Platform — WHO African Region
+NCD Surveillance Intelligence Platform - WHO African Region
 Configuration: constants, palette, survey metadata
 """
 from pathlib import Path
@@ -24,7 +24,7 @@ CYCLE_YEARS         = 5
 CURRENT_CYCLE_START = CURRENT_YEAR - CYCLE_YEARS    # 2021
 PREV_CYCLE_START    = CURRENT_CYCLE_START - CYCLE_YEARS  # 2016
 
-# ── SPI weights (3 dimensions — must sum to 1.0) ──────────────────────────────
+# ── SPI weights (3 dimensions - must sum to 1.0) ──────────────────────────────
 # B Coverage    (33.333%) : breadth across 5 instrument types
 # R Recency     (33.333%) : step function on gap since last completed survey
 # D Regularity  (33.334%) : average renewal cycle interval vs 5-yr standard

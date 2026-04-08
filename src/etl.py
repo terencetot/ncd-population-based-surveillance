@@ -1,5 +1,5 @@
 """
-NCD Surveillance Intelligence Platform — WHO African Region
+NCD Surveillance Intelligence Platform - WHO African Region
 ETL Pipeline: Excel → SQLite star schema
 """
 import sqlite3
@@ -238,7 +238,7 @@ def etl_steps_indicators(steps_db_path: Path, ncd_db_path: Path) -> int:
     Returns the number of measurements loaded.
     """
     if not steps_db_path.exists():
-        print(f"      WARNING: {steps_db_path.name} not found — skipping STEPS ETL")
+        print(f"      WARNING: {steps_db_path.name} not found - skipping STEPS ETL")
         return 0
 
     src = sqlite3.connect(steps_db_path)
