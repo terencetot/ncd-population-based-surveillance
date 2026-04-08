@@ -310,6 +310,12 @@ hr.section-divider{border:none;border-top:1px solid var(--border);margin:32px 0}
 .profile-no-data i{font-size:40px;opacity:.28;}
 .profile-survey-pill{display:inline-flex;align-items:center;gap:5px;background:rgba(0,61,130,.08);border:1px solid rgba(0,61,130,.18);border-radius:20px;padding:3px 11px;font-size:10.5px;font-weight:600;color:var(--primary);}
 .profile-cmp-badge{display:inline-block;font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px;vertical-align:middle;}
+/* Compare toggle */
+.profile-compare-toggle-active{background:var(--primary)!important;color:#fff!important;}
+.profile-ind-table th.col-latest{color:var(--primary);font-weight:800;}
+.profile-ind-table th.col-prev{color:var(--muted);}
+.profile-ind-table td.change-cell-up-good{background:#e6f5ec;color:#00a651;font-weight:700;border-radius:8px;}
+.profile-ind-table td.change-cell-up-bad{background:#fce8e6;color:#c0392b;font-weight:700;border-radius:8px;}
 """
 
 # ── JavaScript ─────────────────────────────────────────────────────────────────
@@ -947,58 +953,35 @@ JS = """
     charts+='<div id="profile-radar-chart" style="height:420px;"></div></div></div>';
     charts+='</div>';
 
-    // ── Section detail cards ────────────────────────────────────────────────
-    var sdiv='<div class="section-divider-label">Detailed Indicator Dashboard \u2014 All STEPS Sections</div>';
-    sdiv+='<div class="profile-section-grid">';
-    _SECTION_ORDER.forEach(function(sc){
-      var s=sec[sc]; if(!s) return;
-      var secInds=Object.entries(ind).filter(function(e){return e[1].sec===sc;});
-      sdiv+='<div class="profile-section-card reveal">';
-      sdiv+='<div class="profile-section-head" style="background:'+s.color+';">';
-      sdiv+='<i class="fas '+s.icon+'" style="color:rgba(255,255,255,.9);font-size:13px;"></i>';
-      sdiv+='<span class="sec-title">'+s.name+'</span>';
-      sdiv+='<span class="sec-step">'+s.step+'</span>';
-      sdiv+='</div>';
-      sdiv+='<div style="overflow-x:auto;">';
-      sdiv+='<table class="profile-ind-table">';
-      sdiv+='<thead><tr>';
-      sdiv+='<th style="text-align:left;min-width:130px;">Indicator</th>';
-      sdiv+='<th style="text-align:center;">Both</th>';
-      sdiv+='<th style="text-align:center;color:#2980b9;">Male</th>';
-      sdiv+='<th style="text-align:center;color:#c0392b;">Female</th>';
-      sdiv+='<th style="text-align:center;">vs AFRO</th>';
-      sdiv+='</tr></thead><tbody>';
-      secInds.forEach(function(entry,idx){
-        var code=entry[0], i2=entry[1];
-        var d=latData[code]||{}, pd=prevData[code]||{}, rv=reg[code]||{};
-        var bV=d.b!==undefined?d.b:null;
-        var mV=d.m!==undefined?d.m:null;
-        var fV=d.f!==undefined?d.f:null;
-        var rvB=rv.b!==undefined?rv.b:null;
-        var unit=i2.unit||'%';
-        var ciAttr=(d.lo!==null&&d.lo!==undefined&&d.hi!==null&&d.hi!==undefined)?
-          ' title="95% CI: '+d.lo.toFixed(1)+'\u2013'+d.hi.toFixed(1)+unit+'"':'';
-        var bStr=bV!==null?('<strong'+ciAttr+'>'+bV.toFixed(1)+'</strong><span style="font-size:9px;color:var(--muted);">'+unit+'</span>'):'<span style="color:#ccc;">\u2014</span>';
-        var mStr=mV!==null?mV.toFixed(1):'<span style="color:#ccc;">\u2014</span>';
-        var fStr=fV!==null?fV.toFixed(1):'<span style="color:#ccc;">\u2014</span>';
-        var cmpStr=_cmpRegional(bV,rvB,i2.hib,unit);
-        var tArr=_trendArrow(bV,pd.b!==undefined?pd.b:null,i2.hib);
-        var bg=idx%2===0?'#fff':'#f9fafb';
-        var lbl=i2.label.length>55?i2.label.substring(0,54)+'\u2026':i2.label;
-        sdiv+='<tr style="background:'+bg+';">';
-        sdiv+='<td style="color:var(--text);word-break:break-word;">'+lbl+(tArr?' '+tArr:'')+'</td>';
-        sdiv+='<td style="text-align:center;">'+bStr+'</td>';
-        sdiv+='<td style="text-align:center;color:#2980b9;">'+mStr+'</td>';
-        sdiv+='<td style="text-align:center;color:#c0392b;">'+fStr+'</td>';
-        sdiv+='<td style="text-align:center;">'+cmpStr+'</td>';
-        sdiv+='</tr>';
-      });
-      sdiv+='</tbody></table></div></div>';
-    });
-    sdiv+='</div>';
+    // ── Store state for re-render on toggle ────────────────────────────────
+    _profileState = {
+      latData: latData, prevData: prevData, latYr: latYr, prevYr: prevYr,
+      ind: ind, sec: sec, reg: reg, hasMulti: hasMulti, tier: p.tier,
+      country: country
+    };
+    _secShowCompare = false;
+
+    // ── Section divider with toggle button ─────────────────────────────────
+    var sdivLabel='<div style="display:flex;align-items:center;gap:16px;margin:28px 0 18px;flex-wrap:wrap;">';
+    sdivLabel+='<div class="section-divider-label" style="flex:1;margin:0;">Detailed Indicator Dashboard \u2014 All STEPS Sections</div>';
+    if(hasMulti){
+      sdivLabel+='<button id="sec-compare-toggle" onclick="_toggleSectionCompare()" '
+        +'style="display:inline-flex;align-items:center;gap:7px;font-family:var(--font);font-size:11.5px;font-weight:700;'
+        +'padding:7px 16px;border-radius:22px;border:2px solid var(--primary);background:#fff;color:var(--primary);'
+        +'cursor:pointer;transition:all .22s;white-space:nowrap;" '
+        +'onmouseover="this.style.background=\'var(--primary)\';this.style.color=\'#fff\'" '
+        +'onmouseout="if(!_secShowCompare){this.style.background=\'#fff\';this.style.color=\'var(--primary)\'}">'
+        +'<i class="fas fa-exchange-alt"></i> Compare vs '+prevYr+'</button>';
+    }
+    sdivLabel+='</div>';
+
+    // ── Section grid placeholder (filled by _renderSectionDetail) ──────────
+    var sdiv=sdivLabel+'<div id="profile-section-detail-grid"></div>';
 
     document.getElementById('country-profile-content').innerHTML=
       hdr+kpi+charts+sdiv;
+
+    _renderSectionDetail(false);
 
     // ── Render Plotly charts ────────────────────────────────────────────────
     setTimeout(function(){
@@ -1008,6 +991,169 @@ JS = """
       });
       window.dispatchEvent(new Event('resize'));
     },80);
+  }
+
+  // ── Section state ───────────────────────────────────────────────────────────
+  var _profileState = {};
+  var _secShowCompare = false;
+
+  function _toggleSectionCompare() {
+    _secShowCompare = !_secShowCompare;
+    var btn = document.getElementById('sec-compare-toggle');
+    if(btn) {
+      btn.style.background   = _secShowCompare ? 'var(--primary)' : '#fff';
+      btn.style.color        = _secShowCompare ? '#fff'           : 'var(--primary)';
+      btn.innerHTML = '<i class="fas fa-exchange-alt"></i> '
+        + (_secShowCompare
+            ? 'Latest (' + _profileState.latYr + ') view'
+            : 'Compare vs ' + _profileState.prevYr);
+    }
+    _renderSectionDetail(_secShowCompare);
+  }
+
+  function _renderSectionDetail(showCompare) {
+    var el = document.getElementById('profile-section-detail-grid');
+    if(!el) return;
+    var s   = _profileState;
+    var latData  = s.latData  || {};
+    var prevData = s.prevData || {};
+    var latYr    = s.latYr;
+    var prevYr   = s.prevYr;
+    var ind      = s.ind  || {};
+    var sec      = s.sec  || {};
+    var reg      = s.reg  || {};
+
+    var grid = '<div class="profile-section-grid">';
+    _SECTION_ORDER.forEach(function(sc){
+      var sv = sec[sc]; if(!sv) return;
+      var secInds = Object.entries(ind).filter(function(e){return e[1].sec===sc;});
+
+      grid += '<div class="profile-section-card">';
+      grid += '<div class="profile-section-head" style="background:'+sv.color+';">';
+      grid += '<i class="fas '+sv.icon+'" style="color:rgba(255,255,255,.9);font-size:13px;"></i>';
+      grid += '<span class="sec-title">'+sv.name+'</span>';
+
+      if(showCompare && prevYr) {
+        grid += '<span class="sec-step" style="background:rgba(255,255,255,.18);border-radius:8px;padding:2px 8px;font-size:9px;font-weight:700;">'
+               + latYr + ' vs ' + prevYr + '</span>';
+      } else {
+        grid += '<span class="sec-step">'+sv.step+'</span>';
+      }
+      grid += '</div>';
+
+      grid += '<div style="overflow-x:auto;">';
+      grid += '<table class="profile-ind-table">';
+      grid += '<thead><tr>';
+      grid += '<th style="text-align:left;min-width:140px;">Indicator</th>';
+
+      if(showCompare && prevYr) {
+        // Comparison mode columns
+        grid += '<th style="text-align:center;color:#003d82;font-weight:800;">'
+               + latYr + '<br><span style="font-size:8px;font-weight:600;opacity:.75;">(latest)</span></th>';
+        grid += '<th style="text-align:center;color:#6b7280;">'
+               + prevYr + '<br><span style="font-size:8px;font-weight:600;opacity:.75;">(previous)</span></th>';
+        grid += '<th style="text-align:center;min-width:72px;">Change</th>';
+        grid += '<th style="text-align:center;font-size:9px;white-space:nowrap;">'
+               + '<span style="color:#2980b9;">M</span> &middot; '
+               + '<span style="color:#c0392b;">F</span></th>';
+      } else {
+        // Default mode columns
+        grid += '<th style="text-align:center;">Both</th>';
+        grid += '<th style="text-align:center;color:#2980b9;">Male</th>';
+        grid += '<th style="text-align:center;color:#c0392b;">Female</th>';
+        grid += '<th style="text-align:center;">vs AFRO</th>';
+      }
+      grid += '</tr></thead><tbody>';
+
+      secInds.forEach(function(entry, idx){
+        var code = entry[0], i2 = entry[1];
+        var d  = latData[code]  || {};
+        var pd = prevData[code] || {};
+        var rv = reg[code]      || {};
+        var bV  = d.b  !== undefined ? d.b  : null;
+        var mV  = d.m  !== undefined ? d.m  : null;
+        var fV  = d.f  !== undefined ? d.f  : null;
+        var pbV = pd.b !== undefined ? pd.b : null;
+        var pmV = pd.m !== undefined ? pd.m : null;
+        var pfV = pd.f !== undefined ? pd.f : null;
+        var rvB = rv.b !== undefined ? rv.b : null;
+        var unit = i2.unit || '%';
+        var hib  = i2.hib;
+        var bg   = idx % 2 === 0 ? '#fff' : '#f9fafb';
+        var lbl  = i2.label.length > 58 ? i2.label.substring(0, 57) + '\u2026' : i2.label;
+        var ciAttr = (d.lo !== null && d.lo !== undefined && d.hi !== null && d.hi !== undefined)
+          ? ' title="95% CI: ' + d.lo.toFixed(1) + '\u2013' + d.hi.toFixed(1) + unit + '"' : '';
+
+        grid += '<tr style="background:' + bg + ';">';
+        grid += '<td style="color:var(--text);word-break:break-word;font-size:11px;">' + lbl + '</td>';
+
+        if(showCompare && prevYr) {
+          // Latest value
+          var latStr = bV !== null
+            ? '<strong' + ciAttr + '>' + bV.toFixed(1) + '</strong>'
+              + '<span style="font-size:8.5px;color:var(--muted);">' + unit + '</span>'
+            : '<span style="color:#ccc;">\u2014</span>';
+          // Previous value
+          var prevStr = pbV !== null
+            ? '<span style="color:#6b7280;">' + pbV.toFixed(1)
+              + '<span style="font-size:8.5px;"> ' + unit + '</span></span>'
+            : '<span style="color:#ccc;">\u2014</span>';
+          // Change cell
+          var changeStr = '';
+          if(bV !== null && pbV !== null) {
+            var diff = bV - pbV;
+            var absDiff = Math.abs(diff);
+            var up = diff > 0;
+            // good = direction that is beneficial
+            var good = (hib === null || hib === undefined) ? null : (hib ? up : !up);
+            var clr = good === null ? '#6b7280' : (good ? '#00a651' : '#c0392b');
+            var bgClr = good === null ? '#f5f5f5' : (good ? '#e6f5ec' : '#fce8e6');
+            var sym = up ? '\u2191' : '\u2193';
+            if(absDiff < 0.1) {
+              changeStr = '<span style="color:#6b7280;font-size:12px;">\u2248</span>';
+            } else {
+              changeStr = '<span style="display:inline-flex;align-items:center;gap:3px;'
+                + 'background:' + bgClr + ';color:' + clr + ';font-weight:700;font-size:11px;'
+                + 'padding:2px 7px;border-radius:8px;">'
+                + sym + ' ' + absDiff.toFixed(1) + '</span>';
+            }
+          } else {
+            changeStr = '<span style="color:#ccc;">\u2014</span>';
+          }
+          // M · F (latest)
+          var mfStr = '';
+          if(mV !== null || fV !== null) {
+            if(mV !== null) mfStr += '<span style="color:#2980b9;font-weight:600;">'  + mV.toFixed(1) + '</span>';
+            if(mV !== null && fV !== null) mfStr += '<span style="color:#ccc;font-size:9px;"> / </span>';
+            if(fV !== null) mfStr += '<span style="color:#c0392b;font-weight:600;">' + fV.toFixed(1) + '</span>';
+          } else {
+            mfStr = '<span style="color:#ccc;">\u2014</span>';
+          }
+          grid += '<td style="text-align:center;">' + latStr + '</td>';
+          grid += '<td style="text-align:center;">' + prevStr + '</td>';
+          grid += '<td style="text-align:center;">' + changeStr + '</td>';
+          grid += '<td style="text-align:center;font-size:11px;">' + mfStr + '</td>';
+        } else {
+          // Default mode
+          var bStr = bV !== null
+            ? '<strong' + ciAttr + '>' + bV.toFixed(1) + '</strong>'
+              + '<span style="font-size:9px;color:var(--muted);">' + unit + '</span>'
+            : '<span style="color:#ccc;">\u2014</span>';
+          var mStr = mV !== null ? mV.toFixed(1)  : '<span style="color:#ccc;">\u2014</span>';
+          var fStr = fV !== null ? fV.toFixed(1)  : '<span style="color:#ccc;">\u2014</span>';
+          var cmpStr = _cmpRegional(bV, rvB, hib, unit);
+          var tArr   = _trendArrow(bV, pbV, hib);
+          grid += '<td style="text-align:center;">' + bStr + '</td>';
+          grid += '<td style="text-align:center;color:#2980b9;">' + mStr + '</td>';
+          grid += '<td style="text-align:center;color:#c0392b;">' + fStr + '</td>';
+          grid += '<td style="text-align:center;">' + (tArr || cmpStr) + '</td>';
+        }
+        grid += '</tr>';
+      });
+      grid += '</tbody></table></div></div>';
+    });
+    grid += '</div>';
+    el.innerHTML = grid;
   }
 
   // ── Radar: NCD Burden Profile ───────────────────────────────────────────────
