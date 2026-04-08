@@ -828,11 +828,12 @@ JS = """
     {code:'risk_3plus_pct',                label:'Multi-Risk'},
   ];
   var _KPI_CFG = [
-    {code:'tobacco_current_smoke_pct',  icon:'fa-smoking',            label:'Tobacco Use',         col:'#c0392b'},
-    {code:'bp_raised_140_pct',          icon:'fa-heartbeat',          label:'Raised Blood Pressure',col:'#e74c3c'},
-    {code:'bmi_obese_pct',              icon:'fa-weight',             label:'Obesity (BMI\u226530)',col:'#e67e22'},
-    {code:'glucose_raised_7_pct',       icon:'fa-tint',               label:'Raised Glucose',      col:'#d35400'},
-    {code:'risk_3plus_pct',             icon:'fa-exclamation-circle', label:'3+ Risk Factors',     col:'#2c3e50'},
+    {code:'tobacco_current_smoke_pct',  icon:'fa-smoking',            label:'Tobacco Use',          col:'#c0392b'},
+    {code:'alcohol_binge_pct',          icon:'fa-wine-glass-alt',     label:'Heavy/Binge Drinking',  col:'#8e44ad'},
+    {code:'bp_raised_140_pct',          icon:'fa-heartbeat',          label:'Raised Blood Pressure', col:'#e74c3c'},
+    {code:'bmi_obese_pct',              icon:'fa-weight',             label:'Obesity (BMI\u226530)', col:'#e67e22'},
+    {code:'glucose_raised_7_pct',       icon:'fa-tint',               label:'Raised Glucose',        col:'#d35400'},
+    {code:'risk_3plus_pct',             icon:'fa-exclamation-circle', label:'3+ Risk Factors',       col:'#2c3e50'},
   ];
   var _TIER_CLR = {1:'#00a651',2:'#4a90e2',3:'#f7941d',4:'#c0392b'};
 
@@ -892,7 +893,6 @@ JS = """
     hdr+='<div style="font-size:22px;font-weight:900;color:var(--dark);letter-spacing:-.025em;">'+country+'</div>';
     hdr+='<div style="font-size:12px;color:var(--muted);margin-top:5px;display:flex;flex-wrap:wrap;gap:10px;">';
     hdr+='<span class="profile-survey-pill"><i class="fas fa-flask"></i>&nbsp;STEPS surveys: <strong>'+yrsStr+'</strong></span>';
-    hdr+='<span class="profile-survey-pill"><i class="fas fa-users"></i>&nbsp;Latest n\u2009=\u2009'+nStr+'</span>';
     if(latS.rr) hdr+='<span class="profile-survey-pill"><i class="fas fa-percentage"></i>&nbsp;Response rate: '+latS.rr+'%</span>';
     hdr+='</div></div></div>';
     hdr+='<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">';
@@ -939,35 +939,13 @@ JS = """
     });
     kpi+='</div>';
 
-    // ── Charts row (radar + regional compare) ──────────────────────────────
+    // ── Radar chart (full width) ────────────────────────────────────────────
     var charts='<div class="row" style="margin-bottom:20px;">';
-    charts+='<div class="col-6"><div class="chart-card reveal">';
+    charts+='<div class="col-12"><div class="chart-card reveal">';
     charts+='<h3 style="font-size:13px;font-weight:700;color:var(--primary);margin-bottom:4px;"><i class="fas fa-chart-area"></i>&nbsp; NCD Burden Profile \u2014 9 Risk Factor Domains</h3>';
-    charts+='<p style="font-size:11px;color:var(--muted);margin-bottom:6px;">Headline indicator per domain vs AFRO average \u2014 survey year: <strong>'+latYr+'</strong></p>';
-    charts+='<div id="profile-radar-chart" style="height:380px;"></div></div></div>';
-    charts+='<div class="col-6"><div class="chart-card reveal">';
-    charts+='<h3 style="font-size:13px;font-weight:700;color:var(--primary);margin-bottom:4px;"><i class="fas fa-balance-scale"></i>&nbsp; Regional Benchmark \u2014 vs WHO AFRO Average</h3>';
-    charts+='<p style="font-size:11px;color:var(--muted);margin-bottom:6px;">Country value (coloured) vs AFRO mean (grey). \u25b2\u2009above average \u00b7 \u25bc\u2009below average</p>';
-    charts+='<div id="profile-compare-chart" style="height:380px;"></div></div></div>';
+    charts+='<p style="font-size:11px;color:var(--muted);margin-bottom:6px;">Headline indicator per domain vs WHO AFRO average \u2014 survey year: <strong>'+latYr+'</strong></p>';
+    charts+='<div id="profile-radar-chart" style="height:420px;"></div></div></div>';
     charts+='</div>';
-
-    // ── Trend chart (multi only) ────────────────────────────────────────────
-    var trend='';
-    if(hasMulti){
-      trend='<div class="row" style="margin-bottom:20px;">';
-      trend+='<div class="col-12"><div class="chart-card reveal">';
-      trend+='<h3 style="font-size:13px;font-weight:700;color:var(--primary);margin-bottom:4px;"><i class="fas fa-chart-line"></i>&nbsp; Trend Analysis \u2014 Key NCD Indicators Over Time</h3>';
-      trend+='<p style="font-size:11px;color:var(--muted);margin-bottom:8px;">';
-      trend+=surveys.length+' STEPS survey rounds \u00b7 '+surveys[0].year+'\u2013'+latYr+' \u00b7 Both-sexes estimates with 95% CI bands</p>';
-      trend+='<div id="profile-trend-chart" style="height:420px;"></div></div></div></div>';
-    }
-
-    // ── Sex disaggregation chart ────────────────────────────────────────────
-    var sexC='<div class="row" style="margin-bottom:20px;">';
-    sexC+='<div class="col-12"><div class="chart-card reveal">';
-    sexC+='<h3 style="font-size:13px;font-weight:700;color:var(--primary);margin-bottom:4px;"><i class="fas fa-venus-mars"></i>&nbsp; Sex Disaggregation \u2014 Headline Risk Factors</h3>';
-    sexC+='<p style="font-size:11px;color:var(--muted);margin-bottom:8px;">Male vs Female estimates for the 9 headline NCD risk indicators \u00b7 survey year: <strong>'+latYr+'</strong></p>';
-    sexC+='<div id="profile-sex-chart" style="height:400px;"></div></div></div></div>';
 
     // ── Section detail cards ────────────────────────────────────────────────
     var sdiv='<div class="section-divider-label">Detailed Indicator Dashboard \u2014 All STEPS Sections</div>';
@@ -1019,24 +997,12 @@ JS = """
     });
     sdiv+='</div>';
 
-    // ── Data notes ─────────────────────────────────────────────────────────
-    var notes='<div style="background:#fffbeb;border:1px solid #fde68a;border-left:4px solid #f59e0b;border-radius:10px;padding:12px 16px;font-size:11.5px;color:#78350f;margin-bottom:24px;line-height:1.75;">';
-    notes+='<i class="fas fa-info-circle" style="margin-right:6px;color:#f59e0b;"></i>';
-    notes+='<strong>Data notes:</strong> Values from the most recent completed STEPS survey (<strong>'+latYr+'</strong>). ';
-    notes+='AFRO average computed from latest survey per country across <strong>'+(STEPS_PROFILE_DATA.countries?STEPS_PROFILE_DATA.countries.length:'?')+' countries</strong>. ';
-    notes+='Hover over Both-Sexes values to see 95% confidence intervals. ';
-    if(hasMulti) notes+='Trend arrows (\u2191\u2193) reflect change vs <strong>'+prevYr+'</strong>; green\u2009=\u2009improvement, red\u2009=\u2009deterioration.';
-    notes+='</div>';
-
     document.getElementById('country-profile-content').innerHTML=
-      hdr+kpi+charts+trend+sexC+sdiv+notes;
+      hdr+kpi+charts+sdiv;
 
     // ── Render Plotly charts ────────────────────────────────────────────────
     setTimeout(function(){
       _renderProfileRadar(latData,country,reg,sec,ind,p.tier);
-      _renderProfileCompare(latData,country,reg,ind,sec);
-      if(hasMulti) _renderProfileTrend(p,ind);
-      _renderProfileSexChart(latData,country,ind,reg);
       document.querySelectorAll('#country-profile-content .reveal').forEach(function(el){
         el.classList.add('visible');
       });
@@ -2171,18 +2137,18 @@ def build_html(A: dict) -> str:
         <!-- SPI -->
         <div class="method-card reveal" style="border-top:4px solid #0070c0;">
           <h4 style="color:#0070c0;"><i class="fas fa-tachometer-alt"></i>&nbsp; Surveillance Performance Index (SPI)</h4>
-          <p style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.7;">
-            A composite score (0&ndash;100) measuring the breadth, currency, and sustainability of a country&rsquo;s NCD surveillance system across <strong>three conceptually distinct and equally weighted dimensions</strong>.
+          <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.8;">
+            The SPI is a composite score from <strong>0 to 100</strong> that summarises how well a country&rsquo;s NCD surveillance system is performing across three equally weighted dimensions. It is designed for <strong>relative ranking and trend monitoring</strong> across WHO AFRO Member States.
           </p>
           <ul>
-            <li><strong>Breadth Score — BS (33.3%)</strong> &mdash; Count of distinct instrument types completed at least once, divided by 5. BS &isin; {0, 0.2, 0.4, 0.6, 0.8, 1.0}. Structural and permanent — measures institutional capacity, not time-decay. Orthogonal to CS because it is discrete and non-decaying.</li>
-            <li><strong>Currency Score — CS (33.3%)</strong> &mdash; Single exponential decay over the entire surveillance portfolio: c&#8336; = exp(&minus;&mu;&thinsp;&middot;&thinsp;g&#8336;), &mu; = ln(2)/7 (7-yr half-life); c&#8336;&nbsp;=&nbsp;0 for instruments never completed. CS = mean(c&#8336;) over all 5 types. Captures evidence currency continuously — no threshold artefacts, no double-penalisation.</li>
-            <li><strong>Coverage-Adjusted Regularity — CA-ARI (33.3%)</strong> &mdash; For each instrument with &#8805;&nbsp;2 completed rounds: d&#8336;&nbsp;=&nbsp;min(1,&thinsp;5&thinsp;&divide;&thinsp;avg&thinsp;interval). ARI = mean(d&#8336;) over assessable instruments; CA-ARI = ARI &times; (|A|&thinsp;/&thinsp;5). Adjusts for partial assessability — countries with few renewable instruments score proportionally lower, but the formula is universal: CA-ARI = 0 when no instrument has ≥2 rounds, eliminating the need for a separate SPI* formula.</li>
+            <li style="margin-bottom:8px;"><strong style="color:#003d82;">Breadth</strong> &mdash; Has the country ever completed each of the five NCD surveillance instruments? A country that has used more instruments scores higher on this dimension, reflecting the <em>institutional range</em> of its surveillance system.</li>
+            <li style="margin-bottom:8px;"><strong style="color:#003d82;">Currency</strong> &mdash; How recent is the available evidence? Older surveys contribute progressively less, with evidence value halving roughly every seven years. This dimension rewards countries that keep their data fresh and penalises those whose most recent survey is distant in time.</li>
+            <li><strong style="color:#003d82;">Regularity</strong> &mdash; Does the country survey on schedule? Countries that complete each instrument close to the WHO-recommended five-year cycle score well. This dimension is only applicable when a country has conducted a given instrument at least twice &mdash; a single round is not enough to assess cycling behaviour.</li>
           </ul>
-          <div style="background:#f0f6ff;border-radius:8px;padding:10px 14px;margin-top:10px;font-size:11.5px;color:#003d82;font-weight:600;text-align:center;letter-spacing:.1px;line-height:1.9;">
-            SPI &nbsp;=&nbsp; 100 &times; (BS &nbsp;+&nbsp; CS &nbsp;+&nbsp; CA-ARI) / 3
-          </div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;">
+          <p style="font-size:11.5px;color:var(--muted);margin-top:12px;margin-bottom:12px;line-height:1.75;font-style:italic;">
+            The three dimensions are equally weighted and combined into a single score. Countries that have never conducted any survey score zero. Countries with broad, current, and regular surveillance score toward 100.
+          </p>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
             <span style="background:#00a651;color:#fff;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;">Strong &#8805;75</span>
             <span style="background:#4a90e2;color:#fff;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;">Advancing 50&ndash;74</span>
             <span style="background:#f7941d;color:#fff;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;">Developing 30&ndash;49</span>
@@ -2247,9 +2213,6 @@ def build_html(A: dict) -> str:
       <div>
         <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.9);line-height:1.6;">
           &copy; {CURRENT_YEAR} WHO African Region &ndash; Health Promotion / Disease Prevention and Control (DPC) Cluster
-        </div>
-        <div style="font-size:10.5px;color:rgba(255,255,255,.45);margin-top:3px;">
-          For internal use &nbsp;&middot;&nbsp; WHO AFRO NCD Programme &nbsp;&middot;&nbsp; Generated {REPORT_DATE}
         </div>
       </div>
     </div>
