@@ -942,18 +942,6 @@ JS = """
     });
     kpi+='</div>';
 
-    // ── Radar chart (full width) ────────────────────────────────────────────
-    var charts='<div class="row" style="margin-bottom:20px;">';
-    charts+='<div class="col-12"><div class="chart-card reveal">';
-    charts+='<h3 style="font-size:13px;font-weight:700;color:var(--primary);margin-bottom:4px;"><i class="fas fa-chart-bar"></i>&nbsp; NCD Risk Factor Burden — 9 Domains Ranked</h3>';
-    charts+='<p style="font-size:11px;color:var(--muted);margin-bottom:6px;">'
-      +'% of population affected &middot; survey year: <strong>'+latYr+'</strong> &middot; '
-      +'<span style="color:#00a651;font-weight:600;">&#9632; Below AFRO average (lower burden)</span>'
-      +' &nbsp;<span style="color:#c0392b;font-weight:600;">&#9632; Above AFRO average (higher burden)</span>'
-      +' &nbsp;<span style="color:#14265c;font-weight:600;">&#9670; AFRO average</span></p>';
-    charts+='<div id="profile-radar-chart" style="height:380px;"></div></div></div>';
-    charts+='</div>';
-
     // ── Store state for re-render on toggle ────────────────────────────────
     _profileState = {
       latData: latData, prevData: prevData, latYr: latYr, prevYr: prevYr,
@@ -965,13 +953,12 @@ JS = """
     sdiv+='<div id="profile-section-detail-grid"></div>';
 
     document.getElementById('country-profile-content').innerHTML=
-      hdr+kpi+charts+sdiv;
+      hdr+kpi+sdiv;
 
     _renderSectionDetail();
 
     // ── Render Plotly charts ────────────────────────────────────────────────
     setTimeout(function(){
-      _renderProfileDomainChart(latData,country,reg,ind,p.tier);
       document.querySelectorAll('#country-profile-content .reveal').forEach(function(el){
         el.classList.add('visible');
       });
@@ -1056,79 +1043,7 @@ JS = """
     el.innerHTML = grid;
   }
 
-  // ── Domain Bar Chart: NCD Burden Profile ─────────────────────────────────────
-  function _renderProfileDomainChart(latData,country,reg,ind,tier){
-    var divId='profile-radar-chart';
-    if(!document.getElementById(divId)||typeof Plotly==='undefined') return;
-
-    // Build domain rows (all 9 indicators are lower-is-better: lower % = lower burden)
-    var rows=[];
-    _RADAR_CFG.forEach(function(r){
-      var d=latData[r.code]||{}, rv=reg[r.code]||{};
-      var cv =(d.b !==null&&d.b !==undefined)?d.b :null;
-      var afr=(rv.b!==null&&rv.b!==undefined)?rv.b:null;
-      var worse=(cv!==null&&afr!==null)?cv>afr:null;
-      var clr=worse===null?'#adb5bd':(worse?'#c0392b':'#00a651');
-      rows.push({label:r.label,cv:cv,afr:afr,clr:clr,worse:worse});
-    });
-
-    var hasData=rows.some(function(r){return r.cv!==null;});
-    if(!hasData){
-      document.getElementById(divId).innerHTML=
-        '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-size:13px;">No data for this country</div>';
-      return;
-    }
-
-    // Sort by country value descending so highest burden is at top
-    rows=rows.slice().sort(function(a,b){
-      if(a.cv===null) return 1; if(b.cv===null) return -1; return b.cv-a.cv;
-    }).reverse(); // Plotly renders bottom-to-top, so reverse to put highest at visual top
-
-    var yLbls=rows.map(function(r){return r.label;});
-    var xC   =rows.map(function(r){return r.cv;});
-    var xA   =rows.map(function(r){return r.afr;});
-    var clrs =rows.map(function(r){return r.clr;});
-    var txtC =rows.map(function(r){return r.cv!==null?r.cv.toFixed(1)+'%':'';});
-    var htC  =rows.map(function(r){
-      var cStr=r.cv !==null?r.cv.toFixed(1) +'%':'N/A';
-      var aStr=r.afr!==null?r.afr.toFixed(1)+'%':'N/A';
-      var cmp =r.worse===null?'':(r.worse?' — above AFRO avg':' — below AFRO avg');
-      return '<b>'+country+'</b>: '+cStr+cmp+'<br>AFRO average: '+aStr;
-    });
-    var htA=rows.map(function(r){
-      var aStr=r.afr!==null?r.afr.toFixed(1)+'%':'N/A';
-      var cStr=r.cv !==null?r.cv.toFixed(1) +'%':'N/A';
-      return '<b>AFRO average</b>: '+aStr+'<br>'+country+': '+cStr;
-    });
-
-    var allVals=xC.concat(xA).filter(function(v){return v!==null;});
-    var xMax=allVals.length?Math.min(100,Math.max.apply(null,allVals)+8):80;
-
-    try{Plotly.react(divId,[
-      {type:'bar',orientation:'h',x:xC,y:yLbls,name:country,
-       marker:{color:clrs,opacity:0.82,line:{color:'rgba(0,0,0,.1)',width:0.5}},
-       text:txtC,textposition:'auto',
-       textfont:{size:10.5,family:_FONT,color:'#fff'},
-       customdata:htC,hovertemplate:'%{customdata}<extra></extra>'},
-      {type:'scatter',mode:'markers',x:xA,y:yLbls,name:'AFRO Avg',
-       marker:{symbol:'diamond',size:11,color:'#14265c',line:{color:'#fff',width:1.5}},
-       customdata:htA,hovertemplate:'%{customdata}<extra></extra>'},
-    ],{
-      barmode:'overlay',
-      xaxis:{title:{text:'Prevalence (%)',font:{size:11,color:'#6b7280',family:_FONT}},
-             range:[0,xMax],tickfont:{size:10,family:_FONT},
-             showgrid:true,gridcolor:'#f0f4fa',zeroline:false},
-      yaxis:{tickfont:{size:11,family:_FONT,color:'#333e5c'},automargin:true},
-      showlegend:true,
-      legend:{orientation:'h',y:-0.18,x:0.5,xanchor:'center',font:{size:11,family:_FONT},traceorder:'normal'},
-      margin:{l:10,r:20,t:12,b:60},
-      paper_bgcolor:'#fff',plot_bgcolor:'#fff',
-      font:{family:_FONT,size:11,color:'#333e5c'},
-      hoverlabel:{bgcolor:'#14265c',font_size:12,font_family:_FONT,font_color:'#fff'},
-    },{responsive:true,displayModeBar:false});}catch(e){console.warn('Domain chart error',e);}
-  }
-
-    // ── Compare: Regional Benchmark ─────────────────────────────────────────────
+  // ── Compare: Regional Benchmark ─────────────────────────────────────────────
   function _renderProfileCompare(latData,country,reg,ind,sec){
     var divId='profile-compare-chart';
     if(!document.getElementById(divId)||typeof Plotly==='undefined') return;
