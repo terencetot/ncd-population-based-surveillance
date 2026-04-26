@@ -425,6 +425,7 @@ def build_steps_profile_data(ncd_db_path: Path, spi_df: pd.DataFrame) -> dict:
         "S1_ALC": {"color": "#8e44ad", "icon": "fa-wine-glass-alt"},
         "S1_DIT": {"color": "#27ae60", "icon": "fa-apple-alt"},
         "S1_PAC": {"color": "#2980b9", "icon": "fa-running"},
+        "S1_SAL": {"color": "#1a7fc1", "icon": "fa-utensils"},
         "S2_BPR": {"color": "#e74c3c", "icon": "fa-heartbeat"},
         "S2_ANT": {"color": "#e67e22", "icon": "fa-weight"},
         "S3_GLU": {"color": "#d35400", "icon": "fa-tint"},
