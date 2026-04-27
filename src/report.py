@@ -850,15 +850,6 @@ JS = """
     return '<span style="color:'+clr+';font-weight:700;">'+(up?'\u2191':'\u2193')+' '+abs.toFixed(1)+'</span>';
   }
 
-  function _cmpRegional(val, reg, hib, unit) {
-    if(val===null||val===undefined||reg===null||reg===undefined) return '<span style="color:#ccc;">&#8212;</span>';
-    var diff=val-reg, abs=Math.abs(diff);
-    var better= hib===null||hib===undefined ? null : (hib?diff>1:diff<-1);
-    var worse = hib===null||hib===undefined ? null : (hib?diff<-1:diff>1);
-    var clr = worse?'#c0392b':(better?'#00a651':'#6b7280');
-    var sym = worse?'\u25b2':(better?'\u25bc':'\u2248');
-    return '<span class="profile-cmp-badge" style="background:'+(worse?'#fce8e6':(better?'#e6f5ec':'#f0f0f5'))+';color:'+clr+';">'+sym+' '+reg.toFixed(1)+unit+'</span>';
-  }
 
   function renderCountryProfile(country) {
     if(!STEPS_PROFILE_DATA||!STEPS_PROFILE_DATA.profiles){
@@ -1000,19 +991,17 @@ JS = """
       grid += '<th style="text-align:center;">Both</th>';
       grid += '<th style="text-align:center;color:#2980b9;">Male</th>';
       grid += '<th style="text-align:center;color:#c0392b;">Female</th>';
-      grid += '<th style="text-align:center;">vs AFRO</th>';
+      grid += '<th style="text-align:center;">Trend</th>';
       grid += '</tr></thead><tbody>';
 
       secInds.forEach(function(entry, idx){
         var code = entry[0], i2 = entry[1];
         var d  = latData[code]  || {};
         var pd = prevData[code] || {};
-        var rv = reg[code]      || {};
         var bV  = d.b  !== undefined ? d.b  : null;
         var mV  = d.m  !== undefined ? d.m  : null;
         var fV  = d.f  !== undefined ? d.f  : null;
         var pbV = pd.b !== undefined ? pd.b : null;
-        var rvB = rv.b !== undefined ? rv.b : null;
         var unit = i2.unit || '%';
         var hib  = i2.hib;
         var bg   = idx % 2 === 0 ? '#fff' : '#f9fafb';
@@ -1026,15 +1015,14 @@ JS = """
           : '<span style="color:#ccc;">\u2014</span>';
         var mStr = mV !== null ? mV.toFixed(1)  : '<span style="color:#ccc;">\u2014</span>';
         var fStr = fV !== null ? fV.toFixed(1)  : '<span style="color:#ccc;">\u2014</span>';
-        var cmpStr = _cmpRegional(bV, rvB, hib, unit);
-        var tArr   = _trendArrow(bV, pbV, hib);
+        var tArr = _trendArrow(bV, pbV, hib);
 
         grid += '<tr style="background:' + bg + ';">';
         grid += '<td style="color:var(--text);word-break:break-word;font-size:11px;">' + lbl + '</td>';
         grid += '<td style="text-align:center;">' + bStr + '</td>';
         grid += '<td style="text-align:center;color:#2980b9;">' + mStr + '</td>';
         grid += '<td style="text-align:center;color:#c0392b;">' + fStr + '</td>';
-        grid += '<td style="text-align:center;">' + (tArr || cmpStr) + '</td>';
+        grid += '<td style="text-align:center;">' + (tArr || '<span style="color:#ccc;">\u2014</span>') + '</td>';
         grid += '</tr>';
       });
       grid += '</tbody></table></div></div>';
