@@ -1175,6 +1175,104 @@ JS = """
   if(_profSel){
     _profSel.addEventListener('change',function(){renderCountryProfile(this.value);});
   }
+
+  // ── Excel export (XML Spreadsheet 2003) ──────────────────────────────────────
+  function _xlEsc(v) {
+    return String(v === null || v === undefined ? '' : v)
+      .split('&').join('&amp;')
+      .split('<').join('&lt;')
+      .split('>').join('&gt;');
+  }
+
+  function _buildXLS(rows) {
+    var Q   = '"';
+    var xml = '<?xml version=' +Q+'1.0'+Q+' encoding='+Q+'UTF-8'+Q+'?>'
+            + '<Workbook xmlns='+Q+'urn:schemas-microsoft-com:office:spreadsheet'+Q
+            + ' xmlns:ss='+Q+'urn:schemas-microsoft-com:office:spreadsheet'+Q+'>'
+            + '<Worksheet ss:Name='+Q+'Data'+Q+'><Table>';
+    rows.forEach(function(row) {
+      xml += '<Row>';
+      row.forEach(function(cell) {
+        var t = (typeof cell === 'number') ? 'Number' : 'String';
+        xml += '<Cell><Data ss:Type='+Q+t+Q+'>'+_xlEsc(cell)+'</Data></Cell>';
+      });
+      xml += '</Row>';
+    });
+    return xml + '</Table></Worksheet></Workbook>';
+  }
+
+  function _saveXLS(filename, rows) {
+    var xml  = _buildXLS(rows);
+    var link = document.createElement('a');
+    link.style.display = 'none';
+    link.setAttribute('download', filename);
+    link.setAttribute('href',
+      'data:application/vnd.ms-excel;charset=utf-8,' + encodeURIComponent(xml));
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(function() { document.body.removeChild(link); }, 500);
+  }
+
+  // ── SPI export ────────────────────────────────────────────────────────────────
+  var _SPI_TABLE = __SPI_TABLE_PLACEHOLDER__;
+
+  function _doExportSPI() {
+    var rows = [['Rank','Country','ISO3','SPI Score','Tier','Tier Label',
+                 'Breadth (%)','Currency (%)','Regularity (%)','Last Survey Year',
+                 'Gap (years)','Completed Surveys','Instrument Types Used']];
+    (_SPI_TABLE || []).forEach(function(r, i) {
+      rows.push([
+        i + 1, r.country, r.iso3 || '', r.spi, r.tier, r.tier_label,
+        r.d_coverage, r.d_recency,
+        (r.d_regularity !== null && r.d_regularity !== undefined) ? r.d_regularity : '',
+        (r.last_year    !== null && r.last_year    !== undefined) ? r.last_year    : '',
+        (r.gap_years    !== null && r.gap_years    !== undefined) ? r.gap_years    : '',
+        r.n_done, r.types_done
+      ]);
+    });
+    _saveXLS('NCD_AFRO_SPI_Rankings.xls', rows);
+  }
+
+  // ── Country Profile export ────────────────────────────────────────────────────
+  function _doExportProfile() {
+    if (!_profileCurrent) {
+      alert('Please select a country from the dropdown first.');
+      return;
+    }
+    if (!STEPS_PROFILE_DATA || !STEPS_PROFILE_DATA.profiles) return;
+    var p = STEPS_PROFILE_DATA.profiles[_profileCurrent]; if (!p) return;
+    var ind = STEPS_PROFILE_DATA.indicators || {};
+    var sec = STEPS_PROFILE_DATA.sections   || {};
+    var rows = [['Country','ISO3','Survey Year','Section','Indicator Code',
+                 'Indicator','Unit','Both Sexes','Males','Females',
+                 '95% CI Lower','95% CI Upper']];
+    p.surveys.forEach(function(sv) {
+      var yrData = p.data[String(sv.year)] || {};
+      Object.keys(yrData).sort().forEach(function(code) {
+        var vals = yrData[code];
+        var i2 = ind[code] || {};
+        var sc = sec[i2.sec] || {};
+        rows.push([
+          _profileCurrent, p.iso3 || '', sv.year,
+          sc.name || i2.sec || '', code, i2.label || code, i2.unit || '%',
+          (vals.b  !== undefined && vals.b  !== null) ? vals.b  : '',
+          (vals.m  !== undefined && vals.m  !== null) ? vals.m  : '',
+          (vals.f  !== undefined && vals.f  !== null) ? vals.f  : '',
+          (vals.lo !== undefined && vals.lo !== null) ? vals.lo : '',
+          (vals.hi !== undefined && vals.hi !== null) ? vals.hi : ''
+        ]);
+      });
+    });
+    _saveXLS(_profileCurrent.split(' ').join('_') + '_STEPS.xls', rows);
+  }
+
+  // ── Wire buttons via addEventListener (NOT onclick) ───────────────────────────
+  (function() {
+    var btnSPI  = document.getElementById('btn-export-spi');
+    var btnProf = document.getElementById('btn-export-profile');
+    if (btnSPI)  btnSPI.addEventListener('click',  _doExportSPI);
+    if (btnProf) btnProf.addEventListener('click',  _doExportProfile);
+  })();
 })();
 """
 
@@ -1578,10 +1676,26 @@ def build_html(A: dict) -> str:
     import json as _json
     exec_kpis_json        = _json.dumps(A["exec_kpis"], ensure_ascii=False)
     timeline_by_type_json = _json.dumps(A["timeline_by_type"], ensure_ascii=False)
-    spi_scores_json       = _json.dumps(
+    spi_scores_json = _json.dumps(
         {row["country"]: round(float(row["spi"]), 1) for _, row in A["spi"].iterrows()},
         ensure_ascii=False
     )
+    import pandas as _pd
+    spi_table_json = _json.dumps([
+        {"country": str(r["country"]),
+         "iso3":  str(r["iso3"]) if _pd.notna(r["iso3"]) else "",
+         "spi":   round(float(r["spi"]),  1),
+         "tier":  int(r["tier"]),
+         "tier_label": str(r["tier_label"]),
+         "d_coverage":  round(float(r["d_coverage"]),  1),
+         "d_recency":   round(float(r["d_recency"]),   1),
+         "d_regularity": round(float(r["d_regularity"]), 1) if _pd.notna(r["d_regularity"]) else None,
+         "last_year": int(r["last_year"]) if _pd.notna(r["last_year"]) else None,
+         "gap_years": int(r["gap_years"]) if _pd.notna(r["gap_years"]) else None,
+         "n_done":    int(r["n_done"]),
+         "types_done":int(r["types_done"])}
+        for _, r in A["spi"].iterrows()
+    ], ensure_ascii=False)
     # ── STEPS profile data ────────────────────────────────────────────────────
     steps_profile = A.get("steps_profile", {})
     steps_profile_json = _json.dumps(steps_profile, ensure_ascii=False) if steps_profile else "null"
@@ -1601,7 +1715,8 @@ def build_html(A: dict) -> str:
                       .replace("__EXEC_DATA_PLACEHOLDER__",     exec_kpis_json)
                       .replace("__TIMELINE_DATA_PLACEHOLDER__",  timeline_by_type_json)
                       .replace("__SPI_SCORES_PLACEHOLDER__",    spi_scores_json)
-                      .replace("__STEPS_PROFILE_PLACEHOLDER__", steps_profile_json))
+                      .replace("__STEPS_PROFILE_PLACEHOLDER__", steps_profile_json)
+                      .replace("__SPI_TABLE_PLACEHOLDER__", spi_table_json))
 
     # Build favicon link and logo img tags (empty string if asset not found)
     fav_link = f'<link rel="icon" type="image/png" href="data:image/png;base64,{FAV_LOGO_B64}"/>' if FAV_LOGO_B64 else ""
@@ -1947,6 +2062,9 @@ def build_html(A: dict) -> str:
       </div>
 
       <div class="chart-card reveal" style="margin-bottom:20px;">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+          <button id="btn-export-spi" style="font-family:var(--font);font-size:11px;font-weight:700;padding:7px 16px;border-radius:8px;border:none;background:#003d82;color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:6px;"><i class="fas fa-file-excel"></i>&nbsp;Export Excel</button>
+        </div>
         {scorecard_table(spi)}
       </div>
 
@@ -2024,6 +2142,7 @@ def build_html(A: dict) -> str:
         <span style="font-size:11px;color:var(--muted);font-style:italic;margin-left:4px;display:flex;align-items:center;gap:5px;">
           <i class="fas fa-lock" style="font-size:10px;"></i>Additional survey types coming soon
         </span>
+        <button id="btn-export-profile" style="font-family:var(--font);font-size:11px;font-weight:700;padding:7px 16px;border-radius:8px;border:none;background:#003d82;color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:6px;" style="margin-left:auto;"><i class="fas fa-file-excel"></i>&nbsp;Export Excel</button>
       </div>
 
       <div id="country-profile-content">
