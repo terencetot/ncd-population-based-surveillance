@@ -62,7 +62,7 @@ CSS = """
   --shadow-sm:0 2px 8px rgba(0,20,80,.06);
   --shadow-md:0 6px 20px rgba(0,20,80,.10);
   --shadow-lg:0 14px 36px rgba(0,20,80,.15);
-  --radius:14px;
+  --radius:16px;
 }
 html{scroll-behavior:smooth}
 body{font-family:var(--font);background:#f0f4fa;color:var(--text);line-height:1.65;font-size:14px;overflow-x:hidden}
@@ -70,27 +70,21 @@ body{font-family:var(--font);background:#f0f4fa;color:var(--text);line-height:1.
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px)}}
 @keyframes shimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}
 @keyframes slideDown{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:translateY(0)}}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
 /* ── Reading progress ── */
 #reading-progress{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,#00a651,#4a90e2,#56d0ff);width:0%;z-index:9999;transition:width .1s linear}
 /* ── Back to top ── */
-#back-to-top{position:fixed;bottom:32px;right:32px;width:46px;height:46px;background:var(--primary);color:#fff;border:none;border-radius:50%;font-size:17px;cursor:pointer;display:none;align-items:center;justify-content:center;box-shadow:var(--shadow-lg);transition:all .25s;z-index:999}
+#back-to-top{position:fixed;bottom:32px;right:32px;width:46px;height:46px;background:var(--primary);color:#fff;border:none;border-radius:50%;font-size:16px;cursor:pointer;display:none;align-items:center;justify-content:center;box-shadow:var(--shadow-lg);transition:all 240ms;z-index:999}
 #back-to-top:hover{background:var(--accent);transform:translateY(-5px) scale(1.08)}
 /* ── Top nav ── */
 .topnav{position:sticky;top:0;z-index:1000;background:linear-gradient(135deg,#000d28 0%,#001a4a 40%,#003270 70%,#004d99 100%);box-shadow:0 4px 28px rgba(0,10,50,.6);height:70px;animation:slideDown .5s ease;border-bottom:1px solid rgba(255,255,255,.1)}
 .topnav::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#003d82,#4a90e2,#56d0ff,#00a651,#56d0ff,#4a90e2,#003d82);background-size:400% auto;animation:shimmer 10s linear infinite}
-.topnav-inner{max-width:1400px;margin:0 auto;padding:0 32px;height:100%;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.topnav-inner{max-width:1400px;margin:0 auto;padding:0 32px;height:100%;display:flex;align-items:center;gap:20px}
 .nav-logos{display:flex;align-items:center;gap:18px;flex-shrink:0}
 .nav-logos img{height:40px;object-fit:contain;filter:brightness(1.05)}
 .nav-divider{width:1px;height:34px;background:rgba(255,255,255,.18)}
 .nav-brand-text{display:flex;flex-direction:column;justify-content:center}
 .nav-brand-title{color:#fff;font-weight:800;font-size:14px;letter-spacing:-.015em;line-height:1.2}
-.nav-brand-sub{color:rgba(255,255,255,.5);font-size:10.5px;font-weight:500;letter-spacing:.4px;margin-top:2px}
-.nav-right{display:flex;align-items:center;gap:14px;flex-shrink:0}
-.nav-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:20px;padding:5px 13px;font-size:11px;font-weight:600;color:rgba(255,255,255,.75);white-space:nowrap;transition:background .2s}
-.nav-badge:hover{background:rgba(255,255,255,.14)}
-.nav-badge i{font-size:10px;color:rgba(255,255,255,.55)}
-.nav-date{color:rgba(255,255,255,.6);font-size:11px;background:rgba(255,255,255,.09);padding:6px 14px;border-radius:20px;border:1px solid rgba(255,255,255,.15);white-space:nowrap;flex-shrink:0;display:flex;align-items:center;gap:6px}
+.nav-brand-sub{color:rgba(255,255,255,.5);font-size:11px;font-weight:500;letter-spacing:.4px;margin-top:2px}
 /* ── Hero ── */
 @keyframes badgeIn{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:translateX(0)}}
 .hero{background:#fff;padding:0;position:relative;overflow:hidden;border-bottom:1px solid var(--border)}
@@ -107,7 +101,7 @@ body{font-family:var(--font);background:#f0f4fa;color:var(--text);line-height:1.
 .hero-right-orb-3{width:130px;height:130px;top:40%;left:38%;background:radial-gradient(circle,rgba(74,144,226,.15) 0%,transparent 70%);animation:float 7s ease-in-out 2s infinite}
 .hero-stats{display:flex;flex-direction:column;gap:12px;position:relative;z-index:2;width:100%}
 /* Each badge staggered entrance */
-.hero-stat-badge{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:0;overflow:hidden;transition:background .25s,transform .25s,box-shadow .25s;cursor:default;animation:badgeIn .55s ease both}
+.hero-stat-badge{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:0;overflow:hidden;transition:background 240ms,transform 240ms,box-shadow 240ms;cursor:default;animation:badgeIn .55s ease both}
 .hero-stat-badge:nth-child(1){animation-delay:.15s;border-top:3px solid #4a90e2}
 .hero-stat-badge:nth-child(2){animation-delay:.28s;border-top:3px solid #00a651}
 .hero-stat-badge:nth-child(3){animation-delay:.41s}
@@ -115,21 +109,19 @@ body{font-family:var(--font);background:#f0f4fa;color:var(--text);line-height:1.
 .hero-stat-inner{padding:14px 18px}
 .hero-stat-val{font-size:2.15rem;font-weight:900;color:#fff;line-height:1;letter-spacing:-.04em;display:flex;align-items:baseline;gap:4px}
 .hero-stat-val sup{font-size:.85rem;font-weight:700;opacity:.6;margin-left:1px}
-.hero-stat-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.8px;color:rgba(255,255,255,.42);margin-top:6px}
+.hero-stat-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.8px;color:rgba(255,255,255,.42);margin-top:6px}
 /* SPI progress bar */
-.hero-spi-bar{height:3px;background:rgba(255,255,255,.12);margin:10px 18px 0;border-radius:2px;overflow:hidden}
-.hero-spi-fill{height:100%;border-radius:2px;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+.hero-spi-bar{height:3px;background:rgba(255,255,255,.12);margin:10px 18px 0;border-radius:6px;overflow:hidden}
+.hero-spi-fill{height:100%;border-radius:6px;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
 /* Hero left */
-.hero-eyebrow{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:20px;display:inline-flex;align-items:center;gap:10px;background:rgba(74,144,226,.08);border:1px solid rgba(74,144,226,.2);padding:5px 13px 5px 10px;border-radius:20px;align-self:flex-start}
-.hero-eyebrow::before{content:'';display:inline-block;width:6px;height:6px;background:var(--accent);border-radius:50%;flex-shrink:0;animation:pulse 2.5s ease-in-out infinite}
 .hero h1{font-size:3.5rem;font-weight:900;line-height:1.04;letter-spacing:-.055em;color:var(--dark);margin-bottom:14px;animation:fadeScale .8s ease forwards}
 .grad{background:linear-gradient(90deg,#0065b3 0%,#4a90e2 50%,#56d0ff 100%);-webkit-background-clip:text;background-clip:text;color:transparent;background-size:200% auto;animation:shimmer 6s linear infinite}
-.hero-sub{font-size:15px;color:#4a5568;max-width:620px;line-height:1.85;animation:fadeScale 1s ease .1s both;font-weight:400;margin-bottom:20px}
+.hero-sub{font-size:16px;color:#4a5568;max-width:620px;line-height:1.85;animation:fadeScale 1s ease .1s both;font-weight:400;margin-bottom:20px}
 .hero-sub strong{color:var(--dark);font-weight:700}
 /* Quick-stat pills below subtitle */
 .hero-quick-stats{display:flex;flex-wrap:wrap;gap:8px;animation:fadeScale .9s ease .25s both}
-.hero-qs{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:var(--muted);background:#f4f7fb;border:1px solid var(--border);border-radius:20px;padding:4px 12px;white-space:nowrap}
-.hero-qs i{font-size:9px}
+.hero-qs{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--muted);background:#f4f7fb;border:1px solid var(--border);border-radius:9999px;padding:4px 12px;white-space:nowrap}
+.hero-qs i{font-size:11px}
 /* ── Reveal animation (hidden only when JS adds .will-animate) ── */
 .reveal{transition:opacity .65s ease,transform .65s ease}
 .reveal.will-animate{opacity:0;transform:translateY(28px)}
@@ -150,77 +142,79 @@ body{font-family:var(--font);background:#f0f4fa;color:var(--text);line-height:1.
   .container{max-width:1600px}
   .hero-inner{max-width:1600px}
 }
-body{background:#f0f4fa}
-/* ── Layout ── */
-.row{display:flex;flex-wrap:wrap;gap:20px;margin-bottom:20px}
-.col-12{flex:0 0 100%}.col-8{flex:0 0 calc(66.666% - 10px)}.col-7{flex:0 0 calc(58.333% - 9px)}.col-6{flex:0 0 calc(50% - 10px)}.col-5{flex:0 0 calc(41.666% - 11px)}.col-4{flex:0 0 calc(33.333% - 14px)}.col-3{flex:0 0 calc(25% - 15px)}
+/* ── Layout ──
+   CSS Grid instead of flex+calc(): a 12-column grid divides its gutters
+   exactly, so a col-8+col-4 row and a col-6+col-6 row always share the same
+   vertical edges (the old flex version's calc(33.333% - 14px) etc. was off
+   by a few px on every fractional column — 20px*(n-1)/n, not a flat 10-15px). */
+.row{display:grid;grid-template-columns:repeat(12,1fr);gap:20px;margin-bottom:20px}
+.col-12{grid-column:span 12}.col-8{grid-column:span 8}.col-7{grid-column:span 7}.col-6{grid-column:span 6}.col-5{grid-column:span 5}.col-4{grid-column:span 4}.col-3{grid-column:span 3}
 /* ── Section ── */
 .section{padding:40px 0 24px}
 .section-header{margin-bottom:28px}
 .section-header-inner{display:inline-flex;align-items:center;gap:10px;margin-bottom:5px}
-.section-num{background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;border-radius:8px;padding:3px 10px;font-size:11px;font-weight:700}
+.section-num{background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;border-radius:10px;padding:3px 10px;font-size:11px;font-weight:700}
 .section-title{font-size:1.55rem;font-weight:800;color:var(--dark);letter-spacing:-.025em;border-bottom:3px solid var(--accent);padding-bottom:3px;display:inline}
-.section-subtitle{color:var(--muted);font-size:13px;margin-top:5px}
+.section-subtitle{color:var(--muted);font-size:14px;margin-top:5px}
 hr.section-divider{border:none;border-top:1px solid var(--border);margin:32px 0}
 /* ── Cards ── */
-.chart-card{background:#fff;border-radius:var(--radius);padding:22px;box-shadow:var(--shadow-sm);border:1.5px solid var(--border);height:100%;transition:transform .3s,box-shadow .3s,border-color .3s;position:relative;overflow:hidden}
+.chart-card{background:#fff;border-radius:var(--radius);padding:22px;box-shadow:var(--shadow-sm);border:2px solid var(--border);height:100%;transition:transform 240ms,box-shadow 240ms,border-color 240ms;position:relative;overflow:hidden}
 .chart-card::before{content:'';position:absolute;inset:0;border-radius:var(--radius);opacity:0;background:linear-gradient(135deg,rgba(74,144,226,.05),rgba(0,166,81,.05));transition:opacity .3s;pointer-events:none}
-.chart-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md);border-color:rgba(74,144,226,.3)}
+.chart-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);border-color:rgba(74,144,226,.3)}
 .chart-card:hover::before{opacity:1}
-.chart-commentary{margin-top:12px;padding:12px 16px;background:linear-gradient(135deg,#f7fbff,#eef4ff);border-radius:10px;font-size:12.5px;color:var(--text);line-height:1.8;border-left:4px solid var(--accent)}
+.chart-commentary{margin-top:12px;padding:12px 16px;background:linear-gradient(135deg,#f7fbff,#eef4ff);border-radius:10px;font-size:12px;color:var(--text);line-height:1.8;border-left:4px solid var(--accent)}
 /* ── Insight boxes ── */
-.insight-box{display:flex;align-items:flex-start;gap:12px;padding:14px 18px;border-radius:10px;margin-bottom:12px;font-size:13px;line-height:1.75;transition:transform .2s}
-.insight-box:hover{transform:translateX(4px)}
+.insight-box{display:flex;align-items:flex-start;gap:12px;padding:14px 18px;border-radius:10px;margin-bottom:12px;font-size:14px;line-height:1.75}
 .insight-icon{font-size:16px;flex-shrink:0;margin-top:2px}
 /* ── KPI cards ── */
 .kpi-row{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:28px}
-.kpi-card{flex:1;min-width:145px;background:#fff;border-radius:var(--radius);padding:20px 18px 17px;box-shadow:var(--shadow-sm);border:1.5px solid var(--border);transition:transform .28s,box-shadow .28s;position:relative;overflow:hidden}
+.kpi-card{flex:1;min-width:145px;background:#fff;border-radius:var(--radius);padding:20px 18px 17px;box-shadow:var(--shadow-sm);border:2px solid var(--border);transition:transform 240ms,box-shadow 240ms;position:relative;overflow:hidden}
 .kpi-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:currentColor;opacity:.3}
-.kpi-card:hover{transform:translateY(-5px);box-shadow:var(--shadow-md)}
+.kpi-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}
 .kpi-icon{font-size:22px;margin-bottom:9px}
 .kpi-value{font-size:2rem;font-weight:800;line-height:1;margin-bottom:5px;letter-spacing:-.03em}
-.kpi-label{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.9px;color:var(--muted)}
+.kpi-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.9px;color:var(--muted)}
 .kpi-delta{font-size:11px;margin-top:6px;font-weight:600;display:flex;align-items:center;gap:4px}
 /* ── Instrument cards ── */
 .instrument-grid{display:flex;flex-wrap:wrap;gap:18px;margin-bottom:24px}
-.instrument-card{flex:1;min-width:200px;background:#fff;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow-sm);border:1.5px solid var(--border);transition:transform .28s,box-shadow .28s}
+.instrument-card{flex:1;min-width:200px;background:#fff;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow-sm);border:2px solid var(--border);transition:transform 240ms,box-shadow 240ms}
 .instrument-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}
 .inst-type{font-size:22px;font-weight:900;letter-spacing:-.02em;margin-bottom:4px}
-.inst-full{font-size:11.5px;color:var(--muted);line-height:1.5;margin-bottom:10px;min-height:34px}
+.inst-full{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px;min-height:34px}
 .inst-meta{display:flex;flex-direction:column;gap:3px;margin-bottom:12px}
 .inst-meta span{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px}
 .inst-stats{display:flex;gap:14px;margin-bottom:12px}
 .inst-stat{display:flex;flex-direction:column;align-items:center}
 .stat-val{font-size:1.4rem;font-weight:800;line-height:1;color:var(--dark)}
-.stat-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
-.inst-bar-wrap{height:6px;background:#f0f0f0;border-radius:3px;overflow:hidden;margin-bottom:5px}
-.inst-bar{height:6px;border-radius:3px}
-.inst-pct{font-size:11.5px;font-weight:700}
+.stat-lbl{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+.inst-bar-wrap{height:6px;background:#f0f0f0;border-radius:6px;overflow:hidden;margin-bottom:5px}
+.inst-bar{height:6px;border-radius:6px}
+.inst-pct{font-size:11px;font-weight:700}
 /* ── Recommendations ── */
 .rec-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:20px;margin-top:8px}
-.rec-card{background:#fff;border-radius:var(--radius);padding:22px 24px;box-shadow:var(--shadow-sm);border:1.5px solid var(--border);display:flex;gap:18px;align-items:flex-start;transition:transform .28s,box-shadow .28s}
+.rec-card{background:#fff;border-radius:var(--radius);padding:22px 24px;box-shadow:var(--shadow-sm);border:2px solid var(--border);display:flex;gap:18px;align-items:flex-start;transition:transform 240ms,box-shadow 240ms}
 .rec-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}
-.rec-num{width:34px;height:34px;background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;flex-shrink:0}
-.rec-content h4{font-size:13.5px;font-weight:700;color:var(--dark);margin-bottom:7px}
-.rec-content p{font-size:12.5px;color:var(--muted);line-height:1.75}
+.rec-num{width:34px;height:34px;background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0}
+.rec-content h4{font-size:14px;font-weight:700;color:var(--dark);margin-bottom:7px}
+.rec-content p{font-size:12px;color:var(--muted);line-height:1.75}
 /* ── Methods ── */
 .methods-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
-.method-card{background:#fff;border-radius:var(--radius);padding:22px;box-shadow:var(--shadow-sm);border:1.5px solid var(--border)}
-.method-card h4{font-size:13.5px;font-weight:700;color:var(--dark);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.method-card{background:#fff;border-radius:var(--radius);padding:22px;box-shadow:var(--shadow-sm);border:2px solid var(--border)}
+.method-card h4{font-size:14px;font-weight:700;color:var(--dark);margin-bottom:12px;display:flex;align-items:center;gap:8px}
 .method-card ul{list-style:none;padding:0}
-.method-card li{font-size:12.5px;color:var(--muted);padding:4px 0;border-bottom:1px solid #f5f5f5;line-height:1.65}
+.method-card li{font-size:12px;color:var(--muted);padding:4px 0;border-bottom:1px solid #f5f5f5;line-height:1.65}
 .method-card li:last-child{border-bottom:none}
-.method-card li code{background:#f0f4ff;padding:1px 6px;border-radius:4px;font-family:monospace;font-size:11px;color:var(--primary)}
+.method-card li code{background:#f0f4ff;padding:1px 6px;border-radius:6px;font-family:monospace;font-size:11px;color:var(--primary)}
 /* ── Footer ── */
 .footer{background:linear-gradient(135deg,#000d28,#001a4a);color:rgba(255,255,255,.7);padding:0;margin-top:40px}
 .footer-inner{max-width:1400px;margin:0 auto;padding:28px 32px;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
-.footer-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:3px 11px;font-size:11px;margin:2px;color:rgba(255,255,255,.8)}
+.footer-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:9999px;padding:3px 11px;font-size:11px;margin:2px;color:rgba(255,255,255,.8)}
 /* ══ TABS ════════════════════════════════════════════════════════════════════ */
 .tab-nav{background:linear-gradient(to bottom,#ffffff 0%,#f5f8ff 100%);border-bottom:2px solid var(--border);position:sticky;top:70px;z-index:990;box-shadow:0 4px 18px rgba(0,20,80,.09);overflow-x:auto}
 .tab-nav-inner{max-width:1400px;margin:0 auto;padding:0 16px;display:flex;gap:0}
-.tab-btn{background:none;border:none;padding:13px 22px;font-family:var(--font);font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:8px;letter-spacing:-.01em;position:relative;transition:color .22s,background .22s;border-radius:0}
-.tab-btn::before{content:'';position:absolute;bottom:6px;top:6px;left:8px;right:8px;border-radius:8px;background:linear-gradient(135deg,rgba(0,61,130,.08),rgba(74,144,226,.06));opacity:0;transition:opacity .25s}
-.tab-btn::after{content:'';position:absolute;bottom:-2px;left:18px;right:18px;height:3px;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:3px 3px 0 0;opacity:0;transition:opacity .25s,left .25s,right .25s}
+.tab-btn{background:none;border:none;padding:13px 22px;font-family:var(--font);font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:8px;letter-spacing:-.01em;position:relative;transition:color .22s,background .22s;border-radius:0}
+.tab-btn::before{content:'';position:absolute;bottom:6px;top:6px;left:8px;right:8px;border-radius:10px;background:linear-gradient(135deg,rgba(0,61,130,.08),rgba(74,144,226,.06));opacity:0;transition:opacity .25s}
+.tab-btn::after{content:'';position:absolute;bottom:-2px;left:18px;right:18px;height:3px;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:6px 3px 0 0;opacity:0;transition:opacity .25s,left .25s,right .25s}
 .tab-btn:hover{color:var(--primary)}
 .tab-btn:hover::before{opacity:.6}
 .tab-btn:hover::after{opacity:.3}
@@ -233,102 +227,116 @@ hr.section-divider{border:none;border-top:1px solid var(--border);margin:32px 0}
 .tab-pane{display:none}
 .tab-pane.active{display:block}
 /* ══ FILTER BAR ═════════════════════════════════════════════════════════════ */
-.filter-bar{background:#fff;border:1.5px solid var(--border);border-radius:var(--radius);padding:14px 20px;margin-bottom:22px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;box-shadow:var(--shadow-sm)}
-.filter-label{font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;white-space:nowrap}
-.filter-select{border:1.5px solid var(--border);border-radius:8px;padding:7px 12px;font-family:var(--font);font-size:12px;color:var(--text);background:#fafbff;cursor:pointer;outline:none;transition:border-color .2s,box-shadow .2s}
+.filter-bar{background:#fff;border:2px solid var(--border);border-radius:var(--radius);padding:14px 20px;margin-bottom:22px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;box-shadow:var(--shadow-sm)}
+.filter-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;white-space:nowrap}
+.filter-select{border:2px solid var(--border);border-radius:10px;padding:7px 12px;font-family:var(--font);font-size:12px;color:var(--text);background:#fafbff;cursor:pointer;outline:none;transition:border-color .2s,box-shadow .2s}
 .filter-select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(74,144,226,.12)}
-.filter-input{border:1.5px solid var(--border);border-radius:8px;padding:7px 13px;font-family:var(--font);font-size:12px;color:var(--text);background:#fafbff;outline:none;width:175px;transition:border-color .2s,box-shadow .2s}
+.filter-input{border:2px solid var(--border);border-radius:10px;padding:7px 13px;font-family:var(--font);font-size:12px;color:var(--text);background:#fafbff;outline:none;width:175px;transition:border-color .2s,box-shadow .2s}
 .filter-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(74,144,226,.12)}
-.filter-reset{background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;border:none;border-radius:8px;padding:8px 16px;font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
+.filter-reset{background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;border:none;border-radius:10px;padding:8px 16px;font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
 .filter-reset:hover{box-shadow:0 4px 14px rgba(74,144,226,.4);transform:translateY(-1px)}
 .filter-count{font-size:11px;color:var(--muted);margin-left:auto;font-style:italic;white-space:nowrap}
 /* ══ TABLES ═════════════════════════════════════════════════════════════════ */
-.prio-table{width:100%;border-collapse:collapse;font-size:12.5px}
-.prio-table th{background:linear-gradient(135deg,var(--primary),#005fa3);color:#fff;padding:10px 13px;text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.7px;font-weight:700;position:sticky;top:0;z-index:1}
+.prio-table{width:100%;border-collapse:collapse;font-size:12px}
+.prio-table th{background:linear-gradient(135deg,var(--primary),#005fa3);color:#fff;padding:10px 13px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.7px;font-weight:700;position:sticky;top:0;z-index:1}
 .prio-table td{padding:9px 13px;border-bottom:1px solid var(--border)}
 .prio-table tbody tr{transition:background .15s}
 .prio-table tbody tr:hover td{background:#f0f6ff}
 .rank-cell{font-weight:700;color:var(--muted);font-size:12px;text-align:center}
 .num-cell{text-align:center;font-variant-numeric:tabular-nums}
 /* Country map thumbnail */
-.country-map{width:40px;height:28px;object-fit:contain;opacity:.85;border-radius:3px;background:#f5f8ff;padding:2px;border:1px solid #e8eef8;vertical-align:middle;margin-right:8px;transition:opacity .2s}
+.country-map{width:40px;height:28px;object-fit:contain;opacity:.85;border-radius:6px;background:#f5f8ff;padding:2px;border:1px solid #e8eef8;vertical-align:middle;margin-right:8px;transition:opacity .2s}
 .country-map:hover{opacity:1}
 /* ══ EXECUTIVE SIGNALS ══════════════════════════════════════════════════════ */
 .signal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;margin-bottom:28px}
-.signal-card{background:#fff;border-radius:var(--radius);padding:24px 22px;box-shadow:var(--shadow-sm);border:1.5px solid var(--border);position:relative;overflow:hidden;transition:transform .3s,box-shadow .3s}
+.signal-card{background:#fff;border-radius:var(--radius);padding:24px 22px;box-shadow:var(--shadow-sm);border:2px solid var(--border);position:relative;overflow:hidden;transition:transform 240ms,box-shadow 240ms}
 .signal-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:currentColor;opacity:.5;border-radius:var(--radius) var(--radius) 0 0}
 .signal-card::after{content:'';position:absolute;bottom:-30px;right:-20px;width:100px;height:100px;border-radius:50%;background:currentColor;opacity:.04}
-.signal-card:hover{transform:translateY(-5px);box-shadow:var(--shadow-md)}
+.signal-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}
 .signal-val{font-size:2.8rem;font-weight:900;line-height:1;letter-spacing:-.05em}
-.signal-lbl{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-top:8px}
-.signal-sub{font-size:11.5px;color:var(--muted);margin-top:5px;line-height:1.55}
+.signal-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-top:8px}
+.signal-sub{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.55}
 /* ══ EXECUTIVE MESSAGE ══════════════════════════════════════════════════════ */
 .exec-message{background:linear-gradient(135deg,#000d28 0%,#001a4a 50%,#003270 100%);color:#fff;border-radius:var(--radius);padding:30px 34px;margin-bottom:28px;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(0,10,50,.3)}
 .exec-message::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(74,144,226,.15),transparent);pointer-events:none}
 .exec-message h3{font-size:1.1rem;font-weight:800;margin-bottom:12px;color:#56d0ff;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
-.exec-message p{font-size:13.5px;line-height:1.9;opacity:.9;max-width:900px}
+.exec-message p{font-size:14px;line-height:1.9;opacity:.9;max-width:900px}
 .exec-message strong{color:#fff}
 /* ══ TIER BADGE ═════════════════════════════════════════════════════════════ */
-.tier-badge{display:inline-block;padding:2px 9px;border-radius:10px;font-size:10.5px;font-weight:700;color:#fff;vertical-align:middle}
+.tier-badge{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;color:#fff;vertical-align:middle}
 .schema-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px;margin-bottom:24px}
-.schema-card{background:#fff;border-radius:12px;border:1.5px solid var(--border);overflow:hidden;box-shadow:0 4px 12px rgba(0,20,80,.06)}
-.schema-card-head{padding:11px 16px;font-weight:700;font-size:12.5px;color:#fff;display:flex;align-items:center;gap:8px}
+.schema-card{background:#fff;border-radius:10px;border:2px solid var(--border);overflow:hidden;box-shadow:0 4px 12px rgba(0,20,80,.06)}
+.schema-card-head{padding:11px 16px;font-weight:700;font-size:12px;color:#fff;display:flex;align-items:center;gap:8px}
 .schema-card table{width:100%;border-collapse:collapse;font-size:12px}
 .schema-card table tr{border-bottom:1px solid var(--border)}
 .schema-card table td{padding:7px 14px;color:var(--muted)}
-.schema-card table td:first-child{color:var(--text);font-weight:500;font-family:monospace;font-size:11.5px}
-@media(max-width:920px){.col-6,.col-4,.col-3,.col-8,.col-7,.col-5{flex:0 0 100%}.hero h1{font-size:2.2rem}.hero-right{display:none}.hero-left{padding:36px 28px 32px}}
+.schema-card table td:first-child{color:var(--text);font-weight:500;font-family:monospace;font-size:11px}
+@media(max-width:920px){
+  .col-6,.col-4,.col-3,.col-8,.col-7,.col-5{grid-column:span 12}
+  .hero h1{font-size:2.2rem}
+  .hero-left{padding:32px 24px 24px}
+  /* Reflow the headline numbers under the title instead of dropping them —
+     48 countries / 5 instruments / regional SPI are the whole point of the
+     hero, not decoration to discard on a phone. */
+  .hero-inner{flex-direction:column;min-height:0}
+  .hero-right{width:100%;clip-path:none;padding:20px 24px;flex-shrink:1;order:2}
+  .hero-right-orb{display:none}
+  .hero-stats{flex-direction:row;flex-wrap:wrap;gap:10px}
+  .hero-stat-badge{flex:1;min-width:130px}
+  .hero-stat-inner{padding:10px 14px}
+  .hero-stat-val{font-size:1.5rem}
+}
 @media(max-width:1100px){.signal-grid[style*="repeat(5"]{grid-template-columns:repeat(3,1fr)!important}}
 @media(max-width:700px){.signal-grid[style*="repeat(5"]{grid-template-columns:repeat(2,1fr)!important}}
 /* ══ TIER SUMMARY CARDS ══════════════════════════════════════════════════ */
 .tier-row{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:24px;}
-.tier-card{flex:1;min-width:130px;background:#fff;border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow-sm);border:1.5px solid var(--border);border-top-width:4px;transition:transform .28s,box-shadow .28s;}
+.tier-card{flex:1;min-width:130px;background:#fff;border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow-sm);border:2px solid var(--border);border-top-width:4px;transition:transform 240ms,box-shadow 240ms;}
 .tier-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);}
 .tier-card-val{font-size:2.2rem;font-weight:900;line-height:1;letter-spacing:-.04em;}
-.tier-card-lbl{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-top:6px;}
+.tier-card-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-top:6px;}
 .tier-card-sub{font-size:11px;color:var(--muted);margin-top:3px;}
 /* ══ STAT HIGHLIGHT ROW ══════════════════════════════════════════════════ */
-.stat-highlight-row{display:flex;flex-wrap:wrap;gap:14px;background:#fff;border-radius:var(--radius);padding:20px 24px;box-shadow:var(--shadow-sm);border:1.5px solid var(--border);margin-bottom:22px;align-items:center;}
+.stat-highlight-row{display:flex;flex-wrap:wrap;gap:14px;background:#fff;border-radius:var(--radius);padding:20px 24px;box-shadow:var(--shadow-sm);border:2px solid var(--border);margin-bottom:22px;align-items:center;}
 .stat-highlight-item{display:flex;flex-direction:column;align-items:center;padding:0 16px;border-right:1px solid var(--border);last-child:border-right:none;}
 .stat-highlight-item:last-child{border-right:none;}
 .stat-hl-val{font-size:2rem;font-weight:900;letter-spacing:-.04em;line-height:1;}
-.stat-hl-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin-top:5px;}
+.stat-hl-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin-top:5px;}
 /* ══ SECTION DIVIDER LABEL ═══════════════════════════════════════════════ */
 .section-divider-label{display:flex;align-items:center;gap:12px;margin:28px 0 18px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);}
 .section-divider-label::before,.section-divider-label::after{content:'';flex:1;height:1px;background:var(--border);}
 /* ══ COUNTRY PROFILE TAB ═════════════════════════════════════════════════ */
-.profile-header-card{background:linear-gradient(135deg,#f4f7fc 0%,#eef2f8 100%);border:1.5px solid var(--border);border-radius:var(--radius);padding:24px 28px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden;}
+.profile-header-card{background:linear-gradient(135deg,#f4f7fc 0%,#eef2f8 100%);border:2px solid var(--border);border-radius:var(--radius);padding:24px 28px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden;}
 .profile-header-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--primary),var(--accent),#56d0ff);border-radius:var(--radius) var(--radius) 0 0;}
 .profile-iso-badge{display:inline-flex;align-items:center;justify-content:center;width:60px;height:44px;background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;border-radius:10px;font-size:11px;font-weight:800;letter-spacing:.5px;flex-shrink:0;box-shadow:0 4px 12px rgba(0,61,130,.25);}
 .profile-kpi-row{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:22px;}
-.profile-kpi-card{flex:1;min-width:150px;background:#fff;border-radius:var(--radius);padding:18px 16px 14px;box-shadow:var(--shadow-sm);border:1.5px solid var(--border);position:relative;overflow:hidden;transition:transform .28s,box-shadow .28s;}
+.profile-kpi-card{flex:1;min-width:150px;background:#fff;border-radius:var(--radius);padding:18px 16px 14px;box-shadow:var(--shadow-sm);border:2px solid var(--border);position:relative;overflow:hidden;transition:transform 240ms,box-shadow 240ms;}
 .profile-kpi-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);}
 .profile-kpi-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:currentColor;opacity:.25;}
-.profile-kpi-icon{font-size:20px;margin-bottom:8px;}
+.profile-kpi-icon{font-size:22px;margin-bottom:8px;}
 .profile-kpi-value{font-size:1.9rem;font-weight:900;line-height:1;letter-spacing:-.03em;margin-bottom:4px;}
-.profile-kpi-ci{font-size:9.5px;color:var(--muted);font-weight:600;margin-bottom:2px;}
-.profile-kpi-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.9px;color:var(--muted);}
+.profile-kpi-ci{font-size:11px;color:var(--muted);font-weight:600;margin-bottom:2px;}
+.profile-kpi-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.9px;color:var(--muted);}
 .profile-kpi-trend{font-size:12px;margin-top:6px;font-weight:700;}
 .profile-kpi-sex{display:flex;gap:6px;margin-top:8px;}
-.profile-kpi-sex span{font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:8px;}
+.profile-kpi-sex span{font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;}
 .profile-section-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:16px;margin-bottom:24px;}
-.profile-section-card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow-sm);border:1.5px solid var(--border);overflow:hidden;transition:transform .28s,box-shadow .28s;}
-.profile-section-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md);}
+.profile-section-card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow-sm);border:2px solid var(--border);overflow:hidden;transition:transform 240ms,box-shadow 240ms;}
+.profile-section-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);}
 .profile-section-head{padding:10px 15px;display:flex;align-items:center;gap:8px;}
 .profile-section-head span.sec-title{font-size:12px;font-weight:700;color:#fff;flex:1;}
-.profile-section-head span.sec-step{font-size:9.5px;color:rgba(255,255,255,.65);font-style:italic;}
+.profile-section-head span.sec-step{font-size:11px;color:rgba(255,255,255,.65);font-style:italic;}
 .profile-ind-table{width:100%;border-collapse:collapse;font-size:11px;}
-.profile-ind-table th{padding:6px 8px;font-size:9px;text-transform:uppercase;letter-spacing:.5px;font-weight:700;background:#f7f9ff;border-bottom:1px solid var(--border);white-space:nowrap;}
+.profile-ind-table th{padding:6px 8px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;font-weight:700;background:#f7f9ff;border-bottom:1px solid var(--border);white-space:nowrap;}
 .profile-ind-table td{padding:6px 8px;border-bottom:1px solid #f3f5fb;vertical-align:middle;line-height:1.45;}
 .profile-ind-table tbody tr:last-child td{border-bottom:none;}
 .profile-ind-table tbody tr:hover td{background:#f0f5ff;}
 .profile-no-data{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:64px 20px;color:var(--muted);text-align:center;gap:16px;}
-.profile-no-data i{font-size:40px;opacity:.28;}
-.profile-survey-pill{display:inline-flex;align-items:center;gap:5px;background:rgba(0,61,130,.08);border:1px solid rgba(0,61,130,.18);border-radius:20px;padding:3px 11px;font-size:10.5px;font-weight:600;color:var(--primary);}
-.profile-cmp-badge{display:inline-block;font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px;vertical-align:middle;}
+.profile-no-data i{font-size:36px;opacity:.28;}
+.profile-survey-pill{display:inline-flex;align-items:center;gap:5px;background:rgba(0,61,130,.08);border:1px solid rgba(0,61,130,.18);border-radius:9999px;padding:3px 11px;font-size:11px;font-weight:600;color:var(--primary);}
+.profile-cmp-badge{display:inline-block;font-size:11px;font-weight:700;padding:1px 6px;border-radius:6px;vertical-align:middle;}
 .profile-charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;}
 .profile-charts-grid>.chart-card:first-child{grid-column:1 / -1;}
-.profile-chart-title{font-size:12.5px;font-weight:700;color:var(--dark);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.profile-chart-title{font-size:12px;font-weight:700;color:var(--dark);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
 .profile-chart-title i{color:var(--accent);font-size:12px;}
 @media(max-width:820px){.profile-charts-grid{grid-template-columns:1fr;}}
 """
@@ -617,7 +625,7 @@ JS = """
         font:{family:_FONT,size:12,color:'#333e5c'},
         height:400,margin:{l:60,r:30,t:70,b:60},
         title:{
-          text:'<b>Historical Activity \u2014 '+surveyKey+'</b>&nbsp;&nbsp;<span style="font-size:12px;color:#6b7280;font-weight:400">'+fullName+'</span><br><span style="font-size:10px;color:#6b7280;font-weight:400">Number of countries completing the survey each year</span>',
+          text:'<b>Historical Activity \u2014 '+surveyKey+'</b>&nbsp;&nbsp;<span style="font-size:12px;color:#6b7280;font-weight:400">'+fullName+'</span><br><span style="font-size:11px;color:#6b7280;font-weight:400">Number of countries completing the survey each year</span>',
           font:{size:14,color:'#14265c',family:_FONT},x:0,xanchor:'left',pad:{l:4,t:4}
         },
         xaxis:{
@@ -976,16 +984,16 @@ JS = """
     hdr+='</div></div></div>';
     hdr+='<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">';
     if(p.spi!==null&&p.spi!==undefined){
-      hdr+='<div style="text-align:center;padding:12px 20px;background:linear-gradient(135deg,'+tc+'18,'+tc+'0a);border:2px solid '+tc+';border-radius:12px;min-width:90px;">';
+      hdr+='<div style="text-align:center;padding:12px 20px;background:linear-gradient(135deg,'+tc+'18,'+tc+'0a);border:2px solid '+tc+';border-radius:10px;min-width:90px;">';
       hdr+='<div style="font-size:1.75rem;font-weight:900;color:'+tc+';line-height:1;">'+p.spi.toFixed(1)+'</div>';
-      hdr+='<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:'+tc+';margin-top:3px;">SPI Score</div>';
-      hdr+='<div style="font-size:10.5px;color:'+tc+';font-weight:600;margin-top:2px;">'+( p.tier_label||'')+'</div></div>';
+      hdr+='<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:'+tc+';margin-top:3px;">SPI Score</div>';
+      hdr+='<div style="font-size:11px;color:'+tc+';font-weight:600;margin-top:2px;">'+( p.tier_label||'')+'</div></div>';
     }
     if(hasMulti){
-      hdr+='<div style="padding:10px 18px;background:#e6f5ec;border:1.5px solid #9dd4b0;border-radius:10px;text-align:center;">';
+      hdr+='<div style="padding:10px 18px;background:#e6f5ec;border:2px solid #9dd4b0;border-radius:10px;text-align:center;">';
       hdr+='<div style="font-size:1.5rem;font-weight:900;color:#00a651;">'+surveys.length+'</div>';
-      hdr+='<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#00a651;">'+surveyType+' Rounds</div>';
-      hdr+='<div style="font-size:9.5px;color:#00a651;margin-top:1px;">Trend available</div></div>';
+      hdr+='<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#00a651;">'+surveyType+' Rounds</div>';
+      hdr+='<div style="font-size:11px;color:#00a651;margin-top:1px;">Trend available</div></div>';
     }
     hdr+='</div></div></div>';
 
@@ -1008,7 +1016,7 @@ JS = """
       kpi+='<div class="profile-kpi-value" style="color:'+k.col+';"'+loStr+'>'+valStr+'</div>';
       if(hasCI){kpi+='<div class="profile-kpi-ci">95% CI '+d.lo.toFixed(1)+'\u2013'+d.hi.toFixed(1)+unit+'</div>';}
       kpi+='<div class="profile-kpi-label">'+k.label+'</div>';
-      if(arrow){kpi+='<div class="profile-kpi-trend">'+arrow+'<span style="font-size:10px;color:var(--muted);font-weight:400;"> vs '+prevYr+'</span></div>';}
+      if(arrow){kpi+='<div class="profile-kpi-trend">'+arrow+'<span style="font-size:11px;color:var(--muted);font-weight:400;"> vs '+prevYr+'</span></div>';}
       if(mV!==null||fV!==null){
         kpi+='<div class="profile-kpi-sex">';
         if(mV!==null) kpi+='<span style="background:#e8f0fb;color:#2980b9;">M: '+mV.toFixed(1)+'</span>';
@@ -1035,7 +1043,7 @@ JS = """
     if(hasMulti){
       charts+='<div id="profile-trend-chart" style="height:340px;"></div>';
     }else{
-      charts+='<div style="display:flex;align-items:center;justify-content:center;height:120px;color:var(--muted);font-size:12.5px;text-align:center;padding:0 20px;">'+
+      charts+='<div style="display:flex;align-items:center;justify-content:center;height:120px;color:var(--muted);font-size:12px;text-align:center;padding:0 20px;">'+
         'Trend requires 2+ survey rounds — '+country+' has 1 completed '+surveyType+' round so far ('+latYr+').</div>';
     }
     charts+='</div>';
@@ -1088,7 +1096,7 @@ JS = """
 
       grid += '<div class="profile-section-card">';
       grid += '<div class="profile-section-head" style="background:'+sv.color+';">';
-      grid += '<i class="fas '+sv.icon+'" style="color:rgba(255,255,255,.9);font-size:13px;"></i>';
+      grid += '<i class="fas '+sv.icon+'" style="color:rgba(255,255,255,.9);font-size:14px;"></i>';
       grid += '<span class="sec-title">'+sv.name+'</span>';
       grid += '<span class="sec-step">'+sv.step+'</span>';
       grid += '</div>';
@@ -1118,11 +1126,11 @@ JS = """
         var hasCI = (d.lo !== null && d.lo !== undefined && d.hi !== null && d.hi !== undefined);
         var ciAttr = hasCI ? ' title="95% CI: ' + d.lo.toFixed(1) + '\u2013' + d.hi.toFixed(1) + unit + '"' : '';
         var ciInline = hasCI
-          ? '<br><span style="font-size:8.5px;color:var(--muted);font-weight:400;">CI ' + d.lo.toFixed(1) + '\u2013' + d.hi.toFixed(1) + '</span>' : '';
+          ? '<br><span style="font-size:11px;color:var(--muted);font-weight:400;">CI ' + d.lo.toFixed(1) + '\u2013' + d.hi.toFixed(1) + '</span>' : '';
 
         var bStr = bV !== null
           ? '<strong' + ciAttr + '>' + bV.toFixed(1) + '</strong>'
-            + '<span style="font-size:9px;color:var(--muted);">' + unit + '</span>' + ciInline
+            + '<span style="font-size:11px;color:var(--muted);">' + unit + '</span>' + ciInline
           : '<span style="color:#ccc;">\u2014</span>';
         var mStr = mV !== null ? mV.toFixed(1)  : '<span style="color:#ccc;">\u2014</span>';
         var fStr = fV !== null ? fV.toFixed(1)  : '<span style="color:#ccc;">\u2014</span>';
@@ -1426,7 +1434,7 @@ def kpi_card(fa_key, value, label, delta=None, color=None, bg=None):
     delta_html = ""
     if delta:
         delta_html = (f'<div class="kpi-delta" style="color:{color};">'
-                      f'<i class="fas fa-arrow-up" style="font-size:9px;"></i> {delta}</div>')
+                      f'<i class="fas fa-arrow-up" style="font-size:11px;"></i> {delta}</div>')
     return f"""
 <div class="kpi-card reveal" style="color:{color};background:{bg};">
   <div class="kpi-icon"><i class="fas {fa}" style="color:{color};"></i></div>
@@ -1491,8 +1499,8 @@ def instrument_cards(A):
   <div class="inst-type" style="color:{meta['color']};">{code}</div>
   <div class="inst-full">{meta['full']}</div>
   <div class="inst-meta">
-    <span><i class="fas fa-users" style="font-size:10px;margin-right:4px;"></i>{meta['target']}</span>
-    <span><i class="fas fa-tag" style="font-size:10px;margin-right:4px;"></i>{meta['domain']}</span>
+    <span><i class="fas fa-users" style="font-size:11px;margin-right:4px;"></i>{meta['target']}</span>
+    <span><i class="fas fa-tag" style="font-size:11px;margin-right:4px;"></i>{meta['domain']}</span>
   </div>
   <div class="inst-stats">
     <div class="inst-stat"><span class="stat-val">{int(row['total'])}</span><span class="stat-lbl">Surveys</span></div>
@@ -1532,22 +1540,22 @@ def scorecard_table(spi):
   </td>
   <td style="padding:8px 10px;">
     <div style="display:flex;align-items:center;gap:7px;">
-      <div style="background:{tc};height:5px;border-radius:3px;width:{bw}px;max-width:80px;flex-shrink:0;"></div>
+      <div style="background:{tc};height:5px;border-radius:6px;width:{bw}px;max-width:80px;flex-shrink:0;"></div>
       <strong style="color:{tc}">{r['spi']:.1f}</strong>
-      <span style="background:{tc};color:#fff;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700">{r['tier_label']}</span>
+      <span style="background:{tc};color:#fff;padding:1px 7px;border-radius:10px;font-size:11px;font-weight:700">{r['tier_label']}</span>
     </div>
   </td>
   <td class="num-cell" style="padding:8px 10px;text-align:center;">{r['d_coverage']:.0f}%</td>
   <td class="num-cell" style="padding:8px 10px;text-align:center;">{r['d_recency']:.0f}%</td>
   <td class="num-cell" style="padding:8px 10px;text-align:center;">{reg_s}</td>
-  <td class="num-cell" style="padding:8px 10px;text-align:center;font-size:10.5px;color:var(--muted);">{avg_iv}</td>
+  <td class="num-cell" style="padding:8px 10px;text-align:center;font-size:11px;color:var(--muted);">{avg_iv}</td>
   <td class="num-cell" style="padding:8px 10px;text-align:center;">{last_s}</td>
   <td class="num-cell" style="padding:8px 10px;text-align:center;">{gap_s}</td>
 </tr>"""
     return f"""
 <div style="overflow-x:auto;">
-<table id="scorecard-table" style="width:100%;border-collapse:collapse;font-size:12.5px;">
-<caption style="text-align:left;font-size:11.5px;color:var(--muted);font-style:italic;padding-bottom:10px;">
+<table id="scorecard-table" style="width:100%;border-collapse:collapse;font-size:12px;">
+<caption style="text-align:left;font-size:11px;color:var(--muted);font-style:italic;padding-bottom:10px;">
   Country Surveillance Scorecard — SPI ranking and dimension scores. The <strong>Last Survey</strong> and <strong>Gap</strong> columns span
   <strong>all five instruments</strong> (most recent completed survey of any type); see the Strategic Priority tab for instrument-specific recency.
 </caption>
@@ -1658,7 +1666,7 @@ def per_survey_sections(A):
             rows_html += f"""<tr style="background:{bg};">
   <td style="padding:6px 12px;font-size:12px;">{row['country']}</td>
   <td style="padding:6px 12px;text-align:center;">
-    <span style="background:{sc};color:#fff;padding:2px 8px;border-radius:10px;font-size:10.5px;font-weight:700;">{status}</span>
+    <span style="background:{sc};color:#fff;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">{status}</span>
   </td>
   <td style="padding:6px 12px;text-align:center;font-size:12px;">{last_s}</td>
   <td style="padding:6px 12px;text-align:center;font-size:12px;">{gap_s}</td>
@@ -1668,14 +1676,14 @@ def per_survey_sections(A):
 <div class="chart-card reveal survey-detail-section" data-survey="{code}" style="border-top:4px solid {meta['color']};margin-bottom:20px;">
   <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
     <div>
-      <h3 style="font-size:15px;font-weight:700;color:{meta['color']};margin:0 0 2px;">{code}</h3>
-      <div style="font-size:11.5px;color:var(--muted);">{meta['full']} &mdash; {meta['target']} &mdash; <span style="font-style:italic;">last {code} survey per country</span></div>
+      <h3 style="font-size:16px;font-weight:700;color:{meta['color']};margin:0 0 2px;">{code}</h3>
+      <div style="font-size:11px;color:var(--muted);">{meta['full']} &mdash; {meta['target']} &mdash; <span style="font-style:italic;">last {code} survey per country</span></div>
     </div>
     <div style="display:flex;gap:7px;flex-wrap:wrap;">
-      <span style="background:{CYCLE_STATUS_COLORS['On Cycle']}1a;color:{CYCLE_STATUS_COLORS['On Cycle']};padding:3px 10px;border-radius:8px;font-size:11px;font-weight:700;">{k['n_on_cycle']} On Cycle</span>
-      <span style="background:{CYCLE_STATUS_COLORS['Attempt to update']}1a;color:{CYCLE_STATUS_COLORS['Attempt to update']};padding:3px 10px;border-radius:8px;font-size:11px;font-weight:700;">{k['n_attempt_to_update']} Attempt to update</span>
-      <span style="background:{CYCLE_STATUS_COLORS['Off Cycle']}1a;color:{CYCLE_STATUS_COLORS['Off Cycle']};padding:3px 10px;border-radius:8px;font-size:11px;font-weight:700;">{k['n_off_cycle']} Off Cycle</span>
-      <span style="background:{CYCLE_STATUS_COLORS['Never Conducted']}1a;color:{CYCLE_STATUS_COLORS['Never Conducted']};padding:3px 10px;border-radius:8px;font-size:11px;font-weight:700;">{k['n_never']} Never Conducted</span>
+      <span style="background:{CYCLE_STATUS_COLORS['On Cycle']}1a;color:{CYCLE_STATUS_COLORS['On Cycle']};padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;">{k['n_on_cycle']} On Cycle</span>
+      <span style="background:{CYCLE_STATUS_COLORS['Attempt to update']}1a;color:{CYCLE_STATUS_COLORS['Attempt to update']};padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;">{k['n_attempt_to_update']} Attempt to update</span>
+      <span style="background:{CYCLE_STATUS_COLORS['Off Cycle']}1a;color:{CYCLE_STATUS_COLORS['Off Cycle']};padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;">{k['n_off_cycle']} Off Cycle</span>
+      <span style="background:{CYCLE_STATUS_COLORS['Never Conducted']}1a;color:{CYCLE_STATUS_COLORS['Never Conducted']};padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;">{k['n_never']} Never Conducted</span>
     </div>
   </div>
   <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.7;">{k['briefing']}</p>
@@ -1941,7 +1949,7 @@ def build_html(A: dict) -> str:
         <button id="exec-filter-reset" class="filter-reset" style="padding:7px 14px;">
           <i class="fas fa-undo"></i>&nbsp; Reset to STEPS
         </button>
-        <span id="exec-survey-badge" style="font-size:11.5px;font-weight:600;color:var(--primary);margin-left:6px;padding:5px 12px;background:#eef4ff;border-radius:20px;border:1px solid #c8d8f8;">
+        <span id="exec-survey-badge" style="font-size:11px;font-weight:600;color:var(--primary);margin-left:6px;padding:5px 12px;background:#eef4ff;border-radius:9999px;border:1px solid #c8d8f8;">
           STEPS &mdash; NCD Risk Factor Surveillance
         </span>
       </div>
@@ -1962,49 +1970,49 @@ def build_html(A: dict) -> str:
       <div class="signal-grid" style="grid-template-columns:repeat(4,1fr);">
 
         <div class="signal-card reveal" style="color:{st_on};">
-          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:{st_on};margin-bottom:4px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:{st_on};margin-bottom:4px;">
             <i class="fas fa-check-circle"></i>&nbsp; On Cycle
           </div>
           <div class="signal-val" id="exec-n-oncycle" data-count="{exec_steps['n_on_cycle']}">{exec_steps['n_on_cycle']}</div>
           <div class="signal-lbl">Countries</div>
           <div class="signal-sub" id="exec-n-oncycle-sub">{exec_steps['n_on_cycle']} of {n_ent} countries</div>
-          <div id="exec-n-oncycle-def" style="font-size:10px;color:#6b7280;margin-top:5px;line-height:1.4;">
+          <div id="exec-n-oncycle-def" style="font-size:11px;color:#6b7280;margin-top:5px;line-height:1.4;">
             Completed &#8804;&nbsp;5 years ago &mdash; current, usable evidence
           </div>
         </div>
 
         <div class="signal-card reveal" style="color:{st_att};">
-          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:{st_att};margin-bottom:4px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:{st_att};margin-bottom:4px;">
             <i class="fas fa-sync-alt"></i>&nbsp; Attempt to Update
           </div>
           <div class="signal-val" id="exec-n-implement" data-count="{exec_steps['n_attempt_to_update']}">{exec_steps['n_attempt_to_update']}</div>
           <div class="signal-lbl">Countries</div>
           <div class="signal-sub" id="exec-n-implement-sub">{exec_steps['n_attempt_to_update']} of {n_ent} countries</div>
-          <div id="exec-n-implement-def" style="font-size:10px;color:#6b7280;margin-top:5px;line-height:1.4;">
+          <div id="exec-n-implement-def" style="font-size:11px;color:#6b7280;margin-top:5px;line-height:1.4;">
             Prior evidence exists &mdash; actively updating with new survey
           </div>
         </div>
 
         <div class="signal-card reveal" style="color:{st_off};">
-          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:{st_off};margin-bottom:4px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:{st_off};margin-bottom:4px;">
             <i class="fas fa-pause-circle"></i>&nbsp; Off Cycle
           </div>
           <div class="signal-val" id="exec-n-offcycle" data-count="{exec_steps['n_off_cycle']}">{exec_steps['n_off_cycle']}</div>
           <div class="signal-lbl">Countries</div>
           <div class="signal-sub" id="exec-n-offcycle-sub">{exec_steps['n_off_cycle']} of {n_ent} countries</div>
-          <div id="exec-n-offcycle-def" style="font-size:10px;color:#6b7280;margin-top:5px;line-height:1.4;">
+          <div id="exec-n-offcycle-def" style="font-size:11px;color:#6b7280;margin-top:5px;line-height:1.4;">
             Has prior evidence but surveillance is idle &mdash; off-cycle
           </div>
         </div>
 
         <div class="signal-card reveal" style="color:{st_nev};">
-          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:{st_nev};margin-bottom:4px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:{st_nev};margin-bottom:4px;">
             <i class="fas fa-ban"></i>&nbsp; Never Conducted
           </div>
           <div class="signal-val" id="exec-n-never" data-count="{exec_steps['n_never']}">{exec_steps['n_never']}</div>
           <div class="signal-lbl">Countries</div>
           <div class="signal-sub" id="exec-n-never-sub">{exec_steps['n_never']} of {n_ent} countries</div>
-          <div id="exec-n-never-def" style="font-size:10px;color:#6b7280;margin-top:5px;line-height:1.4;">
+          <div id="exec-n-never-def" style="font-size:11px;color:#6b7280;margin-top:5px;line-height:1.4;">
             Never completed &mdash; no policy-usable evidence exists
           </div>
         </div>
@@ -2151,7 +2159,7 @@ def build_html(A: dict) -> str:
 
       <div class="chart-card reveal" style="margin-bottom:20px;">
         <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
-          <button id="btn-export-spi" style="font-family:var(--font);font-size:11px;font-weight:700;padding:7px 16px;border-radius:8px;border:none;background:#003d82;color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:6px;"><i class="fas fa-file-excel"></i>&nbsp;Export Excel</button>
+          <button id="btn-export-spi" style="font-family:var(--font);font-size:11px;font-weight:700;padding:7px 16px;border-radius:10px;border:none;background:#003d82;color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:6px;"><i class="fas fa-file-excel"></i>&nbsp;Export Excel</button>
         </div>
         {scorecard_table(spi)}
       </div>
@@ -2174,14 +2182,14 @@ def build_html(A: dict) -> str:
       <div class="section-divider-label">Historical Activity Timeline - By Survey Instrument</div>
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;flex-wrap:wrap;">
         <label style="font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;">Survey instrument:</label>
-        <select id="cycle-timeline-filter" style="font-family:var(--font);font-size:13px;font-weight:600;border:1.5px solid var(--border);border-radius:8px;padding:7px 14px;background:#fff;color:var(--text);cursor:pointer;transition:border-color .2s;" onchange="updateTimeline(this.value)">
+        <select id="cycle-timeline-filter" style="font-family:var(--font);font-size:14px;font-weight:600;border:2px solid var(--border);border-radius:10px;padding:7px 14px;background:#fff;color:var(--text);cursor:pointer;transition:border-color .2s;" onchange="updateTimeline(this.value)">
           <option value="STEPS" selected>STEPS - NCD Risk Factor Survey</option>
           <option value="GYTS">GYTS - Global Youth Tobacco Survey</option>
           <option value="GSHS">GSHS - Global School Health Survey</option>
           <option value="GATS">GATS - Global Adult Tobacco Survey</option>
           <option value="GSHPP">GSHPP - School Health Policies &amp; Practices</option>
         </select>
-        <button onclick="(function(){{var f=document.getElementById('cycle-timeline-filter');f.value='STEPS';updateTimeline('STEPS');}})();" style="font-family:var(--font);font-size:11px;font-weight:600;border:1.5px solid var(--border);border-radius:8px;padding:7px 14px;background:#f4f7fb;color:var(--muted);cursor:pointer;transition:all .2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f4f7fb'"><i class="fas fa-undo" style="margin-right:5px;"></i>Reset</button>
+        <button onclick="(function(){{var f=document.getElementById('cycle-timeline-filter');f.value='STEPS';updateTimeline('STEPS');}})();" style="font-family:var(--font);font-size:11px;font-weight:600;border:2px solid var(--border);border-radius:10px;padding:7px 14px;background:#f4f7fb;color:var(--muted);cursor:pointer;transition:all .2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f4f7fb'"><i class="fas fa-undo" style="margin-right:5px;"></i>Reset</button>
       </div>
       <div class="chart-card reveal" style="margin-bottom:24px;">
         <div id="cycle-timeline-chart" style="width:100%;min-height:400px;"></div>
@@ -2196,7 +2204,7 @@ def build_html(A: dict) -> str:
       <div class="section-divider-label" style="margin-top:28px;">Surveillance Recency Matrix &mdash; Country &times; Instrument</div>
       <div class="chart-card reveal">
         {ch_heatmap}
-        <div class="chart-commentary"><strong>Surveillance Recency Matrix:</strong> Each cell = year of the most recent <em>completed</em> survey for a given country &times; instrument pair. <span style="display:inline-block;background:#dde4ee;border-radius:4px;padding:1px 8px;font-size:11px;font-weight:600;color:#555;">Grey</span> = no completed survey on record (never conducted). Deep green = current evidence (2021&ndash;2026). Yellow/orange = evidence ageing. Red = critically outdated. Countries sorted top-to-bottom by SPI rank. Grey cells indicate instrument-specific evidence gaps requiring targeted reinvestment.</div>
+        <div class="chart-commentary"><strong>Surveillance Recency Matrix:</strong> Each cell = year of the most recent <em>completed</em> survey for a given country &times; instrument pair. <span style="display:inline-block;background:#dde4ee;border-radius:6px;padding:1px 8px;font-size:11px;font-weight:600;color:#555;">Grey</span> = no completed survey on record (never conducted). Deep green = current evidence (2021&ndash;2026). Yellow/orange = evidence ageing. Red = critically outdated. Countries sorted top-to-bottom by SPI rank. Grey cells indicate instrument-specific evidence gaps requiring targeted reinvestment.</div>
       </div>
 
     </div>
@@ -2216,7 +2224,7 @@ def build_html(A: dict) -> str:
         </p>
       </div>
 
-      {'<div class="profile-no-data" style="padding:40px;text-align:center;color:var(--muted);"><i class="fas fa-database" style="font-size:32px;opacity:.3;margin-bottom:12px;display:block;"></i><p>No indicator data found. Ensure STEP.db and the GYTS/GATS profile JSON files are present in the data/ folder and run the pipeline.</p></div>' if not _prof_countries else ""}
+      {'<div class="profile-no-data" style="padding:40px;text-align:center;color:var(--muted);"><i class="fas fa-database" style="font-size:36px;opacity:.3;margin-bottom:12px;display:block;"></i><p>No indicator data found. Ensure STEP.db and the GYTS/GATS profile JSON files are present in the data/ folder and run the pipeline.</p></div>' if not _prof_countries else ""}
 
       <div class="filter-bar" style="{'display:none;' if not _prof_countries else ''}">
         <span class="filter-label"><i class="fas fa-map-marker-alt"></i>&nbsp; Country</span>
@@ -2226,7 +2234,7 @@ def build_html(A: dict) -> str:
         <span class="filter-label" style="margin-left:6px;">Survey</span>
         <select id="profile-survey-select" class="filter-select" style="min-width:240px;">
         </select>
-        <button id="btn-export-profile" style="font-family:var(--font);font-size:11px;font-weight:700;padding:7px 16px;border-radius:8px;border:none;background:#003d82;color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:6px;margin-left:auto;"><i class="fas fa-file-excel"></i>&nbsp;Export Excel</button>
+        <button id="btn-export-profile" style="font-family:var(--font);font-size:11px;font-weight:700;padding:7px 16px;border-radius:10px;border:none;background:#003d82;color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:6px;margin-left:auto;"><i class="fas fa-file-excel"></i>&nbsp;Export Excel</button>
       </div>
 
       <div id="country-profile-content">
@@ -2251,13 +2259,13 @@ def build_html(A: dict) -> str:
       </div>
 
       <!-- Survey instrument filter pills -->
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:24px;padding:16px 20px;background:linear-gradient(135deg,#f0f4fc,#e8eef8);border-radius:14px;border:1px solid #d8def0;box-shadow:0 2px 10px rgba(0,20,80,.06);">
-        <span style="font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.9px;margin-right:4px;white-space:nowrap;"><i class="fas fa-sliders-h"></i>&nbsp; Survey instrument:</span>
-        <button class="prio-pill" data-survey="STEPS"  data-color="#003d82" style="font-family:var(--font);font-size:12px;font-weight:700;padding:8px 20px;border-radius:22px;border:2px solid #003d82;background:#003d82;color:#fff;cursor:pointer;transition:all .25s;box-shadow:0 4px 12px rgba(0,61,130,.3);">STEPS</button>
-        <button class="prio-pill" data-survey="GYTS"   data-color="#c0392b" style="font-family:var(--font);font-size:12px;font-weight:700;padding:8px 20px;border-radius:22px;border:2px solid var(--border);background:#f4f7fb;color:var(--muted);cursor:pointer;transition:all .25s;">GYTS</button>
-        <button class="prio-pill" data-survey="GSHS"   data-color="#f7941d" style="font-family:var(--font);font-size:12px;font-weight:700;padding:8px 20px;border-radius:22px;border:2px solid var(--border);background:#f4f7fb;color:var(--muted);cursor:pointer;transition:all .25s;">GSHS</button>
-        <button class="prio-pill" data-survey="GATS"   data-color="#8e44ad" style="font-family:var(--font);font-size:12px;font-weight:700;padding:8px 20px;border-radius:22px;border:2px solid var(--border);background:#f4f7fb;color:var(--muted);cursor:pointer;transition:all .25s;">GATS</button>
-        <button class="prio-pill" data-survey="GSHPP"  data-color="#00a651" style="font-family:var(--font);font-size:12px;font-weight:700;padding:8px 20px;border-radius:22px;border:2px solid var(--border);background:#f4f7fb;color:var(--muted);cursor:pointer;transition:all .25s;">GSHPP</button>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:24px;padding:16px 20px;background:linear-gradient(135deg,#f0f4fc,#e8eef8);border-radius:16px;border:1px solid #d8def0;box-shadow:0 2px 10px rgba(0,20,80,.06);">
+        <span style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.9px;margin-right:4px;white-space:nowrap;"><i class="fas fa-sliders-h"></i>&nbsp; Survey instrument:</span>
+        <button class="prio-pill" data-survey="STEPS"  data-color="#003d82" style="font-family:var(--font);font-size:12px;font-weight:700;padding:8px 20px;border-radius:9999px;border:2px solid #003d82;background:#003d82;color:#fff;cursor:pointer;transition:all 240ms;box-shadow:0 4px 12px rgba(0,61,130,.3);">STEPS</button>
+        <button class="prio-pill" data-survey="GYTS"   data-color="#c0392b" style="font-family:var(--font);font-size:12px;font-weight:700;padding:8px 20px;border-radius:9999px;border:2px solid var(--border);background:#f4f7fb;color:var(--muted);cursor:pointer;transition:all 240ms;">GYTS</button>
+        <button class="prio-pill" data-survey="GSHS"   data-color="#f7941d" style="font-family:var(--font);font-size:12px;font-weight:700;padding:8px 20px;border-radius:9999px;border:2px solid var(--border);background:#f4f7fb;color:var(--muted);cursor:pointer;transition:all 240ms;">GSHS</button>
+        <button class="prio-pill" data-survey="GATS"   data-color="#8e44ad" style="font-family:var(--font);font-size:12px;font-weight:700;padding:8px 20px;border-radius:9999px;border:2px solid var(--border);background:#f4f7fb;color:var(--muted);cursor:pointer;transition:all 240ms;">GATS</button>
+        <button class="prio-pill" data-survey="GSHPP"  data-color="#00a651" style="font-family:var(--font);font-size:12px;font-weight:700;padding:8px 20px;border-radius:9999px;border:2px solid var(--border);background:#f4f7fb;color:var(--muted);cursor:pointer;transition:all 240ms;">GSHPP</button>
         <input id="pr-search" type="search" placeholder="Search country&hellip;" class="filter-input" style="margin-left:auto;width:190px;" aria-label="Search countries across the Strategic Priority tables"/>
         <span id="pr-count" class="filter-count" style="margin-left:0;"></span>
       </div>
@@ -2267,7 +2275,7 @@ def build_html(A: dict) -> str:
         <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:14px;">
           <div>
             <h3 style="font-size:14px;font-weight:700;color:{C['primary']};margin:0 0 4px;"><i class="fas fa-crosshairs"></i>&nbsp; Strategic Quadrant Analysis</h3>
-            <p style="font-size:11.5px;color:var(--muted);margin:0;line-height:1.5;">Country position: <strong>survey gap</strong> (x) vs <strong>overall SPI</strong> (y). Drag sliders to redefine quadrant boundaries.</p>
+            <p style="font-size:11px;color:var(--muted);margin:0;line-height:1.5;">Country position: <strong>survey gap</strong> (x) vs <strong>overall SPI</strong> (y). Drag sliders to redefine quadrant boundaries.</p>
           </div>
           <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:11px;font-weight:600;align-items:center;">
             <span><span style="color:#c0392b;font-size:14px;">&#9632;</span> URGENT</span>
@@ -2279,21 +2287,21 @@ def build_html(A: dict) -> str:
         <!-- Movable threshold sliders -->
         <div style="display:flex;gap:32px;flex-wrap:wrap;align-items:center;padding:12px 16px;background:#f0f4fc;border-radius:10px;margin-bottom:14px;border:1px solid #d8def0;">
           <div style="display:flex;align-items:center;gap:10px;">
-            <i class="fas fa-arrows-alt-h" style="color:#14265c;font-size:13px;"></i>
+            <i class="fas fa-arrows-alt-h" style="color:#14265c;font-size:14px;"></i>
             <span style="font-size:11px;font-weight:700;color:{C['primary']};white-space:nowrap;">Gap threshold:</span>
             <input type="range" id="prio-gap-cut" min="1" max="35" value="5"
               style="width:130px;accent-color:#003d82;cursor:pointer;"/>
-            <span style="font-size:13px;font-weight:800;color:#003d82;min-width:38px;"><span id="prio-gap-val">5</span>&nbsp;yrs</span>
+            <span style="font-size:14px;font-weight:800;color:#003d82;min-width:38px;"><span id="prio-gap-val">5</span>&nbsp;yrs</span>
           </div>
           <div style="width:1px;height:28px;background:#d0d8ee;"></div>
           <div style="display:flex;align-items:center;gap:10px;">
-            <i class="fas fa-arrows-alt-v" style="color:#14265c;font-size:13px;"></i>
+            <i class="fas fa-arrows-alt-v" style="color:#14265c;font-size:14px;"></i>
             <span style="font-size:11px;font-weight:700;color:{C['primary']};white-space:nowrap;">SPI threshold:</span>
             <input type="range" id="prio-spi-cut" min="5" max="95" value="50"
               style="width:130px;accent-color:#003d82;cursor:pointer;"/>
-            <span style="font-size:13px;font-weight:800;color:#003d82;min-width:38px;"><span id="prio-spi-val">50</span>&nbsp;pts</span>
+            <span style="font-size:14px;font-weight:800;color:#003d82;min-width:38px;"><span id="prio-spi-val">50</span>&nbsp;pts</span>
           </div>
-          <span style="font-size:10.5px;color:var(--muted);font-style:italic;margin-left:auto;"><i class="fas fa-hand-pointer"></i>&nbsp; Sliders update the chart in real time</span>
+          <span style="font-size:11px;color:var(--muted);font-style:italic;margin-left:auto;"><i class="fas fa-hand-pointer"></i>&nbsp; Sliders update the chart in real time</span>
         </div>
         <div id="prio-scatter-chart" style="height:490px;width:100%;"></div>
       </div>
@@ -2341,7 +2349,7 @@ def build_html(A: dict) -> str:
             <li style="margin-bottom:8px;"><strong style="color:#003d82;">Currency:</strong> How recent is the available evidence? Older surveys contribute progressively less, with evidence value halving roughly every seven years. This dimension rewards countries that keep their data fresh and penalises those whose most recent survey is distant in time.</li>
             <li><strong style="color:#003d82;">Regularity:</strong> Does the country survey on schedule? Countries that complete each instrument close to the WHO-recommended five-year cycle score well. This dimension is only applicable when a country has conducted a given instrument at least twice, as a single round is not enough to assess cycling behaviour.</li>
           </ul>
-          <p style="font-size:11.5px;color:var(--muted);margin-top:12px;margin-bottom:12px;line-height:1.75;font-style:italic;">
+          <p style="font-size:11px;color:var(--muted);margin-top:12px;margin-bottom:12px;line-height:1.75;font-style:italic;">
             The three dimensions are equally weighted and combined into a single score. Countries that have never conducted any survey score zero. Countries with broad, current, and regular surveillance score toward 100.
           </p>
           <div style="display:flex;gap:6px;flex-wrap:wrap;">

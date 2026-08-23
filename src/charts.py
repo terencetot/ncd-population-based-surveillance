@@ -9,7 +9,7 @@ import plotly.express as px
 from plotly.subplots import make_subplots
 from src.config import (C, FONT, TIER_COLORS, TIER_LABELS, SURVEY_META,
                         CURRENT_YEAR, CYCLE_YEARS, CURRENT_CYCLE_START,
-                        PREV_CYCLE_START, STATUS_COLORS)
+                        PREV_CYCLE_START, STATUS_COLORS, CYCLE_STATUS_COLORS)
 
 
 def _layout(fig, title="", height=420):
@@ -38,26 +38,6 @@ def _html(fig, first=False):
                 "modeBarButtonsToRemove":["lasso2d","select2d"],
                 "displaylogo":False},
     )
-
-
-def fig_status_donut(A):
-    sd = A["status_dist"]
-    colors = [STATUS_COLORS.get(s, C["muted"]) for s in sd["status"]]
-    fig = go.Figure(go.Pie(
-        labels=sd["status"], values=sd["count"], marker_colors=colors,
-        hole=0.62, textinfo="label+percent",
-        textfont=dict(size=12, family=FONT),
-        hovertemplate="<b>%{label}</b><br>Count: %{value}<br>%{percent}<extra></extra>",
-        pull=[0.04 if s == "Not Usable" else 0 for s in sd["status"]],
-    ))
-    fig.add_annotation(
-        text=f"<b>{A['n_completed']}</b><br><span style='font-size:11px'>Completed</span>",
-        x=0.5, y=0.5, xref="paper", yref="paper",
-        showarrow=False, font=dict(size=16, color=C["dark"], family=FONT), align="center",
-    )
-    _layout(fig, "Survey Implementation Status", 360)
-    fig.update_layout(showlegend=True, legend=dict(orientation="h", y=-0.08))
-    return fig
 
 
 def fig_spi_bar(A):
@@ -447,10 +427,10 @@ def fig_survey_type_comparison(A):
     survey_types = [st for st in SURVEY_META.keys() if st in kpis]
 
     statuses = [
-        ("n_on_cycle",           "On Cycle",           "#00a651"),
-        ("n_attempt_to_update",  "Attempt to Update",  "#4a90e2"),
-        ("n_off_cycle",          "Off Cycle",          "#f7941d"),
-        ("n_never",              "Never Conducted",    "#adb5bd"),
+        ("n_on_cycle",           "On Cycle",           CYCLE_STATUS_COLORS["On Cycle"]),
+        ("n_attempt_to_update",  "Attempt to Update",  CYCLE_STATUS_COLORS["Attempt to update"]),
+        ("n_off_cycle",          "Off Cycle",          CYCLE_STATUS_COLORS["Off Cycle"]),
+        ("n_never",              "Never Conducted",    CYCLE_STATUS_COLORS["Never Conducted"]),
     ]
 
     fig = go.Figure()
