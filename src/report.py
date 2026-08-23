@@ -8,7 +8,8 @@ import pandas as pd
 from pathlib import Path
 from src.config import (C, FONT, TIER_COLORS, TIER_LABELS, SURVEY_META,
                         CURRENT_YEAR, CYCLE_YEARS, CURRENT_CYCLE_START,
-                        REPORT_DATE, ASSETS_DIR)
+                        REPORT_DATE, ASSETS_DIR, CYCLE_STATUS_LABELS, CYCLE_STATUS_COLORS,
+                        FS, RADIUS, DUR, EASE)
 from src.charts import (fig_tier_donut, fig_spi_bar, fig_spi_choropleth,
                         fig_spi_components, fig_current_cycle,
                         fig_last_year_heatmap, fig_priority_scatter,
@@ -35,6 +36,19 @@ COUNTRY_MAPS: dict = {}
 if _MAPS_DIR.exists():
     for mp in sorted(_MAPS_DIR.glob("*.png")):
         COUNTRY_MAPS[mp.stem] = _b64(mp)
+
+# ── Shared formatting helpers ──────────────────────────────────────────────────
+def fmt_years(n, prefix: str = "") -> str:
+    """'1 yr' / '2 yrs' — every year-count rendering routes through this."""
+    v = int(round(float(n)))
+    return f"{prefix}{v} yr" if v == 1 else f"{prefix}{v} yrs"
+
+
+def fmt_spi(v, decimals: int = 1) -> str:
+    """Single formatter for the regional/country SPI score, so every display
+    (hero badge, Performance tab, tables) renders the same precision."""
+    return f"{float(v):.{decimals}f}"
+
 
 # ── CSS ────────────────────────────────────────────────────────────────────────
 CSS = """
@@ -432,13 +446,16 @@ JS = """
   const SPI_SCORES = __SPI_SCORES_PLACEHOLDER__;
 
   const _FONT = "Poppins,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
-  const _STATUS_LABELS = ['On Cycle','Attempt to update','Off Cycle','Never Conducted'];
-  const _STATUS_CLR = {
-    'On Cycle':          '#00a651',
-    'Attempt to update': '#4a90e2',
-    'Off Cycle':         '#f7941d',
-    'Never Conducted':   '#909090'
-  };
+  function _hexA(hex,a){
+    var h=hex.replace('#','');
+    var r=parseInt(h.substring(0,2),16),g=parseInt(h.substring(2,4),16),b=parseInt(h.substring(4,6),16);
+    return 'rgba('+r+','+g+','+b+','+a+')';
+  }
+  // Single source of truth for status colour, generated from src/config.py's
+  // STATUS_COLORS so the server-rendered badges/tables and every JS chart
+  // (donut, scatter, KPI cards) always agree — see Phase 3/4 colour-system fix.
+  const _STATUS_LABELS = __STATUS_LABELS_PLACEHOLDER__;
+  const _STATUS_CLR = __STATUS_COLORS_PLACEHOLDER__;
 
   function updateExecDonut(d) {
     var divId='exec-donut-chart';
@@ -491,7 +508,7 @@ JS = """
     var clrs=gaps.map(function(g){
       if(g>=15)return'#c0392b';
       if(g>=10)return'#f7941d';
-      if(g>=5)return'#f1c40f';
+      if(g>=5)return'#c8a600';
       return'#00a651';
     });
     var hov=withData.map(function(c){
@@ -640,12 +657,14 @@ JS = """
     if(!chartEl||typeof Plotly==='undefined') return;
     var cgap=d.countries_gap||[];
     var MAXGAP=40;
-    var statusCfg={
-      'On Cycle':          {color:'#00a651',fill:'rgba(0,166,81,.85)',  symbol:'circle',      sz:15,lw:1.5},
-      'Attempt to update': {color:'#4a90e2',fill:'rgba(74,144,226,.85)',symbol:'triangle-up', sz:14,lw:1.5},
-      'Off Cycle':         {color:'#f7941d',fill:'rgba(247,148,29,.85)',symbol:'square',       sz:13,lw:1.5},
-      'Never Conducted':   {color:'#c0392b',fill:'rgba(0,0,0,0)',       symbol:'circle-open',  sz:12,lw:2}
-    };
+    var _SYMBOL={'On Cycle':'circle','Attempt to update':'triangle-up','Off Cycle':'square','Never Conducted':'circle-open'};
+    var _SIZE  ={'On Cycle':15,'Attempt to update':14,'Off Cycle':13,'Never Conducted':12};
+    var statusCfg={};
+    _STATUS_LABELS.forEach(function(s){
+      var isOpen=s==='Never Conducted';
+      statusCfg[s]={color:_STATUS_CLR[s],fill:isOpen?'rgba(0,0,0,0)':_hexA(_STATUS_CLR[s],.85),
+                    symbol:_SYMBOL[s],sz:_SIZE[s],lw:isOpen?2:1.5};
+    });
     var traceData={};
     Object.keys(statusCfg).forEach(function(s){traceData[s]={x:[],y:[],text:[]};});
     cgap.forEach(function(c){
@@ -1438,7 +1457,7 @@ def scorecard_table(spi):
     rows = ""
     for i, (_, r) in enumerate(spi.iterrows(), 1):
         tc  = TIER_COLORS[r["tier"]]
-        gap_s  = f"{int(r['gap_years'])} yrs" if pd.notna(r["gap_years"]) and r["gap_years"] else "-"
+        gap_s  = fmt_years(r["gap_years"]) if pd.notna(r["gap_years"]) else "—"
         last_s = str(int(r["last_year"])) if pd.notna(r["last_year"]) and r["last_year"] else "-"
         cycle_val = 1 if r["recent_done"] > 0 else 0
         cycle_s = (f"{int(r['recent_done'])} done" if r["recent_done"] > 0
@@ -1447,9 +1466,10 @@ def scorecard_table(spi):
         map_img = (f'<img class="country-map" src="data:image/png;base64,{COUNTRY_MAPS[r["iso3"]]}" '
                    f'alt="{r["iso3"]}"/>'
                    if r["iso3"] in COUNTRY_MAPS else "")
-        reg_s  = (f"{r['d_regularity']:.1f}" if r["n_renewable"] > 0
-                  else '<span style="color:#aaa;font-style:italic;font-size:10px;" title="No instrument has been conducted twice yet">n/a</span>')
-        avg_iv = (f"~{r['avg_cycle_interval']:.0f} yr" if r["avg_cycle_interval"] else "-")
+        _NOT_COMPUTABLE = '<span style="color:#aaa;cursor:help;" title="Not computable — fewer than 2 completed rounds">—</span>'
+        reg_s  = f"{r['d_regularity']:.1f}" if r["n_renewable"] > 0 else _NOT_COMPUTABLE
+        avg_iv = (fmt_years(r["avg_cycle_interval"], prefix="~")
+                  if pd.notna(r["avg_cycle_interval"]) else _NOT_COMPUTABLE)
         rows += f"""
 <tr data-country="{r['country'].lower()}" data-tier="{r['tier']}" data-gap="{r['gap_cat']}" data-cycle="{cycle_val}" data-reg="{r['reg_cat']}">
   <td class="rank-cell" style="padding:8px 10px;">{i}</td>
@@ -1473,67 +1493,20 @@ def scorecard_table(spi):
     return f"""
 <div style="overflow-x:auto;">
 <table id="scorecard-table" style="width:100%;border-collapse:collapse;font-size:12.5px;">
+<caption style="text-align:left;font-size:11.5px;color:var(--muted);font-style:italic;padding-bottom:10px;">
+  Country Surveillance Scorecard — SPI ranking and dimension scores. The <strong>Last Survey</strong> and <strong>Gap</strong> columns span
+  <strong>all five instruments</strong> (most recent completed survey of any type); see the Strategic Priority tab for instrument-specific recency.
+</caption>
 <thead><tr style="background:{C['primary']};color:#fff;">
   <th style="padding:9px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">#</th>
   <th style="padding:9px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Country</th>
   <th style="padding:9px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">SPI / Tier</th>
-  <th style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;" title="Breadth Score - count of instrument types completed ≥1 time / 5">BS</th>
-  <th style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;" title="Currency Score - mean exp decay μ=ln2/7 over all 5 instruments">CS</th>
-  <th style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;" title="Coverage-Adjusted Regularity - ARI × (assessable / 5); n/a if no instrument has ≥2 rounds">CA-ARI</th>
-  <th style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;" title="Average years between consecutive survey rounds">Avg Interval</th>
-  <th style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Last Survey</th>
+  <th scope="col" style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;" title="Breadth — count of instrument types completed ≥1 time, out of 5">Breadth</th>
+  <th scope="col" style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;" title="Currency — mean exponential-decay recency score (half-life ≈7 yr) over all 5 instruments">Currency</th>
+  <th scope="col" style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;" title="Regularity — coverage-adjusted average renewal interval score; not computable if no instrument has ≥2 rounds">Regularity</th>
+  <th scope="col" style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;" title="Average years between consecutive survey rounds, across all instruments with ≥2 rounds">Avg Interval</th>
+  <th scope="col" style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;" title="Most recent completed survey across ALL five instruments — not instrument-specific">Last Survey (any instrument)</th>
   <th style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Gap</th>
-</tr></thead>
-<tbody>{rows}</tbody>
-</table>
-</div>"""
-
-
-def priority_table(spi):
-    rows = ""
-    for i, (_, r) in enumerate(spi.iterrows(), 1):
-        tc  = TIER_COLORS[r["tier"]]
-        gap_s  = f"{int(r['gap_years'])} yrs" if pd.notna(r["gap_years"]) and r["gap_years"] else "No data"
-        last_s = str(int(r["last_year"])) if pd.notna(r["last_year"]) and r["last_year"] else "Never"
-        cycle_val = 1 if r["recent_done"] > 0 else 0
-        if r["recent_done"] > 0:
-            act_s = "Active ✓"; act_c = C["success"]
-        elif r["recent_inprog"] > 0:
-            act_s = "In Pipeline"; act_c = C["warning"]
-        else:
-            act_s = "Inactive"; act_c = C["danger"]
-        gap_c = C["danger"] if r["gap_years"] and r["gap_years"] > 10 else (
-                C["warning"] if r["gap_years"] and r["gap_years"] > 5 else C["success"])
-        map_img = (f'<img class="country-map" src="data:image/png;base64,{COUNTRY_MAPS[r["iso3"]]}" '
-                   f'alt="{r["iso3"]}"/>'
-                   if r["iso3"] in COUNTRY_MAPS else "")
-        rows += f"""
-<tr data-country="{r['country'].lower()}" data-tier="{r['tier']}" data-gap="{r['gap_cat']}" data-cycle="{cycle_val}">
-  <td style="padding:8px 12px;">{i}</td>
-  <td style="padding:8px 12px;">
-    <div style="display:flex;align-items:center;">{map_img}<strong>{r['country']}</strong></div>
-  </td>
-  <td style="padding:8px 12px;"><strong style="color:{tc}">{r['spi']:.1f}</strong></td>
-  <td style="padding:8px 12px;"><span style="background:{tc};color:#fff;padding:2px 9px;border-radius:10px;font-size:10.5px;font-weight:700">{r['tier_label']}</span></td>
-  <td style="padding:8px 12px;">{r['d_coverage']:.0f}%</td>
-  <td style="padding:8px 12px;">{r['d_recency']:.0f}%</td>
-  <td style="padding:8px 12px;">{last_s}</td>
-  <td style="padding:8px 12px;color:{gap_c};font-weight:600">{gap_s}</td>
-  <td style="padding:8px 12px;"><span style="color:{act_c};font-weight:600">{act_s}</span></td>
-</tr>"""
-    return f"""
-<div style="overflow-x:auto;max-height:560px;overflow-y:auto;">
-<table id="prio-table-el" class="prio-table">
-<thead><tr>
-  <th style="padding:9px 12px;">#</th>
-  <th style="padding:9px 12px;">Country</th>
-  <th style="padding:9px 12px;">SPI</th>
-  <th style="padding:9px 12px;">Tier</th>
-  <th style="padding:9px 12px;">Coverage</th>
-  <th style="padding:9px 12px;">Recency</th>
-  <th style="padding:9px 12px;">Last Survey</th>
-  <th style="padding:9px 12px;">Gap</th>
-  <th style="padding:9px 12px;">Cycle Status</th>
 </tr></thead>
 <tbody>{rows}</tbody>
 </table>
@@ -1582,75 +1555,56 @@ def schema_cards():
     return html
 
 
-def gap_priority_table(A):
-    spi  = A["spi"].copy()
-    crit = spi[spi["tier"] == 4].sort_values("gap_years", ascending=False, na_position="last").head(15)
-    if len(crit) == 0:
-        return "<p style='color:var(--muted);font-size:13px;'>No Critical-tier countries identified.</p>"
-    rows = ""
-    for _, r in crit.iterrows():
-        gap_s  = f"{int(r['gap_years'])} yrs" if pd.notna(r["gap_years"]) and r["gap_years"] else "No data"
-        last_s = str(int(r["last_year"])) if pd.notna(r["last_year"]) and r["last_year"] else "Never"
-        cycle_s = (f"{int(r['recent_done'])} completed" if r["recent_done"] > 0
-                   else (f"{int(r['recent_inprog'])} in progress" if r["recent_inprog"] > 0
-                         else "No current activity"))
-        rows += f"""
-<tr>
-  <td style="padding:8px 12px;"><strong>{r['country']}</strong></td>
-  <td style="padding:8px 12px;font-weight:700;color:{C['danger']}">{r['spi']:.1f}</td>
-  <td style="padding:8px 12px;">{r['d_coverage']:.0f}%</td>
-  <td style="padding:8px 12px;">{r['d_recency']:.0f}%</td>
-  <td style="padding:8px 12px;color:{C['danger']}">{last_s}</td>
-  <td style="padding:8px 12px;color:{C['danger']}">{gap_s}</td>
-  <td style="padding:8px 12px;">{cycle_s}</td>
-</tr>"""
-    return f"""
-<div style="overflow-x:auto;">
-<table style="width:100%;border-collapse:collapse;font-size:12.5px;">
-<thead><tr style="background:{C['danger']};color:#fff;">
-  <th style="padding:9px 12px;text-align:left;">Country</th>
-  <th style="padding:9px 12px;text-align:left;">SPI</th>
-  <th style="padding:9px 12px;text-align:left;">Coverage</th>
-  <th style="padding:9px 12px;text-align:left;">Recency</th>
-  <th style="padding:9px 12px;text-align:left;">Last Survey</th>
-  <th style="padding:9px 12px;text-align:left;">Gap</th>
-  <th style="padding:9px 12px;text-align:left;">Cycle Status</th>
-</tr></thead>
-<tbody>{rows}</tbody>
-</table>
-</div>"""
-
-
 def per_survey_sections(A):
-    """Generate per-instrument section cards for the Survey Analysis tab."""
+    """
+    Generate per-instrument section cards for the Survey Analysis tab.
+
+    Row status badges and header pills are derived from the SAME source
+    (exec_kpis' per-country status, the canonical 4-category vocabulary:
+    On Cycle / Attempt to update / Off Cycle / Never Conducted) so the two
+    can never contradict each other. The finer Overdue/Critical distinction
+    that used to compete as its own status is now shown as a sub-qualifier
+    next to the gap value instead (e.g. "Off Cycle · 9 yrs").
+    """
     kpis = A["exec_kpis"]
     cm   = A["cycle_matrix"]
-
-    STATUS_COLORS = {
-        "Current":     "#00a651",
-        "In Pipeline": "#f7941d",
-        "Overdue":     "#4a90e2",
-        "Critical":    "#c0392b",
-        "Never":       "#adb5bd",
-    }
 
     html = ""
     for code, meta in SURVEY_META.items():
         if code not in kpis:
             continue
-        k   = kpis[code]
+        k = kpis[code]
+        country_status = {g["country"]: g["status"] for g in k["countries_gap"]}
         sub = cm[cm["survey_type"] == code].sort_values("order").reset_index(drop=True)
+
+        # ── Build-time integrity check: table rows must reconcile with pills ──
+        status_tally = {s: 0 for s in CYCLE_STATUS_LABELS}
+        for c in country_status.values():
+            status_tally[c] += 1
+        pill_tally = {
+            "On Cycle": k["n_on_cycle"], "Attempt to update": k["n_attempt_to_update"],
+            "Off Cycle": k["n_off_cycle"], "Never Conducted": k["n_never"],
+        }
+        assert status_tally == pill_tally, (
+            f"{code}: per-country status tally {status_tally} != header pill tally {pill_tally}")
+        assert sum(status_tally.values()) == k["n_total"] == len(sub), (
+            f"{code}: status rows do not total {k['n_total']} countries")
 
         rows_html = ""
         for i, (_, row) in enumerate(sub.iterrows(), 1):
-            sc     = STATUS_COLORS.get(row["cycle_status"], "#adb5bd")
+            status = country_status.get(row["country"], "Never Conducted")
+            sc     = CYCLE_STATUS_COLORS[status]
             last_s = str(int(row["last_year"])) if pd.notna(row["last_year"]) and row["last_year"] else "Never"
-            gap_s  = f"{int(row['gap'])} yrs"   if pd.notna(row["gap"]) and row["gap"] else "-"
+            if pd.notna(row["gap"]):
+                qualifier = f" &middot; {row['cycle_status']}" if row["cycle_status"] in ("Overdue", "Critical") else ""
+                gap_s = fmt_years(row["gap"]) + qualifier
+            else:
+                gap_s = "&mdash;"
             bg     = "#fafbff" if i % 2 == 0 else "#ffffff"
             rows_html += f"""<tr style="background:{bg};">
   <td style="padding:6px 12px;font-size:12px;">{row['country']}</td>
   <td style="padding:6px 12px;text-align:center;">
-    <span style="background:{sc};color:#fff;padding:2px 8px;border-radius:10px;font-size:10.5px;font-weight:700;">{row['cycle_status']}</span>
+    <span style="background:{sc};color:#fff;padding:2px 8px;border-radius:10px;font-size:10.5px;font-weight:700;">{status}</span>
   </td>
   <td style="padding:6px 12px;text-align:center;font-size:12px;">{last_s}</td>
   <td style="padding:6px 12px;text-align:center;font-size:12px;">{gap_s}</td>
@@ -1661,23 +1615,23 @@ def per_survey_sections(A):
   <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
     <div>
       <h3 style="font-size:15px;font-weight:700;color:{meta['color']};margin:0 0 2px;">{code}</h3>
-      <div style="font-size:11.5px;color:var(--muted);">{meta['full']} &mdash; {meta['target']}</div>
+      <div style="font-size:11.5px;color:var(--muted);">{meta['full']} &mdash; {meta['target']} &mdash; <span style="font-style:italic;">last {code} survey per country</span></div>
     </div>
     <div style="display:flex;gap:7px;flex-wrap:wrap;">
-      <span style="background:#e6f5ec;color:#00a651;padding:3px 10px;border-radius:8px;font-size:11px;font-weight:700;">{k['n_on_cycle']} On Cycle</span>
-      <span style="background:#fff4e5;color:#f7941d;padding:3px 10px;border-radius:8px;font-size:11px;font-weight:700;">{k['n_attempt_to_update']} Updating</span>
-      <span style="background:#e8f0fb;color:#4a90e2;padding:3px 10px;border-radius:8px;font-size:11px;font-weight:700;">{k['n_off_cycle']} Off Cycle</span>
-      <span style="background:#fce8e6;color:#c0392b;padding:3px 10px;border-radius:8px;font-size:11px;font-weight:700;">{k['n_never']} Never</span>
+      <span style="background:{CYCLE_STATUS_COLORS['On Cycle']}1a;color:{CYCLE_STATUS_COLORS['On Cycle']};padding:3px 10px;border-radius:8px;font-size:11px;font-weight:700;">{k['n_on_cycle']} On Cycle</span>
+      <span style="background:{CYCLE_STATUS_COLORS['Attempt to update']}1a;color:{CYCLE_STATUS_COLORS['Attempt to update']};padding:3px 10px;border-radius:8px;font-size:11px;font-weight:700;">{k['n_attempt_to_update']} Attempt to update</span>
+      <span style="background:{CYCLE_STATUS_COLORS['Off Cycle']}1a;color:{CYCLE_STATUS_COLORS['Off Cycle']};padding:3px 10px;border-radius:8px;font-size:11px;font-weight:700;">{k['n_off_cycle']} Off Cycle</span>
+      <span style="background:{CYCLE_STATUS_COLORS['Never Conducted']}1a;color:{CYCLE_STATUS_COLORS['Never Conducted']};padding:3px 10px;border-radius:8px;font-size:11px;font-weight:700;">{k['n_never']} Never Conducted</span>
     </div>
   </div>
   <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.7;">{k['briefing']}</p>
   <div style="overflow-x:auto;max-height:420px;overflow-y:auto;">
   <table style="width:100%;border-collapse:collapse;">
   <thead><tr style="background:{meta['color']};color:#fff;position:sticky;top:0;z-index:1;">
-    <th style="padding:7px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.4px;">Country</th>
-    <th style="padding:7px 12px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.4px;">Status</th>
-    <th style="padding:7px 12px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.4px;">Last Survey</th>
-    <th style="padding:7px 12px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.4px;">Gap</th>
+    <th scope="col" style="padding:7px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.4px;">Country</th>
+    <th scope="col" style="padding:7px 12px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.4px;">Status</th>
+    <th scope="col" style="padding:7px 12px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.4px;" title="Last {code} survey — instrument-specific, not the all-instrument recency shown in the Scorecard">Last {code} Survey</th>
+    <th scope="col" style="padding:7px 12px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.4px;">Gap</th>
   </tr></thead>
   <tbody>{rows_html}</tbody>
   </table>
@@ -1717,6 +1671,15 @@ def build_html(A: dict) -> str:
     spi_tier_color = ("#00a651" if reg_spi >= 75 else
                       "#4a90e2" if reg_spi >= 50 else
                       "#f7941d" if reg_spi >= 25 else "#c0392b")
+    # Status palette shortcuts (single source of truth: config.CYCLE_STATUS_COLORS)
+    # — never reuse TIER_COLORS' hex values here, so a reader can't mistake a
+    # status badge for an SPI-tier badge when moving between tabs.
+    st_on, st_att, st_off, st_nev = (CYCLE_STATUS_COLORS["On Cycle"], CYCLE_STATUS_COLORS["Attempt to update"],
+                                      CYCLE_STATUS_COLORS["Off Cycle"], CYCLE_STATUS_COLORS["Never Conducted"])
+    # Colour must encode the VALUE, not just announce the category: a "0 Strong
+    # performers" stat should not carry a celebratory green dot.
+    strong_dot_color = "#909090" if n_strong == 0 else TIER_COLORS[1]
+    crit_dot_color   = TIER_COLORS[4] if n_crit > 0 else "#909090"
     pct_on   = A["pct_on_track"]
     pct_off  = A["pct_off_cycle"]
     pct_crit = A["pct_gap_critical"]
@@ -1785,6 +1748,8 @@ def build_html(A: dict) -> str:
                       .replace("__GYTS_PROFILE_PLACEHOLDER__",  gyts_profile_json)
                       .replace("__GATS_PROFILE_PLACEHOLDER__",  gats_profile_json)
                       .replace("__COUNTRY_SURVEYS_PLACEHOLDER__", country_surveys_json)
+                      .replace("__STATUS_LABELS_PLACEHOLDER__", _json.dumps(CYCLE_STATUS_LABELS))
+                      .replace("__STATUS_COLORS_PLACEHOLDER__", _json.dumps(CYCLE_STATUS_COLORS))
                       .replace("__SPI_TABLE_PLACEHOLDER__", spi_table_json))
 
     # Build favicon link and logo img tags (empty string if asset not found)
@@ -1837,8 +1802,8 @@ def build_html(A: dict) -> str:
       <h1>NCD Population-based<br>Surveillance <span class="grad">Intelligence</span> Platform</h1>
       <p class="hero-sub">A strategic intelligence platform synthesizing <strong>five core NCD population-based surveillance systems</strong> across 47 WHO AFRO Member States + Zanzibar</p>
       <div class="hero-quick-stats">
-        <span class="hero-qs"><i class="fas fa-circle" style="color:#00a651"></i> {n_strong} Strong performers</span>
-        <span class="hero-qs"><i class="fas fa-circle" style="color:#c0392b"></i> {n_crit} Critical</span>
+        <span class="hero-qs"><i class="fas fa-circle" style="color:{strong_dot_color}"></i> {n_strong} Strong performers</span>
+        <span class="hero-qs"><i class="fas fa-circle" style="color:{crit_dot_color}"></i> {n_crit} Critical</span>
         <span class="hero-qs"><i class="fas fa-sync-alt" style="color:#4a90e2"></i> {n_curr} surveys this cycle</span>
       </div>
     </div>
@@ -1861,7 +1826,7 @@ def build_html(A: dict) -> str:
         </div>
         <div class="hero-stat-badge" style="border-top:3px solid {spi_tier_color}">
           <div class="hero-stat-inner">
-            <div class="hero-stat-val">{reg_spi:.0f}<sup>/100</sup></div>
+            <div class="hero-stat-val">{fmt_spi(reg_spi)}<sup>/100</sup></div>
             <div class="hero-stat-lbl">Regional SPI Score</div>
           </div>
           <div class="hero-spi-bar"><div class="hero-spi-fill" style="width:{reg_spi:.0f}%;background:{spi_tier_color}"></div></div>
@@ -1903,7 +1868,7 @@ def build_html(A: dict) -> str:
           <div class="chart-card reveal">
             {ch_survey_cmp}
             <div class="chart-commentary">
-              Status distribution across all five NCD surveillance instruments (N&#160;=&#160;48 countries per instrument). Each bar shows how countries distribute across four mutually exclusive states: <strong style="color:#00a651;">On Cycle</strong> (completed &#8804;&#160;5 yr), <strong style="color:#f7941d;">Attempt to Update</strong> (prior evidence + active new round), <strong style="color:#4a90e2;">Off Cycle</strong> (prior evidence but surveillance idle), and <strong style="color:#adb5bd;">Never Conducted</strong> (no completed survey on record). This panel is static and reflects system-wide status across all survey types.
+              Status distribution across all five NCD surveillance instruments (N&#160;=&#160;48 countries per instrument). Each bar shows how countries distribute across four mutually exclusive states: <strong style="color:{st_on};">On Cycle</strong> (completed &#8804;&#160;5 yr), <strong style="color:{st_att};">Attempt to Update</strong> (prior evidence + active new round), <strong style="color:{st_off};">Off Cycle</strong> (prior evidence but surveillance idle), and <strong style="color:{st_nev};">Never Conducted</strong> (no completed survey on record). This panel is static and reflects system-wide status across all survey types.
             </div>
           </div>
         </div>
@@ -1932,21 +1897,21 @@ def build_html(A: dict) -> str:
         <i class="fas fa-info-circle" style="margin-top:2px;color:#f59e0b;"></i>
         <span>
           <strong>Unit of analysis:</strong> All counts represent <strong>unique countries/territories</strong> (N&nbsp;=&nbsp;48). Categories are mutually exclusive per country per survey type.
-          &nbsp;<strong style="color:#00a651;">&#9632; On Cycle</strong>: completed &#8804;&nbsp;5 yr &mdash; current, usable evidence &nbsp;|&nbsp;
-          <strong style="color:#4a90e2;">&#9632; Attempt to update</strong>: prior completed data + new round actively in progress (never-conducted excluded) &nbsp;|&nbsp;
-          <strong style="color:#f7941d;">&#9632; Off Cycle</strong>: has prior evidence but surveillance is currently idle &nbsp;|&nbsp;
-          <strong style="color:#909090;">&#9632; Never Conducted</strong>: no completed survey ever &mdash; includes countries currently in a first-time attempt
+          &nbsp;<strong style="color:{st_on};">&#9632; On Cycle</strong>: completed &#8804;&nbsp;5 yr &mdash; current, usable evidence &nbsp;|&nbsp;
+          <strong style="color:{st_att};">&#9632; Attempt to update</strong>: prior completed data + new round actively in progress (never-conducted excluded) &nbsp;|&nbsp;
+          <strong style="color:{st_off};">&#9632; Off Cycle</strong>: has prior evidence but surveillance is currently idle &nbsp;|&nbsp;
+          <strong style="color:{st_nev};">&#9632; Never Conducted</strong>: no completed survey ever &mdash; includes countries currently in a first-time attempt
         </span>
       </div>
 
       <!-- ② FOUR DYNAMIC KPI SIGNAL CARDS -->
       <div class="signal-grid" style="grid-template-columns:repeat(4,1fr);">
 
-        <div class="signal-card reveal" style="color:#00a651;">
-          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#00a651;margin-bottom:4px;">
+        <div class="signal-card reveal" style="color:{st_on};">
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:{st_on};margin-bottom:4px;">
             <i class="fas fa-check-circle"></i>&nbsp; On Cycle
           </div>
-          <div class="signal-val" id="exec-n-oncycle">{exec_steps['n_on_cycle']}</div>
+          <div class="signal-val" id="exec-n-oncycle" data-count="{exec_steps['n_on_cycle']}">{exec_steps['n_on_cycle']}</div>
           <div class="signal-lbl">Countries</div>
           <div class="signal-sub" id="exec-n-oncycle-sub">{exec_steps['n_on_cycle']} of {n_ent} countries</div>
           <div id="exec-n-oncycle-def" style="font-size:10px;color:#6b7280;margin-top:5px;line-height:1.4;">
@@ -1954,11 +1919,11 @@ def build_html(A: dict) -> str:
           </div>
         </div>
 
-        <div class="signal-card reveal" style="color:#4a90e2;">
-          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#4a90e2;margin-bottom:4px;">
+        <div class="signal-card reveal" style="color:{st_att};">
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:{st_att};margin-bottom:4px;">
             <i class="fas fa-sync-alt"></i>&nbsp; Attempt to Update
           </div>
-          <div class="signal-val" id="exec-n-implement">{exec_steps['n_attempt_to_update']}</div>
+          <div class="signal-val" id="exec-n-implement" data-count="{exec_steps['n_attempt_to_update']}">{exec_steps['n_attempt_to_update']}</div>
           <div class="signal-lbl">Countries</div>
           <div class="signal-sub" id="exec-n-implement-sub">{exec_steps['n_attempt_to_update']} of {n_ent} countries</div>
           <div id="exec-n-implement-def" style="font-size:10px;color:#6b7280;margin-top:5px;line-height:1.4;">
@@ -1966,11 +1931,11 @@ def build_html(A: dict) -> str:
           </div>
         </div>
 
-        <div class="signal-card reveal" style="color:#f7941d;">
-          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#f7941d;margin-bottom:4px;">
+        <div class="signal-card reveal" style="color:{st_off};">
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:{st_off};margin-bottom:4px;">
             <i class="fas fa-pause-circle"></i>&nbsp; Off Cycle
           </div>
-          <div class="signal-val" id="exec-n-offcycle">{exec_steps['n_off_cycle']}</div>
+          <div class="signal-val" id="exec-n-offcycle" data-count="{exec_steps['n_off_cycle']}">{exec_steps['n_off_cycle']}</div>
           <div class="signal-lbl">Countries</div>
           <div class="signal-sub" id="exec-n-offcycle-sub">{exec_steps['n_off_cycle']} of {n_ent} countries</div>
           <div id="exec-n-offcycle-def" style="font-size:10px;color:#6b7280;margin-top:5px;line-height:1.4;">
@@ -1978,11 +1943,11 @@ def build_html(A: dict) -> str:
           </div>
         </div>
 
-        <div class="signal-card reveal" style="color:#909090;">
-          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#909090;margin-bottom:4px;">
+        <div class="signal-card reveal" style="color:{st_nev};">
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:{st_nev};margin-bottom:4px;">
             <i class="fas fa-ban"></i>&nbsp; Never Conducted
           </div>
-          <div class="signal-val" id="exec-n-never">{exec_steps['n_never']}</div>
+          <div class="signal-val" id="exec-n-never" data-count="{exec_steps['n_never']}">{exec_steps['n_never']}</div>
           <div class="signal-lbl">Countries</div>
           <div class="signal-sub" id="exec-n-never-sub">{exec_steps['n_never']} of {n_ent} countries</div>
           <div id="exec-n-never-def" style="font-size:10px;color:#6b7280;margin-top:5px;line-height:1.4;">
@@ -2039,7 +2004,7 @@ def build_html(A: dict) -> str:
       <!-- Regional SPI + Tier overview -->
       <div class="stat-highlight-row reveal">
         <div class="stat-highlight-item" style="text-align:center;padding:0 24px 0 0;">
-          <div class="stat-hl-val" style="color:{spi_tier_color};">{reg_spi}<span style="font-size:1rem;font-weight:600;opacity:.6;">/100</span></div>
+          <div class="stat-hl-val" style="color:{spi_tier_color};">{fmt_spi(reg_spi)}<span style="font-size:1rem;font-weight:600;opacity:.6;">/100</span></div>
           <div class="stat-hl-lbl">Regional SPI Average</div>
         </div>
         <div class="stat-highlight-item" style="text-align:center;padding:0 24px;">
@@ -2333,16 +2298,16 @@ def build_html(A: dict) -> str:
         </div>
 
         <!-- Surveillance Status -->
-        <div class="method-card reveal" style="border-top:4px solid #00a651;">
-          <h4 style="color:#00a651;"><i class="fas fa-satellite-dish"></i>&nbsp; Surveillance Status Categories</h4>
+        <div class="method-card reveal" style="border-top:4px solid {st_on};">
+          <h4 style="color:{st_on};"><i class="fas fa-satellite-dish"></i>&nbsp; Surveillance Status Categories</h4>
           <p style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.7;">
-            Each country is assigned exactly <strong>one status per survey instrument</strong>. Categories are mutually exclusive and exhaustive; all 48 entities are covered.
+            Each country is assigned exactly <strong>one status per survey instrument</strong>. Categories are mutually exclusive and exhaustive; all 48 entities are covered. This is the single vocabulary used throughout the platform — Executive Overview, Strategic Priority tables, and here.
           </p>
           <ul>
-            <li><strong style="color:#00a651;">On Cycle:</strong> Completed within the last 5 years. Evidence is current and policy-usable.</li>
-            <li><strong style="color:#4a90e2;">Attempt to Update:</strong> Prior completed evidence exists and a new survey round is actively in progress. Countries with no prior completion are excluded even if attempting a first round.</li>
-            <li><strong style="color:#f7941d;">Off Cycle:</strong> Has completed before but no current survey process is active. Surveillance is idle and evidence is ageing.</li>
-            <li><strong style="color:#909090;">Never Conducted:</strong> No completed survey on record. Countries in a first-time attempt remain here until completion is confirmed.</li>
+            <li><strong style="color:{st_on};">On Cycle:</strong> Completed within the last 5 years. Evidence is current and policy-usable.</li>
+            <li><strong style="color:{st_att};">Attempt to Update:</strong> Prior completed evidence exists and a new survey round is actively in progress. Countries with no prior completion are excluded even if attempting a first round.</li>
+            <li><strong style="color:{st_off};">Off Cycle:</strong> Has completed before but no current survey process is active. Surveillance is idle and evidence is ageing.</li>
+            <li><strong style="color:{st_nev};">Never Conducted:</strong> No completed survey on record. Countries in a first-time attempt remain here until completion is confirmed.</li>
           </ul>
         </div>
 

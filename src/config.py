@@ -33,8 +33,24 @@ PREV_CYCLE_START    = CURRENT_CYCLE_START - CYCLE_YEARS  # 2016
 SPI_W = {"coverage": 1/3, "recency": 1/3, "regularity": 1/3}
 
 # ── Performance tiers ─────────────────────────────────────────────────────────
+# The green→amber→red performance ramp is reserved EXCLUSIVELY for SPI tiers
+# and gap severity. Surveillance STATUS (below) deliberately uses a distinct
+# palette family so a reader moving between the Performance tab and any
+# status view is never shown the same colour meaning two different things.
 TIER_LABELS = {1: "Strong", 2: "Advancing", 3: "Developing", 4: "Critical"}
 TIER_COLORS = {1: "#00a651", 2: "#4a90e2", 3: "#f7941d", 4: "#c0392b"}
+
+# ── Surveillance cycle status (single source of truth, used everywhere: KPI
+#    cards, donut, scatter, per-instrument tables, briefings). Named distinctly
+#    from STATUS_COLORS below (raw ETL record status: Completed/In Progress/
+#    Not Usable) — different concept, would otherwise collide on import. ──────
+CYCLE_STATUS_LABELS = ["On Cycle", "Attempt to update", "Off Cycle", "Never Conducted"]
+CYCLE_STATUS_COLORS = {
+    "On Cycle":          "#0d9488",   # teal    - current, usable evidence
+    "Attempt to update": "#7c3aed",   # violet  - actively updating
+    "Off Cycle":         "#d97706",   # amber   - idle, ageing
+    "Never Conducted":   "#64748b",   # slate   - no evidence (never red: red is reserved for URGENT/Critical tier)
+}
 
 # ── UI colour palette ─────────────────────────────────────────────────────────
 C = {
@@ -45,6 +61,15 @@ C = {
     "dark":      "#14265c", "text":      "#333e5c",
     "muted":     "#6b7280", "border":    "#e2e8f0",
 }
+
+# ── Design-system scale tokens (fonts / radii / motion) — Phase 4 ────────────
+FS = {  # font-size scale: micro/body/lead/h3/h2/display
+    "micro": "11px", "body": "12px", "lead": "14px",
+    "h3": "16px", "h2": "22px", "display": "34px",
+}
+RADIUS = {"sm": "6px", "md": "10px", "lg": "16px"}
+DUR = {"micro": "120ms", "block": "240ms"}
+EASE = "cubic-bezier(.4,0,.2,1)"
 
 FONT = "'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
 
