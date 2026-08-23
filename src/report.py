@@ -65,6 +65,23 @@ CSS = """
   --radius:16px;
 }
 html{scroll-behavior:smooth}
+/* ── Focus visibility — every interactive element gets a consistent,
+   high-contrast ring on keyboard focus (never on mouse click, via
+   :focus-visible), so keyboard users navigating the 6 tabs, filter
+   controls, and 48-row tables are never left invisible to themselves. */
+a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible,
+.tab-btn:focus-visible,[tabindex]:focus-visible{
+  outline:3px solid #56d0ff;outline-offset:2px;border-radius:4px;
+}
+.skip-link{position:absolute;left:-9999px;top:0;z-index:10000;background:var(--primary);color:#fff;
+  padding:10px 18px;border-radius:0 0 8px 0;font-weight:700;font-size:13px;text-decoration:none}
+.skip-link:focus{left:0;}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms!important;animation-iteration-count:1!important;
+    transition-duration:.01ms!important;scroll-behavior:auto!important;
+  }
+}
 body{font-family:var(--font);background:#f0f4fa;color:var(--text);line-height:1.65;font-size:14px;overflow-x:hidden}
 @keyframes fadeScale{from{opacity:0;transform:scale(.96) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px)}}
@@ -84,7 +101,7 @@ body{font-family:var(--font);background:#f0f4fa;color:var(--text);line-height:1.
 .nav-divider{width:1px;height:34px;background:rgba(255,255,255,.18)}
 .nav-brand-text{display:flex;flex-direction:column;justify-content:center}
 .nav-brand-title{color:#fff;font-weight:800;font-size:14px;letter-spacing:-.015em;line-height:1.2}
-.nav-brand-sub{color:rgba(255,255,255,.5);font-size:11px;font-weight:500;letter-spacing:.4px;margin-top:2px}
+.nav-brand-sub{color:rgba(255,255,255,.78);font-size:11px;font-weight:500;letter-spacing:.4px;margin-top:2px}
 /* ── Hero ── */
 @keyframes badgeIn{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:translateX(0)}}
 .hero{background:#fff;padding:0;position:relative;overflow:hidden;border-bottom:1px solid var(--border)}
@@ -109,7 +126,7 @@ body{font-family:var(--font);background:#f0f4fa;color:var(--text);line-height:1.
 .hero-stat-inner{padding:14px 18px}
 .hero-stat-val{font-size:2.15rem;font-weight:900;color:#fff;line-height:1;letter-spacing:-.04em;display:flex;align-items:baseline;gap:4px}
 .hero-stat-val sup{font-size:.85rem;font-weight:700;opacity:.6;margin-left:1px}
-.hero-stat-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.8px;color:rgba(255,255,255,.42);margin-top:6px}
+.hero-stat-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.8px;color:rgba(255,255,255,.75);margin-top:6px}
 /* SPI progress bar */
 .hero-spi-bar{height:3px;background:rgba(255,255,255,.12);margin:10px 18px 0;border-radius:6px;overflow:hidden}
 .hero-spi-fill{height:100%;border-radius:6px;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
@@ -237,11 +254,6 @@ hr.section-divider{border:none;border-top:1px solid var(--border);margin:32px 0}
 .filter-reset:hover{box-shadow:0 4px 14px rgba(74,144,226,.4);transform:translateY(-1px)}
 .filter-count{font-size:11px;color:var(--muted);margin-left:auto;font-style:italic;white-space:nowrap}
 /* ══ TABLES ═════════════════════════════════════════════════════════════════ */
-.prio-table{width:100%;border-collapse:collapse;font-size:12px}
-.prio-table th{background:linear-gradient(135deg,var(--primary),#005fa3);color:#fff;padding:10px 13px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.7px;font-weight:700;position:sticky;top:0;z-index:1}
-.prio-table td{padding:9px 13px;border-bottom:1px solid var(--border)}
-.prio-table tbody tr{transition:background .15s}
-.prio-table tbody tr:hover td{background:#f0f6ff}
 .rank-cell{font-weight:700;color:var(--muted);font-size:12px;text-align:center}
 .num-cell{text-align:center;font-variant-numeric:tabular-nums}
 /* Country map thumbnail */
@@ -386,11 +398,19 @@ JS = """
 
   function activateTab(id){
     document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b=>{
+      b.classList.remove('active');
+      b.setAttribute('aria-selected','false');
+      b.setAttribute('tabindex','-1');
+    });
     const pane=document.getElementById(id);
     const btn=document.querySelector('.tab-btn[data-tab="'+id+'"]');
     if(pane)pane.classList.add('active');
-    if(btn)btn.classList.add('active');
+    if(btn){
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected','true');
+      btn.setAttribute('tabindex','0');
+    }
     window.scrollTo({top:62,behavior:'smooth'});
     if(pane){
       pane.querySelectorAll('.reveal:not(.visible)').forEach((el,i)=>{el.classList.add('will-animate');setTimeout(()=>el.classList.add('visible'),i*45);});
@@ -409,6 +429,22 @@ JS = """
   }
   document.querySelectorAll('.tab-btn').forEach(btn=>btn.addEventListener('click',()=>activateTab(btn.dataset.tab)));
   const firstTab=document.querySelector('.tab-btn');if(firstTab)activateTab(firstTab.dataset.tab);
+
+  // ── ARIA tabs: Left/Right/Home/End keyboard navigation ────────────────────
+  (function(){
+    const tabs=Array.from(document.querySelectorAll('.tab-btn'));
+    tabs.forEach((btn,i)=>btn.addEventListener('keydown',e=>{
+      let j=null;
+      if(e.key==='ArrowRight')j=(i+1)%tabs.length;
+      else if(e.key==='ArrowLeft')j=(i-1+tabs.length)%tabs.length;
+      else if(e.key==='Home')j=0;
+      else if(e.key==='End')j=tabs.length-1;
+      if(j===null)return;
+      e.preventDefault();
+      tabs[j].focus();
+      activateTab(tabs[j].dataset.tab);
+    }));
+  })();
 
   function applyFilters(tableId,searchId,tierSelId,gapSelId,cycleSelId,regSelId,topSelId,countId){
     const tbl=document.getElementById(tableId);if(!tbl)return;
@@ -1103,12 +1139,13 @@ JS = """
 
       grid += '<div style="overflow-x:auto;">';
       grid += '<table class="profile-ind-table">';
+      grid += '<caption style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">'+sv.name+' indicators for the selected country and survey round</caption>';
       grid += '<thead><tr>';
-      grid += '<th style="text-align:left;min-width:140px;">Indicator</th>';
-      grid += '<th style="text-align:center;">Both</th>';
-      grid += '<th style="text-align:center;color:#2980b9;">Male</th>';
-      grid += '<th style="text-align:center;color:#c0392b;">Female</th>';
-      grid += '<th style="text-align:center;">Trend</th>';
+      grid += '<th scope="col" style="text-align:left;min-width:140px;">Indicator</th>';
+      grid += '<th scope="col" style="text-align:center;">Both</th>';
+      grid += '<th scope="col" style="text-align:center;color:#2980b9;">Male</th>';
+      grid += '<th scope="col" style="text-align:center;color:#c0392b;">Female</th>';
+      grid += '<th scope="col" style="text-align:center;">Trend</th>';
       grid += '</tr></thead><tbody>';
 
       secInds.forEach(function(entry, idx){
@@ -1560,15 +1597,15 @@ def scorecard_table(spi):
   <strong>all five instruments</strong> (most recent completed survey of any type); see the Strategic Priority tab for instrument-specific recency.
 </caption>
 <thead><tr style="background:{C['primary']};color:#fff;">
-  <th style="padding:9px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">#</th>
-  <th style="padding:9px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Country</th>
-  <th style="padding:9px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">SPI / Tier</th>
+  <th scope="col" style="padding:9px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">#</th>
+  <th scope="col" style="padding:9px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Country</th>
+  <th scope="col" style="padding:9px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">SPI / Tier</th>
   <th scope="col" style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;" title="Breadth — count of instrument types completed ≥1 time, out of 5">Breadth</th>
   <th scope="col" style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;" title="Currency — mean exponential-decay recency score (half-life ≈7 yr) over all 5 instruments">Currency</th>
   <th scope="col" style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;" title="Regularity — coverage-adjusted average renewal interval score; not computable if no instrument has ≥2 rounds">Regularity</th>
   <th scope="col" style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;" title="Average years between consecutive survey rounds, across all instruments with ≥2 rounds">Avg Interval</th>
   <th scope="col" style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;" title="Most recent completed survey across ALL five instruments — not instrument-specific">Last Survey (any instrument)</th>
-  <th style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Gap</th>
+  <th scope="col" style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Gap</th>
 </tr></thead>
 <tbody>{rows}</tbody>
 </table>
@@ -1689,6 +1726,7 @@ def per_survey_sections(A):
   <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.7;">{k['briefing']}</p>
   <div style="overflow-x:auto;max-height:420px;overflow-y:auto;">
   <table style="width:100%;border-collapse:collapse;">
+  <caption style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">{code} surveillance status by country</caption>
   <thead><tr style="background:{meta['color']};color:#fff;position:sticky;top:0;z-index:1;">
     <th scope="col" style="padding:7px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.4px;">Country</th>
     <th scope="col" style="padding:7px 12px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.4px;">Status</th>
@@ -1841,9 +1879,10 @@ def build_html(A: dict) -> str:
 <style>{CSS}</style>
 </head>
 <body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
 <div id="reading-progress"></div>
 
-<nav class="topnav">
+<nav class="topnav" aria-label="Site header">
   <div class="topnav-inner">
     <div class="nav-logos">
       {who_logo_tag}
@@ -1899,20 +1938,20 @@ def build_html(A: dict) -> str:
 </div>
 
 <div class="tab-nav">
-  <div class="tab-nav-inner">
-    <button class="tab-btn" data-tab="tab-exec"><i class="fas fa-tachometer-alt"></i> Executive Overview</button>
-    <button class="tab-btn" data-tab="tab-perf"><i class="fas fa-medal"></i> Surveillance Performance</button>
-    <button class="tab-btn" data-tab="tab-cycle"><i class="fas fa-sync-alt"></i> Cycle &amp; Gap</button>
-    <button class="tab-btn" data-tab="tab-profile"><i class="fas fa-user-md"></i> Country Profile</button>
-    <button class="tab-btn" data-tab="tab-priority"><i class="fas fa-crosshairs"></i> Strategic Priority</button>
-    <button class="tab-btn" data-tab="tab-methods"><i class="fas fa-book"></i> Methods</button>
+  <div class="tab-nav-inner" role="tablist" aria-label="Dashboard sections">
+    <button class="tab-btn" id="tabbtn-tab-exec" data-tab="tab-exec" role="tab" aria-selected="true" aria-controls="tab-exec" tabindex="0"><i class="fas fa-tachometer-alt" aria-hidden="true"></i> Executive Overview</button>
+    <button class="tab-btn" id="tabbtn-tab-perf" data-tab="tab-perf" role="tab" aria-selected="false" aria-controls="tab-perf" tabindex="-1"><i class="fas fa-medal" aria-hidden="true"></i> Surveillance Performance</button>
+    <button class="tab-btn" id="tabbtn-tab-cycle" data-tab="tab-cycle" role="tab" aria-selected="false" aria-controls="tab-cycle" tabindex="-1"><i class="fas fa-sync-alt" aria-hidden="true"></i> Cycle &amp; Gap</button>
+    <button class="tab-btn" id="tabbtn-tab-profile" data-tab="tab-profile" role="tab" aria-selected="false" aria-controls="tab-profile" tabindex="-1"><i class="fas fa-user-md" aria-hidden="true"></i> Country Profile</button>
+    <button class="tab-btn" id="tabbtn-tab-priority" data-tab="tab-priority" role="tab" aria-selected="false" aria-controls="tab-priority" tabindex="-1"><i class="fas fa-crosshairs" aria-hidden="true"></i> Strategic Priority</button>
+    <button class="tab-btn" id="tabbtn-tab-methods" data-tab="tab-methods" role="tab" aria-selected="false" aria-controls="tab-methods" tabindex="-1"><i class="fas fa-book" aria-hidden="true"></i> Methods</button>
   </div>
 </div>
 
-<div class="container">
+<main id="main-content" class="container">
 
   <!-- ═══════════════════ TAB 1: EXECUTIVE OVERVIEW ═══════════════════ -->
-  <div id="tab-exec" class="tab-pane active">
+  <div id="tab-exec" class="tab-pane active" role="tabpanel" aria-labelledby="tabbtn-tab-exec" tabindex="0">
     <div class="section">
 
       <!-- Section header -->
@@ -2053,7 +2092,7 @@ def build_html(A: dict) -> str:
   </div>
 
   <!-- TAB 2: SURVEILLANCE PERFORMANCE -->
-  <div id="tab-perf" class="tab-pane">
+  <div id="tab-perf" class="tab-pane" role="tabpanel" aria-labelledby="tabbtn-tab-perf" tabindex="0">
     <div class="section">
       <div class="section-header">
         <div class="section-header-inner">
@@ -2168,7 +2207,7 @@ def build_html(A: dict) -> str:
   </div>
 
   <!-- TAB 3: CYCLE & GAP -->
-  <div id="tab-cycle" class="tab-pane">
+  <div id="tab-cycle" class="tab-pane" role="tabpanel" aria-labelledby="tabbtn-tab-cycle" tabindex="0">
     <div class="section">
       <div class="section-header">
         <div class="section-header-inner">
@@ -2211,7 +2250,7 @@ def build_html(A: dict) -> str:
   </div>
 
   <!-- TAB 4: COUNTRY PROFILE -->
-  <div id="tab-profile" class="tab-pane">
+  <div id="tab-profile" class="tab-pane" role="tabpanel" aria-labelledby="tabbtn-tab-profile" tabindex="0">
     <div class="section">
       <div class="section-header">
         <div class="section-header-inner">
@@ -2248,7 +2287,7 @@ def build_html(A: dict) -> str:
   </div>
 
   <!-- TAB 5: STRATEGIC PRIORITY -->
-  <div id="tab-priority" class="tab-pane">
+  <div id="tab-priority" class="tab-pane" role="tabpanel" aria-labelledby="tabbtn-tab-priority" tabindex="0">
     <div class="section">
       <div class="section-header">
         <div class="section-header-inner">
@@ -2314,7 +2353,7 @@ def build_html(A: dict) -> str:
   </div>
 
   <!-- TAB 6: METHODS -->
-  <div id="tab-methods" class="tab-pane">
+  <div id="tab-methods" class="tab-pane" role="tabpanel" aria-labelledby="tabbtn-tab-methods" tabindex="0">
     <div class="section">
       <div class="section-header">
         <div class="section-header-inner">
@@ -2405,7 +2444,7 @@ def build_html(A: dict) -> str:
     </div>
   </div>
 
-</div><!-- /container -->
+</main><!-- /container -->
 
 <footer class="footer">
   <div class="footer-inner">
