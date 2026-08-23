@@ -71,7 +71,7 @@ RADIUS = {"sm": "6px", "md": "10px", "lg": "16px"}
 DUR = {"micro": "120ms", "block": "240ms"}
 EASE = "cubic-bezier(.4,0,.2,1)"
 
-FONT = "'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+FONT = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
 
 # ── Status mapping ─────────────────────────────────────────────────────────────
 STATUS_MAP = {

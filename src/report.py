@@ -57,11 +57,18 @@ CSS = """
   --primary:#003d82;--secondary:#006eb6;--accent:#4a90e2;
   --success:#00a651;--warning:#f7941d;--danger:#c0392b;
   --light:#f4f7fb;--white:#fff;--dark:#0d1f4e;
-  --text:#1e2a4a;--muted:#6b7280;--border:#e2e8f0;
-  --font:'Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-  --shadow-sm:0 2px 8px rgba(0,20,80,.06);
-  --shadow-md:0 6px 20px rgba(0,20,80,.10);
-  --shadow-lg:0 14px 36px rgba(0,20,80,.15);
+  --text:#1e2a4a;--muted:#5b6577;--border:#e4e7ef;
+  /* Editorial type system: Inter carries UI chrome and body copy (precise,
+     neutral, excellent tabular figures for data); Fraunces — an optical-size
+     serif with real character — is reserved for headline moments: the hero
+     title and every "big number" a reader's eye should land on first. */
+  --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --font-serif:'Fraunces','Source Serif 4',Georgia,serif;
+  /* Layered shadows (tight contact shadow + soft diffuse ambient shadow)
+     read as real depth rather than a single flat drop-shadow. */
+  --shadow-sm:0 1px 2px rgba(15,23,42,.04),0 3px 8px rgba(15,23,42,.05);
+  --shadow-md:0 2px 6px rgba(15,23,42,.05),0 10px 24px rgba(15,23,42,.09);
+  --shadow-lg:0 4px 10px rgba(15,23,42,.06),0 20px 48px rgba(15,23,42,.14);
   --radius:16px;
 }
 html{scroll-behavior:smooth;overflow-x:hidden}
@@ -82,7 +89,7 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible,
     transition-duration:.01ms!important;scroll-behavior:auto!important;
   }
 }
-body{font-family:var(--font);background:#f0f4fa;color:var(--text);line-height:1.65;font-size:14px;overflow-x:hidden}
+body{font-family:var(--font);background:#f6f7fb;color:var(--text);line-height:1.65;font-size:14px;overflow-x:hidden;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;font-variant-numeric:tabular-nums}
 @keyframes fadeScale{from{opacity:0;transform:scale(.96) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px)}}
 @keyframes shimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}
@@ -116,6 +123,13 @@ body{font-family:var(--font);background:#f0f4fa;color:var(--text);line-height:1.
 .hero-right-orb-1{width:340px;height:340px;top:-90px;right:-90px;background:radial-gradient(circle,rgba(86,208,255,.2) 0%,transparent 65%);animation:float 9s ease-in-out infinite}
 .hero-right-orb-2{width:220px;height:220px;bottom:-60px;left:-40px;background:radial-gradient(circle,rgba(0,166,81,.14) 0%,transparent 65%);animation:float 12s ease-in-out infinite reverse}
 .hero-right-orb-3{width:130px;height:130px;top:40%;left:38%;background:radial-gradient(circle,rgba(74,144,226,.15) 0%,transparent 70%);animation:float 7s ease-in-out 2s infinite}
+/* A 48-node network — one point per AFRO country/territory, nearest-
+   neighbour lines — as the platform's own signature motif: a literal
+   "surveillance network" rendered as quiet linework behind the headline
+   numbers, rather than generic decoration. */
+.hero-network{position:absolute;inset:0;width:100%;height:100%;z-index:1;opacity:.55}
+.hero-network .hn-lines line{stroke:rgba(86,208,255,.32);stroke-width:.6}
+.hero-network .hn-dots circle{fill:rgba(255,255,255,.55)}
 .hero-stats{display:flex;flex-direction:column;gap:12px;position:relative;z-index:2;width:100%}
 /* Each badge staggered entrance */
 .hero-stat-badge{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:0;overflow:hidden;transition:background 240ms,transform 240ms,box-shadow 240ms;cursor:default;animation:badgeIn .55s ease both}
@@ -124,14 +138,14 @@ body{font-family:var(--font);background:#f0f4fa;color:var(--text);line-height:1.
 .hero-stat-badge:nth-child(3){animation-delay:.41s}
 .hero-stat-badge:hover{background:rgba(255,255,255,.12);transform:translateX(5px);box-shadow:0 4px 20px rgba(0,0,0,.25)}
 .hero-stat-inner{padding:14px 18px}
-.hero-stat-val{font-size:2.15rem;font-weight:900;color:#fff;line-height:1;letter-spacing:-.04em;display:flex;align-items:baseline;gap:4px}
+.hero-stat-val{font-family:var(--font-serif);font-size:2.15rem;font-weight:600;color:#fff;line-height:1;letter-spacing:-.01em;display:flex;align-items:baseline;gap:4px}
 .hero-stat-val sup{font-size:.85rem;font-weight:700;opacity:.6;margin-left:1px}
 .hero-stat-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.8px;color:rgba(255,255,255,.75);margin-top:6px}
 /* SPI progress bar */
 .hero-spi-bar{height:3px;background:rgba(255,255,255,.12);margin:10px 18px 0;border-radius:6px;overflow:hidden}
 .hero-spi-fill{height:100%;border-radius:6px;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
 /* Hero left */
-.hero h1{font-size:3.5rem;font-weight:900;line-height:1.04;letter-spacing:-.055em;color:var(--dark);margin-bottom:14px;animation:fadeScale .8s ease forwards;text-wrap:balance}
+.hero h1{font-family:var(--font-serif);font-size:3.6rem;font-weight:600;line-height:1.05;letter-spacing:-.015em;color:var(--dark);margin-bottom:16px;animation:fadeScale .8s ease forwards;text-wrap:balance}
 .grad{background:linear-gradient(90deg,#0065b3 0%,#4a90e2 50%,#56d0ff 100%);-webkit-background-clip:text;background-clip:text;color:transparent;background-size:200% auto;animation:shimmer 6s linear infinite}
 .hero-sub{font-size:16px;color:#4a5568;max-width:620px;line-height:1.85;animation:fadeScale 1s ease .1s both;font-weight:400;margin-bottom:20px}
 .hero-sub strong{color:var(--dark);font-weight:700}
@@ -169,9 +183,9 @@ body{font-family:var(--font);background:#f0f4fa;color:var(--text);line-height:1.
 /* ── Section ── */
 .section{padding:40px 0 24px}
 .section-header{margin-bottom:28px}
-.section-header-inner{display:inline-flex;align-items:center;gap:10px;margin-bottom:5px}
-.section-num{background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;border-radius:10px;padding:3px 10px;font-size:11px;font-weight:700}
-.section-title{font-size:1.55rem;font-weight:800;color:var(--dark);letter-spacing:-.025em;border-bottom:3px solid var(--accent);padding-bottom:3px;display:inline}
+.section-header-inner{display:inline-flex;align-items:baseline;gap:12px;margin-bottom:6px}
+.section-num{font-family:var(--font-serif);background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;border-radius:10px;padding:2px 11px;font-size:12px;font-weight:600;line-height:1.7;}
+.section-title{font-family:var(--font-serif);font-size:1.7rem;font-weight:600;color:var(--dark);letter-spacing:-.01em;border-bottom:2px solid var(--accent);padding-bottom:4px;display:inline}
 .section-subtitle{color:var(--muted);font-size:14px;margin-top:5px}
 hr.section-divider{border:none;border-top:1px solid var(--border);margin:32px 0}
 /* ── Cards ── */
@@ -189,20 +203,20 @@ hr.section-divider{border:none;border-top:1px solid var(--border);margin:32px 0}
 .kpi-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:currentColor;opacity:.3}
 .kpi-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}
 .kpi-icon{font-size:22px;margin-bottom:9px}
-.kpi-value{font-size:2rem;font-weight:800;line-height:1;margin-bottom:5px;letter-spacing:-.03em}
+.kpi-value{font-family:var(--font-serif);font-size:2rem;font-weight:600;line-height:1;margin-bottom:5px;letter-spacing:-.01em}
 .kpi-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.9px;color:var(--muted)}
 .kpi-delta{font-size:11px;margin-top:6px;font-weight:600;display:flex;align-items:center;gap:4px}
 /* ── Instrument cards ── */
 .instrument-grid{display:flex;flex-wrap:wrap;gap:18px;margin-bottom:24px}
 .instrument-card{flex:1;min-width:200px;background:#fff;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow-sm);border:2px solid var(--border);transition:transform 240ms,box-shadow 240ms}
 .instrument-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}
-.inst-type{font-size:22px;font-weight:900;letter-spacing:-.02em;margin-bottom:4px}
+.inst-type{font-family:var(--font-serif);font-size:22px;font-weight:600;letter-spacing:-.01em;margin-bottom:4px}
 .inst-full{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px;min-height:34px}
 .inst-meta{display:flex;flex-direction:column;gap:3px;margin-bottom:12px}
 .inst-meta span{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px}
 .inst-stats{display:flex;gap:14px;margin-bottom:12px}
 .inst-stat{display:flex;flex-direction:column;align-items:center}
-.stat-val{font-size:1.4rem;font-weight:800;line-height:1;color:var(--dark)}
+.stat-val{font-family:var(--font-serif);font-size:1.4rem;font-weight:600;line-height:1;color:var(--dark)}
 .stat-lbl{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
 .inst-bar-wrap{height:6px;background:#f0f0f0;border-radius:6px;overflow:hidden;margin-bottom:5px}
 .inst-bar{height:6px;border-radius:6px}
@@ -265,13 +279,13 @@ hr.section-divider{border:none;border-top:1px solid var(--border);margin:32px 0}
 .signal-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:currentColor;opacity:.5;border-radius:var(--radius) var(--radius) 0 0}
 .signal-card::after{content:'';position:absolute;bottom:-30px;right:-20px;width:100px;height:100px;border-radius:50%;background:currentColor;opacity:.04}
 .signal-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}
-.signal-val{font-size:2.8rem;font-weight:900;line-height:1;letter-spacing:-.05em}
+.signal-val{font-family:var(--font-serif);font-size:2.8rem;font-weight:600;line-height:1;letter-spacing:-.015em}
 .signal-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-top:8px}
 .signal-sub{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.55}
 /* ══ EXECUTIVE MESSAGE ══════════════════════════════════════════════════════ */
 .exec-message{background:linear-gradient(135deg,#000d28 0%,#001a4a 50%,#003270 100%);color:#fff;border-radius:var(--radius);padding:30px 34px;margin-bottom:28px;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(0,10,50,.3)}
 .exec-message::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(74,144,226,.15),transparent);pointer-events:none}
-.exec-message h3{font-size:1.1rem;font-weight:800;margin-bottom:12px;color:#56d0ff;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+.exec-message h3{font-family:var(--font-serif);font-size:1.3rem;font-weight:600;margin-bottom:12px;color:#56d0ff;letter-spacing:-.005em;display:flex;align-items:center;gap:10px}
 .exec-message p{font-size:14px;line-height:1.9;opacity:.9;max-width:900px}
 .exec-message strong{color:#fff}
 /* ══ TIER BADGE ═════════════════════════════════════════════════════════════ */
@@ -304,14 +318,14 @@ hr.section-divider{border:none;border-top:1px solid var(--border);margin:32px 0}
 .tier-row{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:24px;}
 .tier-card{flex:1;min-width:130px;background:#fff;border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow-sm);border:2px solid var(--border);border-top-width:4px;transition:transform 240ms,box-shadow 240ms;}
 .tier-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);}
-.tier-card-val{font-size:2.2rem;font-weight:900;line-height:1;letter-spacing:-.04em;}
+.tier-card-val{font-family:var(--font-serif);font-size:2.2rem;font-weight:600;line-height:1;letter-spacing:-.01em;}
 .tier-card-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-top:6px;}
 .tier-card-sub{font-size:11px;color:var(--muted);margin-top:3px;}
 /* ══ STAT HIGHLIGHT ROW ══════════════════════════════════════════════════ */
 .stat-highlight-row{display:flex;flex-wrap:wrap;gap:14px;background:#fff;border-radius:var(--radius);padding:20px 24px;box-shadow:var(--shadow-sm);border:2px solid var(--border);margin-bottom:22px;align-items:center;}
 .stat-highlight-item{display:flex;flex-direction:column;align-items:center;padding:0 16px;border-right:1px solid var(--border);last-child:border-right:none;}
 .stat-highlight-item:last-child{border-right:none;}
-.stat-hl-val{font-size:2rem;font-weight:900;letter-spacing:-.04em;line-height:1;}
+.stat-hl-val{font-family:var(--font-serif);font-size:2rem;font-weight:600;letter-spacing:-.01em;line-height:1;}
 .stat-hl-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin-top:5px;}
 /* ══ SECTION DIVIDER LABEL ═══════════════════════════════════════════════ */
 .section-divider-label{display:flex;align-items:center;gap:12px;margin:28px 0 18px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);}
@@ -325,7 +339,7 @@ hr.section-divider{border:none;border-top:1px solid var(--border);margin:32px 0}
 .profile-kpi-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);}
 .profile-kpi-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:currentColor;opacity:.25;}
 .profile-kpi-icon{font-size:22px;margin-bottom:8px;}
-.profile-kpi-value{font-size:1.9rem;font-weight:900;line-height:1;letter-spacing:-.03em;margin-bottom:4px;}
+.profile-kpi-value{font-family:var(--font-serif);font-size:1.9rem;font-weight:600;line-height:1;letter-spacing:-.01em;margin-bottom:4px;}
 .profile-kpi-ci{font-size:11px;color:var(--muted);font-weight:600;margin-bottom:2px;}
 .profile-kpi-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.9px;color:var(--muted);}
 .profile-kpi-trend{font-size:12px;margin-top:6px;font-weight:700;}
@@ -577,7 +591,7 @@ JS = """
   // ── Strategic Priority - overall SPI scores per country ──────────────────
   const SPI_SCORES = __SPI_SCORES_PLACEHOLDER__;
 
-  const _FONT = "Poppins,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
+  const _FONT = "Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
   // Plotly loads from a CDN — on an offline workstation or behind a
   // restrictive proxy (common across the Region) it never arrives. Show a
   // clear reason instead of leaving a blank rectangle where a chart should be.
@@ -1110,7 +1124,7 @@ JS = """
     hdr+='<div style="display:flex;align-items:center;gap:18px;">';
     hdr+='<div class="profile-iso-badge">'+(p.iso3||'???')+'</div>';
     hdr+='<div>';
-    hdr+='<div style="font-size:22px;font-weight:900;color:var(--dark);letter-spacing:-.025em;">'+country+'</div>';
+    hdr+='<div style="font-family:var(--font-serif);font-size:24px;font-weight:600;color:var(--dark);letter-spacing:-.005em;">'+country+'</div>';
     hdr+='<div style="font-size:12px;color:var(--muted);margin-top:5px;display:flex;flex-wrap:wrap;gap:10px;">';
     hdr+='<span class="profile-survey-pill"><i class="fas fa-flask"></i>&nbsp;'+surveyType+' surveys: <strong>'+yrsStr+'</strong></span>';
     if(latS.rr) hdr+='<span class="profile-survey-pill"><i class="fas fa-percentage"></i>&nbsp;Response rate: '+latS.rr+'%</span>';
@@ -1118,13 +1132,13 @@ JS = """
     hdr+='<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">';
     if(p.spi!==null&&p.spi!==undefined){
       hdr+='<div style="text-align:center;padding:12px 20px;background:linear-gradient(135deg,'+tc+'18,'+tc+'0a);border:2px solid '+tc+';border-radius:10px;min-width:90px;">';
-      hdr+='<div style="font-size:1.75rem;font-weight:900;color:'+tc+';line-height:1;">'+p.spi.toFixed(1)+'</div>';
+      hdr+='<div style="font-family:var(--font-serif);font-size:1.75rem;font-weight:600;color:'+tc+';line-height:1;">'+p.spi.toFixed(1)+'</div>';
       hdr+='<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:'+tc+';margin-top:3px;">SPI Score</div>';
       hdr+='<div style="font-size:11px;color:'+tc+';font-weight:600;margin-top:2px;">'+( p.tier_label||'')+'</div></div>';
     }
     if(hasMulti){
       hdr+='<div style="padding:10px 18px;background:#e6f5ec;border:2px solid #9dd4b0;border-radius:10px;text-align:center;">';
-      hdr+='<div style="font-size:1.5rem;font-weight:900;color:#00a651;">'+surveys.length+'</div>';
+      hdr+='<div style="font-family:var(--font-serif);font-size:1.5rem;font-weight:600;color:#00a651;">'+surveys.length+'</div>';
       hdr+='<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#00a651;">'+surveyType+' Rounds</div>';
       hdr+='<div style="font-size:11px;color:#00a651;margin-top:1px;">Trend available</div></div>';
     }
@@ -1992,7 +2006,7 @@ def build_html(A: dict) -> str:
 <script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,900&family=Fraunces:ital,opsz,wght@1,9..144,500&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 <style>{CSS}</style>
 </head>
@@ -2030,6 +2044,7 @@ def build_html(A: dict) -> str:
       <div class="hero-right-orb hero-right-orb-1"></div>
       <div class="hero-right-orb hero-right-orb-2"></div>
       <div class="hero-right-orb hero-right-orb-3"></div>
+      <svg class="hero-network" viewBox="0 0 400 320" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><g class="hn-lines"><line x1="66.2" y1="189.9" x2="52.2" y2="224.0"/><line x1="80.2" y1="127.4" x2="43.9" y2="147.8"/><line x1="152.5" y1="152.1" x2="132.3" y2="185.0"/><line x1="332.1" y1="114.1" x2="341.0" y2="79.3"/><line x1="152.5" y1="152.1" x2="126.8" y2="122.3"/><line x1="273.4" y1="251.2" x2="275.5" y2="292.7"/><line x1="194.6" y1="77.0" x2="208.8" y2="31.6"/><line x1="226.8" y1="160.0" x2="211.7" y2="126.5"/><line x1="260.6" y1="133.3" x2="244.5" y2="97.6"/><line x1="330.0" y1="173.1" x2="363.5" y2="149.7"/><line x1="226.8" y1="160.0" x2="260.6" y2="133.3"/><line x1="104.6" y1="217.6" x2="100.5" y2="252.9"/><line x1="184.0" y1="177.6" x2="190.4" y2="212.3"/><line x1="132.3" y1="185.0" x2="97.0" y2="163.7"/><line x1="288.6" y1="59.7" x2="269.6" y2="27.1"/><line x1="97.0" y1="163.7" x2="66.2" y2="189.9"/><line x1="244.5" y1="97.6" x2="289.0" y2="95.5"/><line x1="131.0" y1="86.1" x2="116.9" y2="44.2"/><line x1="154.2" y1="262.8" x2="177.7" y2="293.0"/><line x1="303.3" y1="143.2" x2="332.1" y2="114.1"/><line x1="190.4" y1="212.3" x2="149.8" y2="226.2"/><line x1="233.6" y1="279.4" x2="275.5" y2="292.7"/><line x1="289.0" y1="95.5" x2="288.6" y2="59.7"/><line x1="131.0" y1="86.1" x2="160.0" y2="53.3"/><line x1="335.7" y1="213.7" x2="317.3" y2="256.4"/><line x1="80.2" y1="127.4" x2="44.3" y2="98.0"/><line x1="332.1" y1="114.1" x2="382.9" y2="116.9"/><line x1="149.8" y1="226.2" x2="154.2" y2="262.8"/><line x1="211.7" y1="126.5" x2="174.5" y2="108.4"/><line x1="236.3" y1="59.5" x2="208.8" y2="31.6"/><line x1="363.5" y1="149.7" x2="375.0" y2="196.6"/><line x1="132.3" y1="185.0" x2="104.6" y2="217.6"/><line x1="235.0" y1="228.7" x2="202.6" y2="253.7"/><line x1="104.6" y1="217.6" x2="52.2" y2="224.0"/><line x1="244.5" y1="97.6" x2="236.3" y2="59.5"/><line x1="202.6" y1="253.7" x2="233.6" y2="279.4"/><line x1="66.2" y1="189.9" x2="43.9" y2="147.8"/><line x1="160.0" y1="53.3" x2="116.9" y2="44.2"/><line x1="174.5" y1="108.4" x2="194.6" y2="77.0"/><line x1="290.5" y1="215.6" x2="273.4" y2="251.2"/><line x1="194.6" y1="77.0" x2="160.0" y2="53.3"/><line x1="80.2" y1="127.4" x2="86.5" y2="84.7"/><line x1="273.4" y1="251.2" x2="317.3" y2="256.4"/><line x1="238.2" y1="191.5" x2="235.0" y2="228.7"/><line x1="86.5" y1="84.7" x2="44.3" y2="98.0"/><line x1="238.2" y1="191.5" x2="280.7" y2="181.2"/><line x1="126.8" y1="122.3" x2="131.0" y2="86.1"/><line x1="330.0" y1="173.1" x2="335.7" y2="213.7"/><line x1="335.7" y1="213.7" x2="375.0" y2="196.6"/><line x1="289.0" y1="95.5" x2="341.0" y2="79.3"/><line x1="226.8" y1="160.0" x2="238.2" y2="191.5"/><line x1="280.7" y1="181.2" x2="290.5" y2="215.6"/><line x1="184.0" y1="177.6" x2="152.5" y2="152.1"/><line x1="236.3" y1="59.5" x2="269.6" y2="27.1"/><line x1="97.0" y1="163.7" x2="80.2" y2="127.4"/><line x1="363.5" y1="149.7" x2="382.9" y2="116.9"/><line x1="154.2" y1="262.8" x2="100.5" y2="252.9"/><line x1="303.3" y1="143.2" x2="330.0" y2="173.1"/><line x1="202.6" y1="253.7" x2="177.7" y2="293.0"/></g><g class="hn-dots"><circle cx="226.8" cy="160.0" r="2.1"/><circle cx="184.0" cy="177.6" r="2.1"/><circle cx="211.7" cy="126.5" r="2.1"/><circle cx="238.2" cy="191.5" r="2.1"/><circle cx="152.5" cy="152.1" r="2.1"/><circle cx="260.6" cy="133.3" r="2.1"/><circle cx="190.4" cy="212.3" r="2.1"/><circle cx="174.5" cy="108.4" r="2.1"/><circle cx="280.7" cy="181.2" r="2.1"/><circle cx="132.3" cy="185.0" r="2.1"/><circle cx="244.5" cy="97.6" r="2.1"/><circle cx="235.0" cy="228.7" r="2.1"/><circle cx="126.8" cy="122.3" r="2.1"/><circle cx="303.3" cy="143.2" r="2.1"/><circle cx="149.8" cy="226.2" r="2.1"/><circle cx="194.6" cy="77.0" r="2.1"/><circle cx="290.5" cy="215.6" r="2.1"/><circle cx="97.0" cy="163.7" r="2.1"/><circle cx="289.0" cy="95.5" r="2.1"/><circle cx="202.6" cy="253.7" r="2.1"/><circle cx="131.0" cy="86.1" r="2.1"/><circle cx="330.0" cy="173.1" r="2.1"/><circle cx="104.6" cy="217.6" r="2.1"/><circle cx="236.3" cy="59.5" r="2.1"/><circle cx="273.4" cy="251.2" r="2.1"/><circle cx="80.2" cy="127.4" r="2.1"/><circle cx="332.1" cy="114.1" r="2.1"/><circle cx="154.2" cy="262.8" r="2.1"/><circle cx="160.0" cy="53.3" r="2.1"/><circle cx="335.7" cy="213.7" r="2.1"/><circle cx="66.2" cy="189.9" r="2.1"/><circle cx="288.6" cy="59.7" r="2.1"/><circle cx="233.6" cy="279.4" r="2.1"/><circle cx="86.5" cy="84.7" r="2.1"/><circle cx="363.5" cy="149.7" r="2.1"/><circle cx="100.5" cy="252.9" r="2.1"/><circle cx="208.8" cy="31.6" r="2.1"/><circle cx="317.3" cy="256.4" r="2.1"/><circle cx="43.9" cy="147.8" r="2.1"/><circle cx="341.0" cy="79.3" r="2.1"/><circle cx="177.7" cy="293.0" r="2.1"/><circle cx="116.9" cy="44.2" r="2.1"/><circle cx="375.0" cy="196.6" r="2.1"/><circle cx="52.2" cy="224.0" r="2.1"/><circle cx="269.6" cy="27.1" r="2.1"/><circle cx="275.5" cy="292.7" r="2.1"/><circle cx="44.3" cy="98.0" r="2.1"/><circle cx="382.9" cy="116.9" r="2.1"/></g></svg>
       <div class="hero-stats">
         <div class="hero-stat-badge">
           <div class="hero-stat-inner">
@@ -2316,7 +2331,7 @@ def build_html(A: dict) -> str:
 
       <div class="chart-card reveal" style="margin-bottom:20px;">
         <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
-          <button id="btn-export-spi" style="font-family:var(--font);font-size:11px;font-weight:700;padding:7px 16px;border-radius:10px;border:none;background:#003d82;color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:6px;"><i class="fas fa-file-excel"></i>&nbsp;Export Excel</button>
+          <button id="btn-export-spi" style="font-family:var(--font);font-size:11px;font-weight:700;padding:7px 16px;border-radius:10px;border:none;background:#003d82;color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:6px;"><i class="fas fa-file-csv"></i>&nbsp;Export CSV</button>
         </div>
         {scorecard_table(spi)}
       </div>
@@ -2391,7 +2406,7 @@ def build_html(A: dict) -> str:
         <span class="filter-label" style="margin-left:6px;">Survey</span>
         <select id="profile-survey-select" class="filter-select" style="min-width:240px;">
         </select>
-        <button id="btn-export-profile" style="font-family:var(--font);font-size:11px;font-weight:700;padding:7px 16px;border-radius:10px;border:none;background:#003d82;color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:6px;margin-left:auto;"><i class="fas fa-file-excel"></i>&nbsp;Export Excel</button>
+        <button id="btn-export-profile" style="font-family:var(--font);font-size:11px;font-weight:700;padding:7px 16px;border-radius:10px;border:none;background:#003d82;color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:6px;margin-left:auto;"><i class="fas fa-file-csv"></i>&nbsp;Export CSV</button>
       </div>
 
       <div id="country-profile-content">
