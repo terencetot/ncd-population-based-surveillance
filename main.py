@@ -18,9 +18,10 @@ import io
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
 from pathlib import Path
-from src.config import EXCEL_PATH, DB_PATH, OUTPUT_PATH, REPORT_DATE, STEPS_DB_PATH
+from src.config import (EXCEL_PATH, DB_PATH, OUTPUT_PATH, REPORT_DATE, STEPS_DB_PATH,
+                        GYTS_JSON_PATH, GATS_JSON_PATH)
 from src.etl import etl_pipeline, load_flat, etl_steps_indicators
-from src.analytics import build_analytics, build_steps_profile_data
+from src.analytics import build_analytics, build_steps_profile_data, build_gtss_profile_data
 from src.report import build_html
 
 
@@ -58,6 +59,11 @@ def main():
     A["steps_profile"] = build_steps_profile_data(DB_PATH, A["spi"])
     n_prof = len(A["steps_profile"].get("countries", []))
     print(f"      OK: STEPS country profiles built for {n_prof} countries")
+
+    A["gyts_profile"] = build_gtss_profile_data(GYTS_JSON_PATH, "GYTS", A["spi"])
+    A["gats_profile"] = build_gtss_profile_data(GATS_JSON_PATH, "GATS", A["spi"])
+    print(f"      OK: GYTS country profiles built for {len(A['gyts_profile'].get('countries', []))} countries")
+    print(f"      OK: GATS country profiles built for {len(A['gats_profile'].get('countries', []))} countries")
 
     # 4. Build HTML
     print(f"\n[5/5] Rendering charts & assembling HTML report ...")

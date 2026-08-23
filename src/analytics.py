@@ -2,12 +2,13 @@
 NCD Surveillance Intelligence Platform - WHO African Region
 Analytics: SPI computation, cycle matrix, regional KPIs
 """
+import json
 import sqlite3
 import numpy as np
 import pandas as pd
 from pathlib import Path
 from src.config import (CURRENT_YEAR, CYCLE_YEARS, CURRENT_CYCLE_START,
-                        SPI_W, TIER_LABELS, TIER_COLORS, SURVEY_META)
+                        SPI_W, TIER_LABELS, TIER_COLORS, SURVEY_META, ISO_CODES)
 
 
 def compute_spi(df: pd.DataFrame) -> pd.DataFrame:
@@ -549,6 +550,118 @@ def build_steps_profile_data(ncd_db_path: Path, spi_df: pd.DataFrame) -> dict:
 
     return {
         "countries":  countries_list,
+        "sections":   sections,
+        "indicators": indicators,
+        "regional":   regional,
+        "profiles":   profiles,
+    }
+
+
+_GTSS_SEC_META = {
+    "GYTS": {
+        "SMOKED":    {"name": "Smoked Tobacco",              "color": "#c0392b", "icon": "fa-smoking"},
+        "SMOKELESS": {"name": "Smokeless Tobacco",            "color": "#e67e22", "icon": "fa-ban"},
+        "ANY":       {"name": "Any Tobacco Use",              "color": "#8e44ad", "icon": "fa-lungs"},
+        "SUSCEPT":   {"name": "Susceptibility",               "color": "#2c3e50", "icon": "fa-exclamation-triangle"},
+        "ECIG":      {"name": "Electronic Cigarettes",        "color": "#16a085", "icon": "fa-bolt"},
+        "CESSATION": {"name": "Cessation",                    "color": "#2980b9", "icon": "fa-briefcase-medical"},
+        "SHS":       {"name": "Secondhand Smoke",             "color": "#d35400", "icon": "fa-wind"},
+        "ACCESS":    {"name": "Access & Availability",        "color": "#27ae60", "icon": "fa-store"},
+        "ADVERT":    {"name": "Tobacco Advertising",          "color": "#7f8c8d", "icon": "fa-bullhorn"},
+        "KNOW":      {"name": "Knowledge & Attitudes",        "color": "#34495e", "icon": "fa-brain"},
+    },
+    "GATS": {
+        "USE":       {"name": "Tobacco & E-Cigarette Use",    "color": "#8e44ad", "icon": "fa-smoking"},
+        "SMOKING":   {"name": "Tobacco Smoking",               "color": "#c0392b", "icon": "fa-fire"},
+        "SMOKELESS": {"name": "Smokeless Tobacco Use",         "color": "#e67e22", "icon": "fa-ban"},
+        "HEATED":    {"name": "Heated Tobacco Products",       "color": "#d35400", "icon": "fa-temperature-high"},
+        "ECIG":      {"name": "Electronic Cigarettes",         "color": "#16a085", "icon": "fa-bolt"},
+        "CESSATION": {"name": "Cessation",                     "color": "#2980b9", "icon": "fa-briefcase-medical"},
+        "SHS":       {"name": "Secondhand Smoke",              "color": "#7f8c8d", "icon": "fa-wind"},
+        "MEDIA":     {"name": "Media & Warning Labels",        "color": "#2c3e50", "icon": "fa-bullhorn"},
+        "KNOW":      {"name": "Knowledge & Attitudes",         "color": "#34495e", "icon": "fa-brain"},
+    },
+}
+
+
+def build_gtss_profile_data(json_path: Path, survey_code: str, spi_df: pd.DataFrame) -> dict:
+    """
+    Load a GYTS/GATS country-profile JSON (built by
+    scripts/build_gtss_profiles.py from fact-sheet PDFs) and shape it into
+    the same {countries, sections, indicators, regional, profiles} structure
+    build_steps_profile_data() produces, so the Country Profile tab can
+    render any of the three survey types through one code path.
+
+    Each country in the source JSON has exactly one survey round (the latest
+    fact sheet year available), so `profiles[c]["surveys"]` is a single-item
+    list and `data` has a single year key.
+    """
+    if not json_path.exists():
+        return {}
+    with open(json_path, encoding="utf-8") as f:
+        raw = json.load(f)
+    if not raw:
+        return {}
+
+    sec_meta = _GTSS_SEC_META.get(survey_code, {})
+    spi_by_iso3: dict = {}
+    if spi_df is not None and len(spi_df) > 0:
+        for _, row in spi_df.iterrows():
+            if row["iso3"]:
+                spi_by_iso3[str(row["iso3"])] = {
+                    "spi":        float(row["spi"]),
+                    "tier":       int(row["tier"]),
+                    "tier_label": str(row["tier_label"]),
+                }
+
+    sections:   dict = {}
+    indicators: dict = {}
+    profiles:   dict = {}
+    sums: dict = {}  # code -> {"b": [...], "m": [...], "f": [...]}
+
+    for country, entry in raw.items():
+        iso3 = ISO_CODES.get(country)
+        spi_info = spi_by_iso3.get(iso3 or "", {})
+        year = int(entry["year"])
+        yd = {}
+        for code, ind in entry["indicators"].items():
+            sc = ind["sec"]
+            if sc not in sections:
+                meta = sec_meta.get(sc, {"name": ind.get("sec_name", sc), "color": "#6b7280", "icon": "fa-circle"})
+                sections[sc] = {"id": len(sections) + 1, "name": meta["name"], "step": survey_code,
+                                 "color": meta["color"], "icon": meta["icon"]}
+            if code not in indicators:
+                indicators[code] = {"label": ind["label"], "unit": "%", "sec": sc, "hib": None}
+            yd[code] = {"b": ind["b"], "lo": None, "hi": None, "m": ind["m"], "f": ind["f"]}
+            bucket = sums.setdefault(code, {"b": [], "m": [], "f": []})
+            if ind["b"] is not None:
+                bucket["b"].append(ind["b"])
+            if ind["m"] is not None:
+                bucket["m"].append(ind["m"])
+            if ind["f"] is not None:
+                bucket["f"].append(ind["f"])
+
+        profiles[country] = {
+            "iso3":       iso3,
+            "spi":        spi_info.get("spi"),
+            "tier":       spi_info.get("tier"),
+            "tier_label": spi_info.get("tier_label"),
+            "surveys":    [{"year": year, "n": None, "rr": None}],
+            "data":       {str(year): yd},
+            "source_file": entry.get("source_file"),
+        }
+
+    regional = {}
+    for code, bucket in sums.items():
+        regional[code] = {
+            "b": round(sum(bucket["b"]) / len(bucket["b"]), 1) if bucket["b"] else None,
+            "m": round(sum(bucket["m"]) / len(bucket["m"]), 1) if bucket["m"] else None,
+            "f": round(sum(bucket["f"]) / len(bucket["f"]), 1) if bucket["f"] else None,
+            "n_countries": len(bucket["b"]),
+        }
+
+    return {
+        "countries":  sorted(profiles.keys()),
         "sections":   sections,
         "indicators": indicators,
         "regional":   regional,

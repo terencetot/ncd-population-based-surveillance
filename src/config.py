@@ -13,6 +13,8 @@ OUTPUT_DIR   = ROOT_DIR / "output"
 
 EXCEL_PATH    = DATA_DIR  / "NCD_Surveillance_Survey_AFRO_dataset.xlsx"
 STEPS_DB_PATH = DATA_DIR  / "STEP.db"
+GYTS_JSON_PATH = DATA_DIR / "gyts_country_profile.json"
+GATS_JSON_PATH = DATA_DIR / "gats_country_profile.json"
 DB_PATH       = OUTPUT_DIR / "ncd_surveillance.db"
 OUTPUT_PATH   = OUTPUT_DIR / "NCD_AFRO_Dashboard.html"
 

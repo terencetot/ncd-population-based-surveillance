@@ -798,7 +798,7 @@ JS = """
       if(btn.dataset.tab==='tab-profile'){
         setTimeout(function(){
           var s=document.getElementById('profile-country-select');
-          if(s&&s.value) renderCountryProfile(s.value);
+          if(s&&s.value) renderCountryProfile(s.value, _profileSurvey);
         },80);
       }
     });
@@ -816,7 +816,11 @@ JS = """
   // COUNTRY PROFILE TAB
   // ════════════════════════════════════════════════════════════════════════════
   var STEPS_PROFILE_DATA = __STEPS_PROFILE_PLACEHOLDER__;
+  var GYTS_PROFILE_DATA  = __GYTS_PROFILE_PLACEHOLDER__;
+  var GATS_PROFILE_DATA  = __GATS_PROFILE_PLACEHOLDER__;
+  var COUNTRY_SURVEYS_MAP = __COUNTRY_SURVEYS_PLACEHOLDER__ || {};
   var _profileCurrent = '';
+  var _profileSurvey  = 'STEPS';
 
   var _SECTION_ORDER = ['S1_TOB','S1_ALC','S1_DIT','S1_PAC','S2_BPR','S2_ANT','S3_GLU','S3_CHO','S_RISK'];
   var _RADAR_CFG = [
@@ -838,6 +842,29 @@ JS = """
     {code:'glucose_raised_7_pct',       icon:'fa-tint',               label:'Raised Glucose',        col:'#d35400'},
     {code:'risk_3plus_pct',             icon:'fa-exclamation-circle', label:'3+ Risk Factors',       col:'#2c3e50'},
   ];
+  var _GYTS_KPI_CFG = [
+    {code:'gyts_current_any_tobacco',      icon:'fa-smoking',            label:'Current Tobacco Use',        col:'#c0392b'},
+    {code:'gyts_current_ecig',             icon:'fa-bolt',                label:'Current E-Cigarette Use',    col:'#16a085'},
+    {code:'gyts_shs_home',                 icon:'fa-wind',                label:'SHS Exposure at Home',       col:'#d35400'},
+    {code:'gyts_noticed_ads_pos',          icon:'fa-store',               label:'Noticed Tobacco Ads (POS)',  col:'#27ae60'},
+    {code:'gyts_susceptible_future_use',   icon:'fa-exclamation-triangle',label:'Susceptible Never-Users',    col:'#2c3e50'},
+    {code:'gyts_favor_ban_enclosed',       icon:'fa-brain',               label:'Favor Indoor Smoking Ban',   col:'#34495e'},
+  ];
+  var _GATS_KPI_CFG = [
+    {code:'gats_current_tobacco_users',    icon:'fa-smoking',            label:'Current Tobacco Use',        col:'#8e44ad'},
+    {code:'gats_current_cigarette_smokers',icon:'fa-fire',                label:'Current Cigarette Smoking',  col:'#c0392b'},
+    {code:'gats_current_ecig',             icon:'fa-bolt',                label:'Current E-Cigarette Use',    col:'#16a085'},
+    {code:'gats_exposed_workplace',        icon:'fa-wind',                label:'SHS Exposure at Workplace',  col:'#7f8c8d'},
+    {code:'gats_smokers_planning_quit',    icon:'fa-briefcase-medical',   label:'Smokers Planning to Quit',   col:'#2980b9'},
+    {code:'gats_belief_smoking_illness',   icon:'fa-brain',               label:'Believe Smoking Causes Illness', col:'#34495e'},
+  ];
+  var _KPI_CFG_BY_SURVEY  = {STEPS: _KPI_CFG,  GYTS: _GYTS_KPI_CFG, GATS: _GATS_KPI_CFG};
+  var _SURVEY_LABEL = {STEPS:'STEPS \u2014 NCD Risk Factor Surveillance', GYTS:'GYTS \u2014 Global Youth Tobacco Survey', GATS:'GATS \u2014 Global Adult Tobacco Survey'};
+  function _profileDataFor(surveyType){
+    if(surveyType==='GYTS') return GYTS_PROFILE_DATA;
+    if(surveyType==='GATS') return GATS_PROFILE_DATA;
+    return STEPS_PROFILE_DATA;
+  }
   var _TIER_CLR = {1:'#00a651',2:'#4a90e2',3:'#f7941d',4:'#c0392b'};
 
   function _trendArrow(cur, prev, hib) {
@@ -851,22 +878,27 @@ JS = """
   }
 
 
-  function renderCountryProfile(country) {
-    if(!STEPS_PROFILE_DATA||!STEPS_PROFILE_DATA.profiles){
+  function renderCountryProfile(country, surveyType) {
+    surveyType = surveyType || _profileSurvey || 'STEPS';
+    _profileSurvey = surveyType;
+    var PROFILE_DATA = _profileDataFor(surveyType);
+    if(!PROFILE_DATA||!PROFILE_DATA.profiles){
       document.getElementById('country-profile-content').innerHTML=
-        '<div class="profile-no-data"><i class="fas fa-database"></i><p>No STEPS indicator data available.</p></div>';
+        '<div class="profile-no-data"><i class="fas fa-database"></i><p>No '+surveyType+' indicator data available.</p></div>';
       return;
     }
     _profileCurrent=country;
-    var p=STEPS_PROFILE_DATA.profiles[country];
+    var p=PROFILE_DATA.profiles[country];
     if(!p||!p.surveys||p.surveys.length===0){
       document.getElementById('country-profile-content').innerHTML=
-        '<div class="profile-no-data"><i class="fas fa-info-circle"></i><p>No STEPS data available for <strong>'+country+'</strong>.</p></div>';
+        '<div class="profile-no-data"><i class="fas fa-info-circle"></i><p>No '+surveyType+' data available for <strong>'+country+'</strong>.</p></div>';
       return;
     }
-    var ind=STEPS_PROFILE_DATA.indicators||{};
-    var sec=STEPS_PROFILE_DATA.sections||{};
-    var reg=STEPS_PROFILE_DATA.regional||{};
+    var ind=PROFILE_DATA.indicators||{};
+    var sec=PROFILE_DATA.sections||{};
+    var reg=PROFILE_DATA.regional||{};
+    var sectionOrder = surveyType==='STEPS' ? _SECTION_ORDER : Object.keys(sec);
+    var kpiCfg = _KPI_CFG_BY_SURVEY[surveyType] || _KPI_CFG;
     var surveys=p.surveys;
     var latYr=surveys[surveys.length-1].year;
     var latData=p.data[String(latYr)]||{};
@@ -886,7 +918,7 @@ JS = """
     hdr+='<div>';
     hdr+='<div style="font-size:22px;font-weight:900;color:var(--dark);letter-spacing:-.025em;">'+country+'</div>';
     hdr+='<div style="font-size:12px;color:var(--muted);margin-top:5px;display:flex;flex-wrap:wrap;gap:10px;">';
-    hdr+='<span class="profile-survey-pill"><i class="fas fa-flask"></i>&nbsp;STEPS surveys: <strong>'+yrsStr+'</strong></span>';
+    hdr+='<span class="profile-survey-pill"><i class="fas fa-flask"></i>&nbsp;'+surveyType+' surveys: <strong>'+yrsStr+'</strong></span>';
     if(latS.rr) hdr+='<span class="profile-survey-pill"><i class="fas fa-percentage"></i>&nbsp;Response rate: '+latS.rr+'%</span>';
     hdr+='</div></div></div>';
     hdr+='<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">';
@@ -899,14 +931,14 @@ JS = """
     if(hasMulti){
       hdr+='<div style="padding:10px 18px;background:#e6f5ec;border:1.5px solid #9dd4b0;border-radius:10px;text-align:center;">';
       hdr+='<div style="font-size:1.5rem;font-weight:900;color:#00a651;">'+surveys.length+'</div>';
-      hdr+='<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#00a651;">STEPS Rounds</div>';
+      hdr+='<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#00a651;">'+surveyType+' Rounds</div>';
       hdr+='<div style="font-size:9.5px;color:#00a651;margin-top:1px;">Trend available</div></div>';
     }
     hdr+='</div></div></div>';
 
     // ── KPI Cards ──────────────────────────────────────────────────────────
     var kpi='<div class="profile-kpi-row">';
-    _KPI_CFG.forEach(function(k){
+    kpiCfg.forEach(function(k){
       var d=latData[k.code]||{};
       var pd=prevData[k.code]||{};
       var ki=ind[k.code]||{};
@@ -937,10 +969,10 @@ JS = """
     _profileState = {
       latData: latData, prevData: prevData, latYr: latYr, prevYr: prevYr,
       ind: ind, sec: sec, reg: reg, hasMulti: hasMulti, tier: p.tier,
-      country: country
+      country: country, sectionOrder: sectionOrder
     };
     // ── Section divider label ──────────────────────────────────────────────
-    var sdiv='<div class="section-divider-label" style="margin:28px 0 18px;">Detailed Indicator Dashboard \u2014 All STEPS Sections</div>';
+    var sdiv='<div class="section-divider-label" style="margin:28px 0 18px;">Detailed Indicator Dashboard \u2014 All '+surveyType+' Sections</div>';
     sdiv+='<div id="profile-section-detail-grid"></div>';
 
     document.getElementById('country-profile-content').innerHTML=
@@ -971,9 +1003,10 @@ JS = """
     var ind      = s.ind  || {};
     var sec      = s.sec  || {};
     var reg      = s.reg  || {};
+    var sectionOrder = s.sectionOrder || _SECTION_ORDER;
 
     var grid = '<div class="profile-section-grid">';
-    _SECTION_ORDER.forEach(function(sc){
+    sectionOrder.forEach(function(sc){
       var sv = sec[sc]; if(!sv) return;
       var secInds = Object.entries(ind).filter(function(e){return e[1].sec===sc;});
 
@@ -1159,9 +1192,39 @@ JS = """
   }
 
   // ── Profile tab: event listeners ────────────────────────────────────────────
+  // All three survey types are always listed (never filtered out of the
+  // dropdown), so GYTS/GATS stay discoverable even when the currently
+  // selected country happens to lack usable data for them — picking one
+  // with no data just shows the existing "no data available" message
+  // instead of hiding the option entirely.
+  var _ALL_SURVEYS = ['STEPS','GYTS','GATS'];
+  function _populateSurveyDropdown(country, preferred){
+    var sel = document.getElementById('profile-survey-select');
+    if(!sel) return null;
+    var avail = COUNTRY_SURVEYS_MAP[country] || [];
+    var chosen = preferred || 'STEPS';
+    sel.innerHTML = _ALL_SURVEYS.map(function(s){
+      var has = avail.indexOf(s) !== -1;
+      var label = (_SURVEY_LABEL[s]||s) + (has ? '' : ' — no data for this country');
+      return '<option value="'+s+'"'+(s===chosen?' selected':'')+'>'+label+'</option>';
+    }).join('');
+    return chosen;
+  }
+
   var _profSel=document.getElementById('profile-country-select');
+  var _profSurveySel=document.getElementById('profile-survey-select');
   if(_profSel){
-    _profSel.addEventListener('change',function(){renderCountryProfile(this.value);});
+    _profSel.addEventListener('change',function(){
+      var chosen=_populateSurveyDropdown(this.value, _profileSurvey);
+      renderCountryProfile(this.value, chosen);
+    });
+    var _initChosen=_populateSurveyDropdown(_profSel.value, 'STEPS');
+    _profileSurvey = _initChosen || 'STEPS';
+  }
+  if(_profSurveySel){
+    _profSurveySel.addEventListener('change',function(){
+      renderCountryProfile(_profileCurrent||(_profSel?_profSel.value:''), this.value);
+    });
   }
 
   // ── Excel export (XML Spreadsheet 2003) ──────────────────────────────────────
@@ -1227,10 +1290,11 @@ JS = """
       alert('Please select a country from the dropdown first.');
       return;
     }
-    if (!STEPS_PROFILE_DATA || !STEPS_PROFILE_DATA.profiles) return;
-    var p = STEPS_PROFILE_DATA.profiles[_profileCurrent]; if (!p) return;
-    var ind = STEPS_PROFILE_DATA.indicators || {};
-    var sec = STEPS_PROFILE_DATA.sections   || {};
+    var PROFILE_DATA = _profileDataFor(_profileSurvey);
+    if (!PROFILE_DATA || !PROFILE_DATA.profiles) return;
+    var p = PROFILE_DATA.profiles[_profileCurrent]; if (!p) return;
+    var ind = PROFILE_DATA.indicators || {};
+    var sec = PROFILE_DATA.sections   || {};
     var rows = [['Country','ISO3','Survey Year','Section','Indicator Code',
                  'Indicator','Unit','Both Sexes','Males','Females',
                  '95% CI Lower','95% CI Upper']];
@@ -1251,7 +1315,7 @@ JS = """
         ]);
       });
     });
-    _saveXLS(_profileCurrent.split(' ').join('_') + '_STEPS.xls', rows);
+    _saveXLS(_profileCurrent.split(' ').join('_') + '_' + _profileSurvey + '.xls', rows);
   }
 
   // ── Wire buttons via addEventListener (NOT onclick) ───────────────────────────
@@ -1684,18 +1748,32 @@ def build_html(A: dict) -> str:
          "types_done":int(r["types_done"])}
         for _, r in A["spi"].iterrows()
     ], ensure_ascii=False)
-    # ── STEPS profile data ────────────────────────────────────────────────────
+    # ── STEPS / GYTS / GATS profile data ──────────────────────────────────────
     steps_profile = A.get("steps_profile", {})
+    gyts_profile  = A.get("gyts_profile", {})
+    gats_profile  = A.get("gats_profile", {})
     steps_profile_json = _json.dumps(steps_profile, ensure_ascii=False) if steps_profile else "null"
+    gyts_profile_json  = _json.dumps(gyts_profile,  ensure_ascii=False) if gyts_profile  else "null"
+    gats_profile_json  = _json.dumps(gats_profile,  ensure_ascii=False) if gats_profile  else "null"
 
-    # Build country profile dropdown options (default: Ethiopia, else first)
-    _prof_countries = steps_profile.get("countries", [])
+    # Build country profile dropdown options across all three survey types
+    # (default: Ethiopia, else first) and a per-country map of which survey
+    # types have data, so the Survey dropdown can populate itself in JS.
+    _steps_countries_set = set(steps_profile.get("countries", []))
+    _gyts_countries_set  = set(gyts_profile.get("countries", []))
+    _gats_countries_set  = set(gats_profile.get("countries", []))
+    _prof_countries = sorted(_steps_countries_set | _gyts_countries_set | _gats_countries_set)
     _prof_default   = "Ethiopia" if "Ethiopia" in _prof_countries else (_prof_countries[0] if _prof_countries else "")
     _prof_options   = "\n".join(
         f'<option value="{c}"{"  selected" if c == _prof_default else ""}>{c}</option>'
         for c in _prof_countries
     )
     _prof_n = len(_prof_countries)
+    _country_surveys_map = {
+        c: [s for s, cs in (("STEPS", _steps_countries_set), ("GYTS", _gyts_countries_set), ("GATS", _gats_countries_set)) if c in cs]
+        for c in _prof_countries
+    }
+    country_surveys_json = _json.dumps(_country_surveys_map, ensure_ascii=False)
 
     exec_global    = A["exec_kpis"]["global"]
     exec_steps     = A["exec_kpis"]["STEPS"]
@@ -1704,6 +1782,9 @@ def build_html(A: dict) -> str:
                       .replace("__TIMELINE_DATA_PLACEHOLDER__",  timeline_by_type_json)
                       .replace("__SPI_SCORES_PLACEHOLDER__",    spi_scores_json)
                       .replace("__STEPS_PROFILE_PLACEHOLDER__", steps_profile_json)
+                      .replace("__GYTS_PROFILE_PLACEHOLDER__",  gyts_profile_json)
+                      .replace("__GATS_PROFILE_PLACEHOLDER__",  gats_profile_json)
+                      .replace("__COUNTRY_SURVEYS_PLACEHOLDER__", country_surveys_json)
                       .replace("__SPI_TABLE_PLACEHOLDER__", spi_table_json))
 
     # Build favicon link and logo img tags (empty string if asset not found)
@@ -2111,12 +2192,12 @@ def build_html(A: dict) -> str:
           <h2 class="section-title">Country Profile</h2>
         </div>
         <p class="section-subtitle">
-          In-depth NCD risk factor profile &mdash; STEPS indicator data by domain, sex &amp; survey round &mdash;
-          {_prof_n} countries with STEPS data available
+          In-depth NCD risk factor profile &mdash; indicator data by domain, sex &amp; survey round &mdash;
+          {_prof_n} countries with STEPS, GYTS and/or GATS indicator data available
         </p>
       </div>
 
-      {'<div class="profile-no-data" style="padding:40px;text-align:center;color:var(--muted);"><i class="fas fa-database" style="font-size:32px;opacity:.3;margin-bottom:12px;display:block;"></i><p>No STEPS indicator data found. Ensure STEP.db is present in the data/ folder and run the pipeline.</p></div>' if not _prof_countries else ""}
+      {'<div class="profile-no-data" style="padding:40px;text-align:center;color:var(--muted);"><i class="fas fa-database" style="font-size:32px;opacity:.3;margin-bottom:12px;display:block;"></i><p>No indicator data found. Ensure STEP.db and the GYTS/GATS profile JSON files are present in the data/ folder and run the pipeline.</p></div>' if not _prof_countries else ""}
 
       <div class="filter-bar" style="{'display:none;' if not _prof_countries else ''}">
         <span class="filter-label"><i class="fas fa-map-marker-alt"></i>&nbsp; Country</span>
@@ -2124,13 +2205,9 @@ def build_html(A: dict) -> str:
           {_prof_options}
         </select>
         <span class="filter-label" style="margin-left:6px;">Survey</span>
-        <select id="profile-survey-select" class="filter-select" style="min-width:200px;" disabled>
-          <option value="STEPS" selected>STEPS &mdash; NCD Risk Factor Surveillance</option>
+        <select id="profile-survey-select" class="filter-select" style="min-width:240px;">
         </select>
-        <span style="font-size:11px;color:var(--muted);font-style:italic;margin-left:4px;display:flex;align-items:center;gap:5px;">
-          <i class="fas fa-lock" style="font-size:10px;"></i>Additional survey types coming soon
-        </span>
-        <button id="btn-export-profile" style="font-family:var(--font);font-size:11px;font-weight:700;padding:7px 16px;border-radius:8px;border:none;background:#003d82;color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:6px;" style="margin-left:auto;"><i class="fas fa-file-excel"></i>&nbsp;Export Excel</button>
+        <button id="btn-export-profile" style="font-family:var(--font);font-size:11px;font-weight:700;padding:7px 16px;border-radius:8px;border:none;background:#003d82;color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:6px;margin-left:auto;"><i class="fas fa-file-excel"></i>&nbsp;Export Excel</button>
       </div>
 
       <div id="country-profile-content">
