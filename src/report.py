@@ -62,8 +62,8 @@ CSS = """
      neutral, excellent tabular figures for data); Fraunces — an optical-size
      serif with real character — is reserved for headline moments: the hero
      title and every "big number" a reader's eye should land on first. */
-  --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-  --font-serif:'Fraunces','Source Serif 4',Georgia,serif;
+  --font:'Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --font-serif:'Lora','Source Serif 4',Georgia,serif;
   /* Layered shadows (tight contact shadow + soft diffuse ambient shadow)
      read as real depth rather than a single flat drop-shadow. */
   --shadow-sm:0 1px 2px rgba(15,23,42,.04),0 3px 8px rgba(15,23,42,.05);
@@ -89,7 +89,13 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible,
     transition-duration:.01ms!important;scroll-behavior:auto!important;
   }
 }
-body{font-family:var(--font);background:#f6f7fb;color:var(--text);line-height:1.65;font-size:14px;overflow-x:hidden;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;font-variant-numeric:tabular-nums}
+body{font-family:var(--font);background:#f6f7fb;color:var(--text);line-height:1.65;font-size:14px;overflow-x:hidden;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+/* font-variant-numeric:tabular-nums is scoped to .num-cell (sans-serif
+   table cells) rather than declared globally — combined with the Lora
+   serif used for headline numbers, it triggers a genuine word-spacing
+   rendering bug (verified in isolation: Lora + tabular-nums inflates the
+   gap between every word on the line, independent of letter-spacing or
+   text-wrap). Numeric tables never use the serif, so scoping loses nothing. */
 @keyframes fadeScale{from{opacity:0;transform:scale(.96) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px)}}
 @keyframes shimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}
@@ -145,7 +151,7 @@ body{font-family:var(--font);background:#f6f7fb;color:var(--text);line-height:1.
 .hero-spi-bar{height:3px;background:rgba(255,255,255,.12);margin:10px 18px 0;border-radius:6px;overflow:hidden}
 .hero-spi-fill{height:100%;border-radius:6px;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
 /* Hero left */
-.hero h1{font-family:var(--font-serif);font-size:3.6rem;font-weight:600;line-height:1.05;letter-spacing:-.015em;color:var(--dark);margin-bottom:16px;animation:fadeScale .8s ease forwards;text-wrap:balance}
+.hero h1{font-family:var(--font-serif);font-size:3.6rem;font-weight:600;line-height:1.1;letter-spacing:-.01em;color:var(--dark);margin-bottom:16px;animation:fadeScale .8s ease forwards;text-wrap:balance}
 .grad{background:linear-gradient(90deg,#0065b3 0%,#4a90e2 50%,#56d0ff 100%);-webkit-background-clip:text;background-clip:text;color:transparent;background-size:200% auto;animation:shimmer 6s linear infinite}
 .hero-sub{font-size:16px;color:#4a5568;max-width:620px;line-height:1.85;animation:fadeScale 1s ease .1s both;font-weight:400;margin-bottom:20px}
 .hero-sub strong{color:var(--dark);font-weight:700}
@@ -591,7 +597,7 @@ JS = """
   // ── Strategic Priority - overall SPI scores per country ──────────────────
   const SPI_SCORES = __SPI_SCORES_PLACEHOLDER__;
 
-  const _FONT = "Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
+  const _FONT = "Poppins,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
   // Plotly loads from a CDN — on an offline workstation or behind a
   // restrictive proxy (common across the Region) it never arrives. Show a
   // clear reason instead of leaving a blank rectangle where a chart should be.
@@ -2006,7 +2012,7 @@ def build_html(A: dict) -> str:
 <script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,900&family=Fraunces:ital,opsz,wght@1,9..144,500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Lora:ital,wght@0,500;0,600;0,700;1,500&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 <style>{CSS}</style>
 </head>
