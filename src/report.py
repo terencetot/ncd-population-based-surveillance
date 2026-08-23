@@ -306,6 +306,7 @@ hr.section-divider{border:none;border-top:1px solid var(--border);margin:32px 0}
 .profile-kpi-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:currentColor;opacity:.25;}
 .profile-kpi-icon{font-size:20px;margin-bottom:8px;}
 .profile-kpi-value{font-size:1.9rem;font-weight:900;line-height:1;letter-spacing:-.03em;margin-bottom:4px;}
+.profile-kpi-ci{font-size:9.5px;color:var(--muted);font-weight:600;margin-bottom:2px;}
 .profile-kpi-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.9px;color:var(--muted);}
 .profile-kpi-trend{font-size:12px;margin-top:6px;font-weight:700;}
 .profile-kpi-sex{display:flex;gap:6px;margin-top:8px;}
@@ -325,6 +326,11 @@ hr.section-divider{border:none;border-top:1px solid var(--border);margin:32px 0}
 .profile-no-data i{font-size:40px;opacity:.28;}
 .profile-survey-pill{display:inline-flex;align-items:center;gap:5px;background:rgba(0,61,130,.08);border:1px solid rgba(0,61,130,.18);border-radius:20px;padding:3px 11px;font-size:10.5px;font-weight:600;color:var(--primary);}
 .profile-cmp-badge{display:inline-block;font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px;vertical-align:middle;}
+.profile-charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;}
+.profile-charts-grid>.chart-card:first-child{grid-column:1 / -1;}
+.profile-chart-title{font-size:12.5px;font-weight:700;color:var(--dark);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.profile-chart-title i{color:var(--accent);font-size:12px;}
+@media(max-width:820px){.profile-charts-grid{grid-template-columns:1fr;}}
 """
 
 # ── JavaScript ─────────────────────────────────────────────────────────────────
@@ -428,13 +434,41 @@ JS = """
     });
     const rb=document.getElementById(rId);
     if(rb)rb.addEventListener('click',()=>{
-      [sId,trId,gId,cId,rgId,topId].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+      // Reset to each control's own declared default (a <select>'s first
+      // <option>, e.g. "All countries"/value=0 for sc-top) rather than a
+      // blanket value='' — sc-top has no empty option, so that used to
+      // leave it at selectedIndex=-1 and render as an empty box.
+      [sId,trId,gId,cId,rgId,topId].forEach(id=>{
+        const el=document.getElementById(id);
+        if(!el)return;
+        el.value = (el.tagName==='SELECT' && el.options.length) ? el.options[0].value : '';
+      });
       applyFilters(tId,sId,trId,gId,cId,rgId,topId,cntId);
     });
     applyFilters(tId,sId,trId,gId,cId,rgId,topId,cntId);
   }
   bindFilters('scorecard-table','sc-search','sc-tier','sc-gap','sc-cycle','sc-reg','sc-top','sc-reset','sc-count');
-  bindFilters('prio-table-el','pr-search','pr-tier','pr-gap','pr-cycle','','pr-top','pr-reset','pr-count');
+
+  // ── Strategic Priority tables: live country-name search ───────────────────
+  function bindPrioritySearch(inputId,countId){
+    const input=document.getElementById(inputId);
+    if(!input)return;
+    function apply(){
+      const q=(input.value||'').toLowerCase().trim();
+      let vis=0,total=0;
+      document.querySelectorAll('.survey-detail-section tbody tr').forEach(tr=>{
+        total++;
+        const country=(tr.children[0]&&tr.children[0].textContent||'').toLowerCase();
+        const show=!q||country.includes(q);
+        tr.style.display=show?'':'none';
+        if(show)vis++;
+      });
+      const cnt=document.getElementById(countId);
+      if(cnt)cnt.textContent=q?('Matching '+vis+' rows across all instrument tables'):'';
+    }
+    input.addEventListener('input',apply);
+  }
+  bindPrioritySearch('pr-search','pr-count');
 
   // ── Executive Overview dynamic filter ────────────────────────────────────
   const EXEC_DATA = __EXEC_DATA_PLACEHOLDER__;
@@ -967,11 +1001,12 @@ JS = """
       var valStr=v!==null?v.toFixed(1)+unit:'N/A';
       var arrow=_trendArrow(v,pv,ki.hib);
       var mV=d.m!==undefined?d.m:null, fV=d.f!==undefined?d.f:null;
-      var loStr=(d.lo!==null&&d.lo!==undefined&&d.hi!==null&&d.hi!==undefined)?
-        ' title="95% CI: '+d.lo.toFixed(1)+'\u2013'+d.hi.toFixed(1)+unit+'"':'';
+      var hasCI=(d.lo!==null&&d.lo!==undefined&&d.hi!==null&&d.hi!==undefined);
+      var loStr=hasCI?' title="95% CI: '+d.lo.toFixed(1)+'\u2013'+d.hi.toFixed(1)+unit+'"':'';
       kpi+='<div class="profile-kpi-card" style="color:'+k.col+';">';
       kpi+='<div class="profile-kpi-icon"><i class="fas '+k.icon+'" style="color:'+k.col+';"></i></div>';
       kpi+='<div class="profile-kpi-value" style="color:'+k.col+';"'+loStr+'>'+valStr+'</div>';
+      if(hasCI){kpi+='<div class="profile-kpi-ci">95% CI '+d.lo.toFixed(1)+'\u2013'+d.hi.toFixed(1)+unit+'</div>';}
       kpi+='<div class="profile-kpi-label">'+k.label+'</div>';
       if(arrow){kpi+='<div class="profile-kpi-trend">'+arrow+'<span style="font-size:10px;color:var(--muted);font-weight:400;"> vs '+prevYr+'</span></div>';}
       if(mV!==null||fV!==null){
@@ -994,12 +1029,34 @@ JS = """
     var sdiv='<div class="section-divider-label" style="margin:28px 0 18px;">Detailed Indicator Dashboard \u2014 All '+surveyType+' Sections</div>';
     sdiv+='<div id="profile-section-detail-grid"></div>';
 
+    var charts='<div class="profile-charts-grid">';
+    charts+='<div class="chart-card reveal">';
+    charts+='<h4 class="profile-chart-title"><i class="fas fa-chart-line"></i>&nbsp; Trend — Key Indicators Over Time</h4>';
+    if(hasMulti){
+      charts+='<div id="profile-trend-chart" style="height:340px;"></div>';
+    }else{
+      charts+='<div style="display:flex;align-items:center;justify-content:center;height:120px;color:var(--muted);font-size:12.5px;text-align:center;padding:0 20px;">'+
+        'Trend requires 2+ survey rounds — '+country+' has 1 completed '+surveyType+' round so far ('+latYr+').</div>';
+    }
+    charts+='</div>';
+    charts+='<div class="chart-card reveal">';
+    charts+='<h4 class="profile-chart-title"><i class="fas fa-balance-scale"></i>&nbsp; '+country+' vs AFRO Regional Average</h4>';
+    charts+='<div id="profile-compare-chart" style="height:360px;"></div>';
+    charts+='</div>';
+    charts+='<div class="chart-card reveal">';
+    charts+='<h4 class="profile-chart-title"><i class="fas fa-venus-mars"></i>&nbsp; Sex Disaggregation — Latest Round</h4>';
+    charts+='<div id="profile-sex-chart" style="height:380px;"></div>';
+    charts+='</div>';
+    charts+='</div>';
+
     document.getElementById('country-profile-content').innerHTML=
-      hdr+kpi+sdiv;
+      hdr+kpi+charts+sdiv;
 
     _renderSectionDetail();
+    if(hasMulti) _renderProfileTrend(p,ind,kpiCfg);
+    _renderProfileCompare(latData,country,reg,ind,sec,kpiCfg);
+    _renderProfileSexChart(latData,country,ind,reg,kpiCfg);
 
-    // ── Render Plotly charts ────────────────────────────────────────────────
     setTimeout(function(){
       document.querySelectorAll('#country-profile-content .reveal').forEach(function(el){
         el.classList.add('visible');
@@ -1058,12 +1115,14 @@ JS = """
         var hib  = i2.hib;
         var bg   = idx % 2 === 0 ? '#fff' : '#f9fafb';
         var lbl  = i2.label.length > 58 ? i2.label.substring(0, 57) + '\u2026' : i2.label;
-        var ciAttr = (d.lo !== null && d.lo !== undefined && d.hi !== null && d.hi !== undefined)
-          ? ' title="95% CI: ' + d.lo.toFixed(1) + '\u2013' + d.hi.toFixed(1) + unit + '"' : '';
+        var hasCI = (d.lo !== null && d.lo !== undefined && d.hi !== null && d.hi !== undefined);
+        var ciAttr = hasCI ? ' title="95% CI: ' + d.lo.toFixed(1) + '\u2013' + d.hi.toFixed(1) + unit + '"' : '';
+        var ciInline = hasCI
+          ? '<br><span style="font-size:8.5px;color:var(--muted);font-weight:400;">CI ' + d.lo.toFixed(1) + '\u2013' + d.hi.toFixed(1) + '</span>' : '';
 
         var bStr = bV !== null
           ? '<strong' + ciAttr + '>' + bV.toFixed(1) + '</strong>'
-            + '<span style="font-size:9px;color:var(--muted);">' + unit + '</span>'
+            + '<span style="font-size:9px;color:var(--muted);">' + unit + '</span>' + ciInline
           : '<span style="color:#ccc;">\u2014</span>';
         var mStr = mV !== null ? mV.toFixed(1)  : '<span style="color:#ccc;">\u2014</span>';
         var fStr = fV !== null ? fV.toFixed(1)  : '<span style="color:#ccc;">\u2014</span>';
@@ -1084,13 +1143,12 @@ JS = """
   }
 
   // ── Compare: Regional Benchmark ─────────────────────────────────────────────
-  function _renderProfileCompare(latData,country,reg,ind,sec){
+  function _renderProfileCompare(latData,country,reg,ind,sec,radarCfg){
     var divId='profile-compare-chart';
-    if(!document.getElementById(divId)||typeof Plotly==='undefined') return;
-    var _SEC_CLR={'S1_TOB':'#c0392b','S1_ALC':'#8e44ad','S1_DIT':'#27ae60','S1_PAC':'#2980b9',
-                  'S2_BPR':'#e74c3c','S2_ANT':'#e67e22','S3_GLU':'#d35400','S3_CHO':'#16a085','S_RISK':'#2c3e50'};
+    var el=document.getElementById(divId);
+    if(!el||typeof Plotly==='undefined') return;
     var names=[],cVals=[],rVals=[],clrs=[];
-    _RADAR_CFG.forEach(function(r){
+    (radarCfg||[]).forEach(function(r){
       var i2=ind[r.code]; if(!i2) return;
       var d=latData[r.code]||{}, rv=reg[r.code]||{};
       var cv=d.b!==null&&d.b!==undefined?d.b:null;
@@ -1098,9 +1156,9 @@ JS = """
       if(cv===null&&rvB===null) return;
       names.push(r.label);
       cVals.push(cv); rVals.push(rvB);
-      clrs.push(_SEC_CLR[i2.sec]||'#6b7280');
+      clrs.push((sec[i2.sec]&&sec[i2.sec].color)||'#6b7280');
     });
-    if(!names.length) return;
+    if(!names.length){el.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);">No comparable indicators available</div>';return;}
     try{Plotly.react(divId,[
       {type:'bar',orientation:'h',x:rVals,y:names,name:'AFRO Avg',
        marker:{color:'rgba(173,181,189,.5)',line:{color:'#adb5bd',width:1}},
@@ -1122,22 +1180,15 @@ JS = """
   }
 
   // ── Trend: Key Indicators Over Time ────────────────────────────────────────
-  function _renderProfileTrend(profile,ind){
+  function _renderProfileTrend(profile,ind,trendCfg){
     var divId='profile-trend-chart';
-    if(!document.getElementById(divId)||typeof Plotly==='undefined') return;
+    var el=document.getElementById(divId);
+    if(!el||typeof Plotly==='undefined') return;
     var surveys=profile.surveys;
     var years=surveys.map(function(s){return s.year;});
-    var _TREND_CFG=[
-      {code:'tobacco_current_smoke_pct',  label:'Tobacco Use',       clr:'#c0392b'},
-      {code:'bp_raised_140_pct',          label:'Raised BP',         clr:'#e74c3c'},
-      {code:'bmi_obese_pct',              label:'Obesity',           clr:'#e67e22'},
-      {code:'glucose_raised_7_pct',       label:'Raised Glucose',    clr:'#d35400'},
-      {code:'risk_3plus_pct',             label:'3+ Risk Factors',   clr:'#2c3e50'},
-      {code:'pa_low_activity_pct',        label:'Low Physical Act.', clr:'#2980b9'},
-      {code:'alcohol_current_drinker_pct',label:'Alcohol Use',       clr:'#8e44ad'},
-    ];
     var traces=[];
-    _TREND_CFG.forEach(function(t){
+    (trendCfg||[]).forEach(function(t0){
+      var t={code:t0.code,label:t0.label,clr:t0.clr||t0.col||'#4a90e2'};
       var vals=years.map(function(yr){
         var yd=profile.data[String(yr)]||{};
         var d=yd[t.code]; return d&&d.b!==null&&d.b!==undefined?d.b:null;
@@ -1176,17 +1227,20 @@ JS = """
   }
 
   // ── Sex Disaggregation ──────────────────────────────────────────────────────
-  function _renderProfileSexChart(latData,country,ind,reg){
+  function _renderProfileSexChart(latData,country,ind,reg,radarCfg){
     var divId='profile-sex-chart';
-    if(!document.getElementById(divId)||typeof Plotly==='undefined') return;
+    var el=document.getElementById(divId);
+    if(!el||typeof Plotly==='undefined') return;
     var names=[],mV=[],fV=[],bV=[];
-    _RADAR_CFG.forEach(function(r){
+    (radarCfg||[]).forEach(function(r){
       var d=latData[r.code]||{};
+      if(d.m===null||d.m===undefined){if(d.f===null||d.f===undefined)return;}
       names.push(r.label);
       mV.push(d.m!==null&&d.m!==undefined?d.m:null);
       fV.push(d.f!==null&&d.f!==undefined?d.f:null);
       bV.push(d.b!==null&&d.b!==undefined?d.b:null);
     });
+    if(!names.length){el.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);">No sex-disaggregated data available</div>';return;}
     try{Plotly.react(divId,[
       {type:'bar',orientation:'h',x:mV,y:names,name:'Males',
        marker:{color:'rgba(41,128,185,.82)',line:{color:'#2980b9',width:1}},
@@ -2204,7 +2258,8 @@ def build_html(A: dict) -> str:
         <button class="prio-pill" data-survey="GSHS"   data-color="#f7941d" style="font-family:var(--font);font-size:12px;font-weight:700;padding:8px 20px;border-radius:22px;border:2px solid var(--border);background:#f4f7fb;color:var(--muted);cursor:pointer;transition:all .25s;">GSHS</button>
         <button class="prio-pill" data-survey="GATS"   data-color="#8e44ad" style="font-family:var(--font);font-size:12px;font-weight:700;padding:8px 20px;border-radius:22px;border:2px solid var(--border);background:#f4f7fb;color:var(--muted);cursor:pointer;transition:all .25s;">GATS</button>
         <button class="prio-pill" data-survey="GSHPP"  data-color="#00a651" style="font-family:var(--font);font-size:12px;font-weight:700;padding:8px 20px;border-radius:22px;border:2px solid var(--border);background:#f4f7fb;color:var(--muted);cursor:pointer;transition:all .25s;">GSHPP</button>
-        <span style="margin-left:auto;font-size:11px;color:var(--muted);font-style:italic;"><i class="fas fa-info-circle"></i>&nbsp; All elements refresh on survey change</span>
+        <input id="pr-search" type="search" placeholder="Search country&hellip;" class="filter-input" style="margin-left:auto;width:190px;" aria-label="Search countries across the Strategic Priority tables"/>
+        <span id="pr-count" class="filter-count" style="margin-left:0;"></span>
       </div>
 
       <!-- Quadrant scatter chart -->
