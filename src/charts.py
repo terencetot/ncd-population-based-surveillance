@@ -58,7 +58,7 @@ def fig_spi_bar(A):
         fig.add_vline(x=thresh, line_dash="dot", line_color=col, line_width=1.5,
                       annotation_text=label, annotation_position="top right",
                       annotation_font_size=10)
-    _layout(fig, "Surveillance Performance Index (SPI) - All Countries", 900)
+    _layout(fig, "Surveillance Performance Index (SPI) - All Countries", max(420, len(spi) * 16 + 140))
     fig.update_layout(
         xaxis=dict(title="SPI Score (0–100)", range=[0, 110]),
         yaxis=dict(title="", tickfont=dict(size=10)),

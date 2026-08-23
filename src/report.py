@@ -64,7 +64,7 @@ CSS = """
   --shadow-lg:0 14px 36px rgba(0,20,80,.15);
   --radius:16px;
 }
-html{scroll-behavior:smooth}
+html{scroll-behavior:smooth;overflow-x:hidden}
 /* ── Focus visibility — every interactive element gets a consistent,
    high-contrast ring on keyboard focus (never on mouse click, via
    :focus-visible), so keyboard users navigating the 6 tabs, filter
@@ -131,7 +131,7 @@ body{font-family:var(--font);background:#f0f4fa;color:var(--text);line-height:1.
 .hero-spi-bar{height:3px;background:rgba(255,255,255,.12);margin:10px 18px 0;border-radius:6px;overflow:hidden}
 .hero-spi-fill{height:100%;border-radius:6px;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
 /* Hero left */
-.hero h1{font-size:3.5rem;font-weight:900;line-height:1.04;letter-spacing:-.055em;color:var(--dark);margin-bottom:14px;animation:fadeScale .8s ease forwards}
+.hero h1{font-size:3.5rem;font-weight:900;line-height:1.04;letter-spacing:-.055em;color:var(--dark);margin-bottom:14px;animation:fadeScale .8s ease forwards;text-wrap:balance}
 .grad{background:linear-gradient(90deg,#0065b3 0%,#4a90e2 50%,#56d0ff 100%);-webkit-background-clip:text;background-clip:text;color:transparent;background-size:200% auto;animation:shimmer 6s linear infinite}
 .hero-sub{font-size:16px;color:#4a5568;max-width:620px;line-height:1.85;animation:fadeScale 1s ease .1s both;font-weight:400;margin-bottom:20px}
 .hero-sub strong{color:var(--dark);font-weight:700}
@@ -351,6 +351,38 @@ hr.section-divider{border:none;border-top:1px solid var(--border);margin:32px 0}
 .profile-chart-title{font-size:12px;font-weight:700;color:var(--dark);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
 .profile-chart-title i{color:var(--accent);font-size:12px;}
 @media(max-width:820px){.profile-charts-grid{grid-template-columns:1fr;}}
+
+/* ══ PRINT ═══════════════════════════════════════════════════════════════
+   This dashboard gets printed/PDF-exported for meetings. Default browser
+   printing of this page would previously: only show whichever one tab was
+   active on screen (the other five are display:none), burn ink on the dark
+   navbar/hero/footer gradients, turn box-shadows into grey smears, and let
+   Plotly charts split mid-figure across a page break. */
+@media print{
+  .topnav,.tab-nav,#reading-progress,#back-to-top,.skip-link,
+  .filter-reset,#btn-export-spi,#btn-export-profile,.js-plotly-plot .modebar{display:none!important;}
+  body{background:#fff!important;overflow-x:visible!important;}
+  .hero{border-bottom:2px solid #000;}
+  .hero-right{background:#fff!important;color:#000!important;clip-path:none!important;}
+  .hero-right-orb{display:none!important;}
+  .hero-stat-val,.hero-stat-lbl{color:#000!important;}
+  .hero-stat-badge{border:1px solid #999!important;background:#fff!important;}
+  .grad{-webkit-text-fill-color:#003d82;color:#003d82!important;background:none!important;}
+  .exec-message,.footer{background:#fff!important;color:#000!important;border:1px solid #999;}
+  .exec-message h3,.exec-message strong,.footer-badge{color:#000!important;}
+  /* Unfold every tab so the full report prints, one section per page */
+  .tab-pane{display:block!important;break-after:page;}
+  .tab-pane:last-of-type{break-after:auto;}
+  .reveal{opacity:1!important;transform:none!important;}
+  .chart-card,.kpi-card,.signal-card,.instrument-card,.rec-card,.tier-card,
+  .profile-kpi-card,.profile-section-card,.method-card,.schema-card{
+    box-shadow:none!important;border:1px solid #999!important;break-inside:avoid;
+  }
+  .chart-card:hover,.kpi-card:hover,.signal-card:hover{transform:none!important;}
+  a[href]::after{content:none!important;}
+  .print-selection{display:inline!important;}
+}
+.print-selection{display:none;font-weight:700;}
 """
 
 # ── JavaScript ─────────────────────────────────────────────────────────────────
@@ -359,10 +391,24 @@ JS = """
   const bar=document.getElementById('reading-progress');
   const btn=document.getElementById('back-to-top');
   if(bar&&btn){
+    // Cache the scrollable height instead of reading
+    // document.documentElement.scrollHeight (a forced layout reflow) on
+    // every single scroll event; only recompute it when the layout can
+    // actually have changed (resize, or content revealed by tab/profile
+    // switches which already dispatch a 'resize' event elsewhere).
+    let scrollable=document.documentElement.scrollHeight-window.innerHeight;
+    const recompute=()=>{scrollable=Math.max(1,document.documentElement.scrollHeight-window.innerHeight);};
+    window.addEventListener('resize',recompute,{passive:true});
+    let ticking=false;
     window.addEventListener('scroll',()=>{
-      const p=window.scrollY/(document.documentElement.scrollHeight-window.innerHeight)*100;
-      bar.style.width=p+'%';
-      btn.style.display=window.scrollY>300?'flex':'none';
+      if(ticking)return;
+      ticking=true;
+      requestAnimationFrame(()=>{
+        const p=window.scrollY/scrollable*100;
+        bar.style.width=p+'%';
+        btn.style.display=window.scrollY>300?'flex':'none';
+        ticking=false;
+      });
     },{passive:true});
     btn.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
   }
@@ -375,8 +421,8 @@ JS = """
   function animCount(el,target,dur){
     const isF=target%1!==0,t0=performance.now();
     const step=now=>{const p=Math.min((now-t0)/dur,1),e2=1-Math.pow(1-p,3),v=target*e2;
-      el.textContent=isF?v.toFixed(1):Math.round(v).toLocaleString();
-      if(p<1)requestAnimationFrame(step);else el.textContent=isF?target.toFixed(1):target.toLocaleString();
+      el.textContent=isF?v.toFixed(1):Math.round(v).toLocaleString('en-US');
+      if(p<1)requestAnimationFrame(step);else el.textContent=isF?target.toFixed(1):target.toLocaleString('en-US');
     };requestAnimationFrame(step);
   }
   const ko=new IntersectionObserver((es)=>{
@@ -411,7 +457,15 @@ JS = """
       btn.setAttribute('aria-selected','true');
       btn.setAttribute('tabindex','0');
     }
-    window.scrollTo({top:62,behavior:'smooth'});
+    // Scroll just past the sticky navbar + tab bar, measured from their
+    // actual rendered heights rather than a guessed constant (62 landed
+    // content partly under the tab bar since navbar is 70px + tab bar
+    // ~46px on its own).
+    if(window.scrollY>0){
+      var navEl=document.querySelector('.topnav'), tabNavEl=document.querySelector('.tab-nav');
+      var offset=(navEl?navEl.offsetHeight:0)+(tabNavEl?tabNavEl.offsetHeight:0);
+      window.scrollTo({top:offset,behavior:'smooth'});
+    }
     if(pane){
       pane.querySelectorAll('.reveal:not(.visible)').forEach((el,i)=>{el.classList.add('will-animate');setTimeout(()=>el.classList.add('visible'),i*45);});
       pane.querySelectorAll('.signal-grid,.kpi-row').forEach(el=>{
@@ -524,6 +578,27 @@ JS = """
   const SPI_SCORES = __SPI_SCORES_PLACEHOLDER__;
 
   const _FONT = "Poppins,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
+  // Plotly loads from a CDN — on an offline workstation or behind a
+  // restrictive proxy (common across the Region) it never arrives. Show a
+  // clear reason instead of leaving a blank rectangle where a chart should be.
+  function _plotlyOffline(el){
+    if(!el||el.dataset.plotlyOfflineMsg)return;
+    el.dataset.plotlyOfflineMsg='1';
+    el.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:160px;color:var(--muted);text-align:center;padding:20px;gap:8px;">'+
+      '<i class="fas fa-wifi" style="font-size:22px;opacity:.35;"></i>'+
+      '<div style="font-size:12.5px;font-weight:600;">Chart unavailable — Plotly failed to load from the CDN</div>'+
+      '<div style="font-size:11px;">This usually means no internet access or a blocked script host. Other page content still works.</div>'+
+      '</div>';
+  }
+  // Shared Plotly config for every dynamically-rendered chart: keep a
+  // trimmed modebar (zoom/pan/reset + "download as PNG") instead of hiding
+  // it outright — users pulling these charts into a slide deck need
+  // toImage, they just don't need lasso/select/compare-hover clutter.
+  var _PLOTLY_CFG = {
+    responsive:true, displayModeBar:true, displaylogo:false,
+    modeBarButtonsToRemove:['select2d','lasso2d','autoScale2d','hoverClosestCartesian',
+      'hoverCompareCartesian','toggleSpikelines','zoomIn2d','zoomOut2d'],
+  };
   function _hexA(hex,a){
     var h=hex.replace('#','');
     var r=parseInt(h.substring(0,2),16),g=parseInt(h.substring(2,4),16),b=parseInt(h.substring(4,6),16);
@@ -538,7 +613,8 @@ JS = """
   function updateExecDonut(d) {
     var divId='exec-donut-chart';
     var el=document.getElementById(divId);
-    if(!el||typeof Plotly==='undefined')return;
+    if(!el)return;
+    if(typeof Plotly==='undefined'){_plotlyOffline(el);return;}
     var valMap={
       'On Cycle':d.n_on_cycle,'Attempt to update':d.n_attempt_to_update,
       'Off Cycle':d.n_off_cycle,'Never Conducted':d.n_never
@@ -569,13 +645,14 @@ JS = """
         x:0.5,y:0.5,xref:'paper',yref:'paper',
         showarrow:false,font:{size:20,color:'#14265c',family:_FONT},align:'center',
       }],
-    },{responsive:true,displayModeBar:false});
+    },_PLOTLY_CFG);
   }
 
   function updateGapChart(surveyKey) {
     var divId='exec-gap-chart';
     var el=document.getElementById(divId);
-    if(!el||typeof Plotly==='undefined')return;
+    if(!el)return;
+    if(typeof Plotly==='undefined'){_plotlyOffline(el);return;}
     var d=EXEC_DATA[surveyKey];
     if(!d||!d.countries_gap)return;
     var withData=d.countries_gap.filter(function(c){return c.gap!==null;});
@@ -594,45 +671,64 @@ JS = """
     });
     var maxGap=gaps.length>0?Math.max.apply(null,gaps):20;
     var noNote=noDataCount>0?'  <span style="font-size:11px;color:#6b7280">('+noDataCount+' countries with no completed '+surveyKey+' not shown)</span>':'';
-    Plotly.react(divId,[{
-      type:'bar',x:names,y:gaps,
-      marker:{color:clrs,line:{color:'#fff',width:0.8}},
-      text:gaps.map(function(g){return g+' yr'+(g===1?'':'s');}),
-      textposition:'outside',
-      textfont:{size:9,family:_FONT,color:'#6b7280'},
-      hovertext:hov,hoverinfo:'text',cliponaxis:false,
-    }],{
-      paper_bgcolor:'#ffffff',plot_bgcolor:'#ffffff',
-      font:{family:_FONT,size:11,color:'#333e5c'},
-      height:500,margin:{l:60,r:80,t:64,b:150},
-      title:{
-        text:'<b>Years Since Most Recent '+surveyKey+' Survey</b>'+noNote,
-        font:{size:13,color:'#14265c',family:_FONT},x:0,xanchor:'left',pad:{l:4,t:4}
-      },
-      xaxis:{tickangle:-50,tickfont:{size:9.5,family:_FONT,color:'#6b7280'},showgrid:false,linecolor:'#e2e8f0',showline:true,automargin:true},
-      yaxis:{
-        title:{text:'Years since last survey (relative to 2026)',font:{size:11,color:'#6b7280'}},
-        range:[0,maxGap+4],dtick:5,gridcolor:'#f0f4fa',linecolor:'#e2e8f0',showline:true,
-        tickfont:{size:11,family:_FONT},zeroline:true,zerolinecolor:'#e2e8f0',
-      },
-      shapes:[
-        {type:'line',x0:0,x1:1,y0:5,y1:5,xref:'paper',yref:'y',line:{color:'#c8a600',dash:'dash',width:1.8}},
-        {type:'line',x0:0,x1:1,y0:10,y1:10,xref:'paper',yref:'y',line:{color:'#f7941d',dash:'dash',width:1.8}},
-        {type:'line',x0:0,x1:1,y0:15,y1:15,xref:'paper',yref:'y',line:{color:'#c0392b',dash:'dash',width:1.8}},
-      ],
-      annotations:[
-        {x:1.01,y:5,xref:'paper',yref:'y',text:'<b>5 yr</b>',showarrow:false,font:{size:10,color:'#c8a600',family:_FONT},xanchor:'left'},
-        {x:1.01,y:10,xref:'paper',yref:'y',text:'<b>10 yr</b>',showarrow:false,font:{size:10,color:'#f7941d',family:_FONT},xanchor:'left'},
-        {x:1.01,y:15,xref:'paper',yref:'y',text:'<b>15 yr</b>',showarrow:false,font:{size:10,color:'#c0392b',family:_FONT},xanchor:'left'},
-      ],
-      hoverlabel:{bgcolor:'#14265c',font_size:12,font_family:_FONT,font_color:'white'},
-    },{responsive:true,displayModeBar:false});
+    // Below ~768px, 48 rotated x-axis labels collide — switch to horizontal
+    // bars (one row per country) and size height to the row count instead
+    // of a fixed 500px that's either cramped or excessive depending on how
+    // many countries have data for the selected instrument.
+    var narrow=window.innerWidth<768;
+    var trace, layout;
+    if(narrow){
+      var namesR=names.slice().reverse(), gapsR=gaps.slice().reverse(), clrsR=clrs.slice().reverse(), hovR=hov.slice().reverse();
+      trace={type:'bar',orientation:'h',y:namesR,x:gapsR,
+        marker:{color:clrsR,line:{color:'#fff',width:0.8}},
+        text:gapsR.map(function(g){return g+' yr'+(g===1?'':'s');}),
+        textposition:'outside',textfont:{size:9,family:_FONT,color:'#6b7280'},
+        hovertext:hovR,hoverinfo:'text',cliponaxis:false};
+      layout={height:Math.max(360,namesR.length*22+140),margin:{l:110,r:50,t:64,b:60},
+        xaxis:{title:{text:'Years since last survey',font:{size:11,color:'#6b7280'}},range:[0,maxGap+4],dtick:5,gridcolor:'#f0f4fa',linecolor:'#e2e8f0',showline:true,tickfont:{size:11,family:_FONT},zeroline:true,zerolinecolor:'#e2e8f0'},
+        yaxis:{tickfont:{size:10,family:_FONT,color:'#6b7280'},showgrid:false,linecolor:'#e2e8f0',showline:true,automargin:true},
+        shapes:[
+          {type:'line',y0:0,y1:1,x0:5,x1:5,xref:'x',yref:'paper',line:{color:'#c8a600',dash:'dash',width:1.8}},
+          {type:'line',y0:0,y1:1,x0:10,x1:10,xref:'x',yref:'paper',line:{color:'#f7941d',dash:'dash',width:1.8}},
+          {type:'line',y0:0,y1:1,x0:15,x1:15,xref:'x',yref:'paper',line:{color:'#c0392b',dash:'dash',width:1.8}},
+        ]};
+    }else{
+      trace={type:'bar',x:names,y:gaps,
+        marker:{color:clrs,line:{color:'#fff',width:0.8}},
+        text:gaps.map(function(g){return g+' yr'+(g===1?'':'s');}),
+        textposition:'outside',textfont:{size:9,family:_FONT,color:'#6b7280'},
+        hovertext:hov,hoverinfo:'text',cliponaxis:false};
+      layout={height:500,margin:{l:60,r:80,t:64,b:150},
+        xaxis:{tickangle:-50,tickfont:{size:9.5,family:_FONT,color:'#6b7280'},showgrid:false,linecolor:'#e2e8f0',showline:true,automargin:true},
+        yaxis:{
+          title:{text:'Years since last survey (relative to 2026)',font:{size:11,color:'#6b7280'}},
+          range:[0,maxGap+4],dtick:5,gridcolor:'#f0f4fa',linecolor:'#e2e8f0',showline:true,
+          tickfont:{size:11,family:_FONT},zeroline:true,zerolinecolor:'#e2e8f0',
+        },
+        shapes:[
+          {type:'line',x0:0,x1:1,y0:5,y1:5,xref:'paper',yref:'y',line:{color:'#c8a600',dash:'dash',width:1.8}},
+          {type:'line',x0:0,x1:1,y0:10,y1:10,xref:'paper',yref:'y',line:{color:'#f7941d',dash:'dash',width:1.8}},
+          {type:'line',x0:0,x1:1,y0:15,y1:15,xref:'paper',yref:'y',line:{color:'#c0392b',dash:'dash',width:1.8}},
+        ],
+        annotations:[
+          {x:1.01,y:5,xref:'paper',yref:'y',text:'<b>5 yr</b>',showarrow:false,font:{size:10,color:'#c8a600',family:_FONT},xanchor:'left'},
+          {x:1.01,y:10,xref:'paper',yref:'y',text:'<b>10 yr</b>',showarrow:false,font:{size:10,color:'#f7941d',family:_FONT},xanchor:'left'},
+          {x:1.01,y:15,xref:'paper',yref:'y',text:'<b>15 yr</b>',showarrow:false,font:{size:10,color:'#c0392b',family:_FONT},xanchor:'left'},
+        ]};
+    }
+    layout.paper_bgcolor='#ffffff';layout.plot_bgcolor='#ffffff';
+    layout.font={family:_FONT,size:11,color:'#333e5c'};
+    layout.title={text:'<b>Years Since Most Recent '+surveyKey+' Survey</b>'+noNote,
+      font:{size:13,color:'#14265c',family:_FONT},x:0,xanchor:'left',pad:{l:4,t:4}};
+    layout.hoverlabel={bgcolor:'#14265c',font_size:12,font_family:_FONT,font_color:'white'};
+    Plotly.react(divId,[trace],layout,_PLOTLY_CFG);
   }
 
   function updateTimeline(surveyKey) {
     var divId='cycle-timeline-chart';
     var el=document.getElementById(divId);
-    if(!el||typeof Plotly==='undefined')return;
+    if(!el)return;
+    if(typeof Plotly==='undefined'){_plotlyOffline(el);return;}
     var rows=TIMELINE_DATA[surveyKey]||[];
     if(rows.length===0){Plotly.purge(divId);return;}
     var years=rows.map(function(r){return r.year;});
@@ -686,7 +782,7 @@ JS = """
            showarrow:false,font:{size:10,color:'#00a651',family:_FONT},xanchor:'left'},
         ],
         hoverlabel:{bgcolor:'#14265c',font_size:12,font_family:_FONT,font_color:'white'},
-      },{responsive:true,displayModeBar:false});
+      },_PLOTLY_CFG);
     }catch(e){console.warn('Timeline render error:',e);}
   }
 
@@ -732,7 +828,8 @@ JS = """
     // Scatter chart
     var divId='prio-scatter-chart';
     var chartEl=document.getElementById(divId);
-    if(!chartEl||typeof Plotly==='undefined') return;
+    if(!chartEl)return;
+    if(typeof Plotly==='undefined'){_plotlyOffline(chartEl);return;}
     var cgap=d.countries_gap||[];
     var MAXGAP=40;
     var _SYMBOL={'On Cycle':'circle','Attempt to update':'triangle-up','Off Cycle':'square','Never Conducted':'circle-open'};
@@ -824,7 +921,7 @@ JS = """
       font:{family:_FONT,size:11,color:'#333e5c'},
       hoverlabel:{bgcolor:'#14265c',font_size:12,font_family:_FONT,font_color:'#fff',bordercolor:'transparent',namelength:-1}
     };
-    try{Plotly.react(divId,traces,layout,{responsive:true,displayModeBar:false});}
+    try{Plotly.react(divId,traces,layout,_PLOTLY_CFG);}
     catch(e){console.warn('Prio scatter error:',e);}
   }
 
@@ -1005,7 +1102,7 @@ JS = """
     var tc=_TIER_CLR[p.tier]||'#4a90e2';
     var latS=surveys[surveys.length-1];
     var yrsStr=surveys.map(function(s){return s.year;}).join(' \u00b7 ');
-    var nStr=latS.n?latS.n.toLocaleString():'N/A';
+    var nStr=latS.n?latS.n.toLocaleString('en-US'):'N/A';
 
     // ── Header ─────────────────────────────────────────────────────────────
     var hdr='<div class="profile-header-card reveal">';
@@ -1191,7 +1288,8 @@ JS = """
   function _renderProfileCompare(latData,country,reg,ind,sec,radarCfg){
     var divId='profile-compare-chart';
     var el=document.getElementById(divId);
-    if(!el||typeof Plotly==='undefined') return;
+    if(!el)return;
+    if(typeof Plotly==='undefined'){_plotlyOffline(el);return;}
     var names=[],cVals=[],rVals=[],clrs=[];
     (radarCfg||[]).forEach(function(r){
       var i2=ind[r.code]; if(!i2) return;
@@ -1221,14 +1319,15 @@ JS = """
       paper_bgcolor:'#fff',plot_bgcolor:'#fff',
       font:{family:_FONT,size:11},
       hoverlabel:{bgcolor:'#14265c',font_size:12,font_family:_FONT,font_color:'#fff'},
-    },{responsive:true,displayModeBar:false});}catch(e){console.warn('Compare error',e);}
+    },_PLOTLY_CFG);}catch(e){console.warn('Compare error',e);}
   }
 
   // ── Trend: Key Indicators Over Time ────────────────────────────────────────
   function _renderProfileTrend(profile,ind,trendCfg){
     var divId='profile-trend-chart';
     var el=document.getElementById(divId);
-    if(!el||typeof Plotly==='undefined') return;
+    if(!el)return;
+    if(typeof Plotly==='undefined'){_plotlyOffline(el);return;}
     var surveys=profile.surveys;
     var years=surveys.map(function(s){return s.year;});
     var traces=[];
@@ -1268,14 +1367,15 @@ JS = """
       paper_bgcolor:'#fff',plot_bgcolor:'#fff',
       font:{family:_FONT,size:11},
       hoverlabel:{bgcolor:'#14265c',font_size:12,font_family:_FONT,font_color:'#fff'},
-    },{responsive:true,displayModeBar:false});}catch(e){console.warn('Trend error',e);}
+    },_PLOTLY_CFG);}catch(e){console.warn('Trend error',e);}
   }
 
   // ── Sex Disaggregation ──────────────────────────────────────────────────────
   function _renderProfileSexChart(latData,country,ind,reg,radarCfg){
     var divId='profile-sex-chart';
     var el=document.getElementById(divId);
-    if(!el||typeof Plotly==='undefined') return;
+    if(!el)return;
+    if(typeof Plotly==='undefined'){_plotlyOffline(el);return;}
     var names=[],mV=[],fV=[],bV=[];
     (radarCfg||[]).forEach(function(r){
       var d=latData[r.code]||{};
@@ -1306,7 +1406,7 @@ JS = """
       paper_bgcolor:'#fff',plot_bgcolor:'#fff',
       font:{family:_FONT,size:11},
       hoverlabel:{bgcolor:'#14265c',font_size:12,font_family:_FONT,font_color:'#fff'},
-    },{responsive:true,displayModeBar:false});}catch(e){console.warn('Sex chart error',e);}
+    },_PLOTLY_CFG);}catch(e){console.warn('Sex chart error',e);}
   }
 
   // ── Profile tab: event listeners ────────────────────────────────────────────
@@ -1345,47 +1445,62 @@ JS = """
     });
   }
 
-  // ── Excel export (XML Spreadsheet 2003) ──────────────────────────────────────
-  function _xlEsc(v) {
-    return String(v === null || v === undefined ? '' : v)
-      .split('&').join('&amp;')
-      .split('<').join('&lt;')
-      .split('>').join('&gt;');
+  // CSV with a UTF-8 BOM opens cleanly in Excel on any locale with no
+  // warning. The previous export named a file "*.xls" but the content was
+  // actually XML Spreadsheet 2003 markup — Excel always flagged "the file
+  // format and extension don't match" and made the user click through it.
+  function _toCSV(rows) {
+    return rows.map(function(row) {
+      return row.map(function(cell) {
+        var s = (cell === null || cell === undefined) ? '' : String(cell);
+        if (/[",\\n\\r]/.test(s)) s = '"' + s.split('"').join('""') + '"';
+        return s;
+      }).join(',');
+    }).join('\\r\\n');
   }
 
-  function _buildXLS(rows) {
-    var Q   = '"';
-    var xml = '<?xml version=' +Q+'1.0'+Q+' encoding='+Q+'UTF-8'+Q+'?>'
-            + '<Workbook xmlns='+Q+'urn:schemas-microsoft-com:office:spreadsheet'+Q
-            + ' xmlns:ss='+Q+'urn:schemas-microsoft-com:office:spreadsheet'+Q+'>'
-            + '<Worksheet ss:Name='+Q+'Data'+Q+'><Table>';
-    rows.forEach(function(row) {
-      xml += '<Row>';
-      row.forEach(function(cell) {
-        var t = (typeof cell === 'number') ? 'Number' : 'String';
-        xml += '<Cell><Data ss:Type='+Q+t+Q+'>'+_xlEsc(cell)+'</Data></Cell>';
-      });
-      xml += '</Row>';
-    });
-    return xml + '</Table></Worksheet></Workbook>';
+  function _slug(s) {
+    // Handles apostrophes/commas that the old naive split(' ').join('_')
+    // let through verbatim (e.g. "Côte d'Ivoire", "Tanzania, United
+    // Republic of" produced awkward, sometimes filesystem-unfriendly names).
+    return String(s).normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'export';
   }
 
-  function _saveXLS(filename, rows) {
-    var xml  = _buildXLS(rows);
+  function _saveCSV(filename, rows) {
+    var csv  = '\uFEFF' + _toCSV(rows);
+    var blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+    var url  = URL.createObjectURL(blob);
     var link = document.createElement('a');
     link.style.display = 'none';
     link.setAttribute('download', filename);
-    link.setAttribute('href',
-      'data:application/vnd.ms-excel;charset=utf-8,' + encodeURIComponent(xml));
+    link.setAttribute('href', url);
     document.body.appendChild(link);
     link.click();
-    setTimeout(function() { document.body.removeChild(link); }, 500);
+    setTimeout(function() { document.body.removeChild(link); URL.revokeObjectURL(url); }, 500);
+  }
+
+  // Inline export feedback next to the triggering button instead of a
+  // browser alert() dialog.
+  function _exportNote(btn, msg, isError) {
+    if (!btn) return;
+    var note = btn.parentElement.querySelector('.export-note');
+    if (!note) {
+      note = document.createElement('span');
+      note.className = 'export-note';
+      note.style.cssText = 'margin-left:10px;font-size:11px;font-weight:600;';
+      btn.insertAdjacentElement('afterend', note);
+    }
+    note.style.color = isError ? '#c0392b' : '#00a651';
+    note.textContent = msg;
+    clearTimeout(note._t);
+    note._t = setTimeout(function() { note.textContent = ''; }, 4000);
   }
 
   // ── SPI export ────────────────────────────────────────────────────────────────
   var _SPI_TABLE = __SPI_TABLE_PLACEHOLDER__;
 
-  function _doExportSPI() {
+  function _doExportSPI(btn) {
     var rows = [['Rank','Country','ISO3','SPI Score','Tier','Tier Label',
                  'Breadth (%)','Currency (%)','Regularity (%)','Last Survey Year',
                  'Gap (years)','Completed Surveys','Instrument Types Used']];
@@ -1399,13 +1514,14 @@ JS = """
         r.n_done, r.types_done
       ]);
     });
-    _saveXLS('NCD_AFRO_SPI_Rankings.xls', rows);
+    _saveCSV('NCD_AFRO_SPI_Rankings.csv', rows);
+    _exportNote(btn, 'Downloaded NCD_AFRO_SPI_Rankings.csv');
   }
 
   // ── Country Profile export ────────────────────────────────────────────────────
-  function _doExportProfile() {
+  function _doExportProfile(btn) {
     if (!_profileCurrent) {
-      alert('Please select a country from the dropdown first.');
+      _exportNote(btn, 'Select a country first', true);
       return;
     }
     var PROFILE_DATA = _profileDataFor(_profileSurvey);
@@ -1433,15 +1549,17 @@ JS = """
         ]);
       });
     });
-    _saveXLS(_profileCurrent.split(' ').join('_') + '_' + _profileSurvey + '.xls', rows);
+    var fname = _slug(_profileCurrent) + '_' + _profileSurvey + '.csv';
+    _saveCSV(fname, rows);
+    _exportNote(btn, 'Downloaded ' + fname);
   }
 
   // ── Wire buttons via addEventListener (NOT onclick) ───────────────────────────
   (function() {
     var btnSPI  = document.getElementById('btn-export-spi');
     var btnProf = document.getElementById('btn-export-profile');
-    if (btnSPI)  btnSPI.addEventListener('click',  _doExportSPI);
-    if (btnProf) btnProf.addEventListener('click',  _doExportProfile);
+    if (btnSPI)  btnSPI.addEventListener('click',  function(){ _doExportSPI(btnSPI); });
+    if (btnProf) btnProf.addEventListener('click',  function(){ _doExportProfile(btnProf); });
   })();
 })();
 """
@@ -1900,7 +2018,7 @@ def build_html(A: dict) -> str:
 <div class="hero">
   <div class="hero-inner">
     <div class="hero-left">
-      <h1>NCD Population-based<br>Surveillance <span class="grad">Intelligence</span> Platform</h1>
+      <h1>NCD Population-based Surveillance <span class="grad">Intelligence</span> Platform</h1>
       <p class="hero-sub">A strategic intelligence platform synthesizing <strong>five core NCD population-based surveillance systems</strong> across 47 WHO AFRO Member States + Zanzibar</p>
       <div class="hero-quick-stats">
         <span class="hero-qs"><i class="fas fa-circle" style="color:{strong_dot_color}"></i> {n_strong} Strong performers</span>
