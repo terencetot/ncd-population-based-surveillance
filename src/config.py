@@ -44,11 +44,12 @@ TIER_COLORS = {1: "#00a651", 2: "#4a90e2", 3: "#f7941d", 4: "#c0392b"}
 #    cards, donut, scatter, per-instrument tables, briefings). Named distinctly
 #    from STATUS_COLORS below (raw ETL record status: Completed/In Progress/
 #    Not Usable) — different concept, would otherwise collide on import. ──────
-CYCLE_STATUS_LABELS = ["On Cycle", "Attempt to update", "Off Cycle", "Never Conducted"]
+CYCLE_STATUS_LABELS = ["On Cycle", "Attempt to update", "Off Cycle", "First Attempt", "Never Conducted"]
 CYCLE_STATUS_COLORS = {
     "On Cycle":          "#0d9488",   # teal    - current, usable evidence
     "Attempt to update": "#7c3aed",   # violet  - actively updating
     "Off Cycle":         "#d97706",   # amber   - idle, ageing
+    "First Attempt":     "#0891b2",   # cyan    - no prior evidence, but fielding a first-ever round now
     "Never Conducted":   "#64748b",   # slate   - no evidence (never red: red is reserved for URGENT/Critical tier)
 }
 
@@ -90,9 +91,9 @@ SURVEY_META = {
     "STEPS":  {"full": "STEPwise Approach to NCD Risk Factor Surveillance",
                "target": "Adults 18–69",  "domain": "NCD risk factors",   "color": "#003d82"},
     "GYTS":   {"full": "Global Youth Tobacco Survey",
-               "target": "Students 13–15", "domain": "Youth tobacco",     "color": "#c0392b"},
+               "target": "School-attending students 13–15", "domain": "Youth tobacco",     "color": "#c0392b"},
     "GSHS":   {"full": "Global School-based Student Health Survey",
-               "target": "Students 13–17", "domain": "Youth health",      "color": "#f7941d"},
+               "target": "School-attending students 13–17", "domain": "Youth health",      "color": "#f7941d"},
     "GATS":   {"full": "Global Adult Tobacco Survey",
                "target": "Adults 15+",    "domain": "Adult tobacco",      "color": "#8e44ad"},
     "GSHPP":  {"full": "Global School Health Policies and Practices",

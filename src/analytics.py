@@ -207,13 +207,19 @@ def compute_exec_kpis(df: pd.DataFrame) -> dict:
     Categories are strictly mutually exclusive per country (per survey type).
 
     Status priority (in order):
-      1. Never Conducted  - no completed survey ever (even if currently in a first attempt).
-                           A country that has never produced evidence goes here unconditionally.
-      2. On Cycle         - has completed AND gap <= 5 years (current, usable evidence)
-      3. Attempt to update- has completed AND gap > 5 AND has in-progress in current cycle
-                           (prior evidence exists; updating it - NOT for never-conducted)
-      4. Off Cycle        - has completed AND gap > 5 AND no active in-progress survey
+      1. On Cycle         - has completed AND gap <= 5 years (current, usable evidence)
+      2. Attempt to update- has completed AND gap > 5 AND has in-progress in current cycle
+                           (prior evidence exists; updating it)
+      3. Off Cycle        - has completed AND gap > 5 AND no active in-progress survey
                            (surveillance idle - data ageing)
+      4. First Attempt    - never completed AND has in-progress in current cycle
+                           (no prior evidence yet, but actively fielding a first round -
+                           distinct from true non-engagement per epidemiological review:
+                           collapsing this into "Never Conducted" made an active first
+                           national survey score identically to a country that has never
+                           engaged with the instrument at all)
+      5. Never Conducted  - never completed AND no active in-progress survey
+                           (no evidence, no current activity)
     """
     import logging
     done   = df[df["completed"]]
@@ -227,7 +233,8 @@ def compute_exec_kpis(df: pd.DataFrame) -> dict:
 
     # ── Per-survey-type KPIs ──────────────────────────────────────────────────
     for st in survey_types:
-        counts = {"On Cycle": 0, "Attempt to update": 0, "Off Cycle": 0, "Never Conducted": 0}
+        counts = {"On Cycle": 0, "Attempt to update": 0, "Off Cycle": 0,
+                  "First Attempt": 0, "Never Conducted": 0}
         country_statuses = {}
 
         for c in countries:
@@ -240,9 +247,13 @@ def compute_exec_kpis(df: pd.DataFrame) -> dict:
             has_inprog_current = len(inprog_current) > 0
 
             if not has_completed:
-                # Never completed - regardless of any in-progress first attempt
-                counts["Never Conducted"] += 1
-                country_statuses[c] = "Never Conducted"
+                if has_inprog_current:
+                    # No prior evidence, but actively fielding a first round now
+                    counts["First Attempt"] += 1
+                    country_statuses[c] = "First Attempt"
+                else:
+                    counts["Never Conducted"] += 1
+                    country_statuses[c] = "Never Conducted"
             else:
                 last_yr = int(completed_rows["survey_year"].max())
                 gap     = CURRENT_YEAR - last_yr
@@ -258,11 +269,12 @@ def compute_exec_kpis(df: pd.DataFrame) -> dict:
                     counts["Off Cycle"] += 1
                     country_statuses[c] = "Off Cycle"
 
-        meta  = SURVEY_META[st]
-        n_on  = counts["On Cycle"]
-        n_att = counts["Attempt to update"]
-        n_off = counts["Off Cycle"]
-        n_nev = counts["Never Conducted"]
+        meta   = SURVEY_META[st]
+        n_on   = counts["On Cycle"]
+        n_att  = counts["Attempt to update"]
+        n_off  = counts["Off Cycle"]
+        n_first= counts["First Attempt"]
+        n_nev  = counts["Never Conducted"]
 
         briefing = (
             f"For the <strong>{st}</strong> survey ({meta['full']}, targeting {meta['target']}), "
@@ -274,9 +286,11 @@ def compute_exec_kpis(df: pd.DataFrame) -> dict:
             f"<strong>{n_off}</strong> {'country' if n_off == 1 else 'countries'} "
             f"{'has' if n_off == 1 else 'have'} conducted {st} before but {'is' if n_off == 1 else 'are'} "
             f"not currently active \u2014 {'its' if n_off == 1 else 'their'} surveillance data is off-cycle and ageing. "
+            f"<strong>{n_first}</strong> {'country has' if n_first == 1 else 'countries have'} "
+            f"no prior {st} evidence but {'is' if n_first == 1 else 'are'} actively fielding a first-ever round right now. "
             f"<strong>{n_nev}</strong> {'country' if n_nev == 1 else 'countries'} "
-            f"{'has' if n_nev == 1 else 'have'} <em>never completed</em> a {st} survey \u2014 "
-            f"no {st}-generated evidence yet exists to inform policy, regardless of any in-progress first attempt."
+            f"{'has' if n_nev == 1 else 'have'} <em>never completed nor attempted</em> a {st} survey \u2014 "
+            f"no {st}-generated evidence exists and none is currently in progress."
         )
 
         # ── Per-country gap data for the dynamic gap chart ──────────────────
@@ -297,6 +311,7 @@ def compute_exec_kpis(df: pd.DataFrame) -> dict:
             "n_on_cycle":         n_on,
             "n_attempt_to_update": n_att,
             "n_off_cycle":        n_off,
+            "n_first_attempt":    n_first,
             "n_never":            n_nev,
             "briefing":           briefing,
             "full_name":          meta["full"],
@@ -307,7 +322,8 @@ def compute_exec_kpis(df: pd.DataFrame) -> dict:
         }
 
     # ── Global KPIs (across all survey types combined) ────────────────────────
-    g_counts = {"On Cycle": 0, "Attempt to update": 0, "Off Cycle": 0, "Never Conducted": 0}
+    g_counts = {"On Cycle": 0, "Attempt to update": 0, "Off Cycle": 0,
+                "First Attempt": 0, "Never Conducted": 0}
 
     for c in countries:
         completed_rows = done[done["country_name"] == c]
@@ -318,7 +334,10 @@ def compute_exec_kpis(df: pd.DataFrame) -> dict:
         has_inprog_current = len(inprog_current) > 0
 
         if not has_completed:
-            g_counts["Never Conducted"] += 1
+            if has_inprog_current:
+                g_counts["First Attempt"] += 1
+            else:
+                g_counts["Never Conducted"] += 1
         else:
             last_yr = int(completed_rows["survey_year"].max())
             gap     = CURRENT_YEAR - last_yr
@@ -329,10 +348,11 @@ def compute_exec_kpis(df: pd.DataFrame) -> dict:
             else:
                 g_counts["Off Cycle"] += 1
 
-    gn_on  = g_counts["On Cycle"]
-    gn_att = g_counts["Attempt to update"]
-    gn_off = g_counts["Off Cycle"]
-    gn_nev = g_counts["Never Conducted"]
+    gn_on    = g_counts["On Cycle"]
+    gn_att   = g_counts["Attempt to update"]
+    gn_off   = g_counts["Off Cycle"]
+    gn_first = g_counts["First Attempt"]
+    gn_nev   = g_counts["Never Conducted"]
 
     global_briefing = (
         f"Across the five NCD population-based surveillance instruments, "
@@ -343,7 +363,9 @@ def compute_exec_kpis(df: pd.DataFrame) -> dict:
         f"conducting a new survey round in the current cycle ({CURRENT_CYCLE_START}&#8211;{CURRENT_YEAR}). "
         f"<strong>{gn_off}</strong> countries have prior survey evidence but are not currently active \u2014 "
         f"their surveillance systems are off-cycle and require re-engagement. "
-        f"<strong>{gn_nev}</strong> countries have <em>never completed</em> any of the five NCD survey instruments \u2014 "
+        f"<strong>{gn_first}</strong> {'country has' if gn_first == 1 else 'countries have'} no completed survey of any type "
+        f"but {'is' if gn_first == 1 else 'are'} actively fielding a first-ever round right now. "
+        f"<strong>{gn_nev}</strong> countries have <em>never completed nor attempted</em> any of the five NCD survey instruments \u2014 "
         f"representing the region\u2019s most severe evidence deficits for NCD policy and programming."
     )
 
@@ -352,6 +374,7 @@ def compute_exec_kpis(df: pd.DataFrame) -> dict:
         "n_on_cycle":         gn_on,
         "n_attempt_to_update": gn_att,
         "n_off_cycle":        gn_off,
+        "n_first_attempt":    gn_first,
         "n_never":            gn_nev,
         "briefing":           global_briefing,
         "full_name":          "All Survey Types \u2014 System-wide view",
@@ -363,7 +386,7 @@ def compute_exec_kpis(df: pd.DataFrame) -> dict:
     # ── Validation ────────────────────────────────────────────────────────────
     for key, d in result.items():
         total_check = (d["n_on_cycle"] + d["n_attempt_to_update"] +
-                       d["n_off_cycle"] + d["n_never"])
+                       d["n_off_cycle"] + d["n_first_attempt"] + d["n_never"])
         if total_check != d["n_total"]:
             logging.warning(f"KPI totals mismatch for {key}: {total_check} != {d['n_total']}")
         assert total_check == d["n_total"], \

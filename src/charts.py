@@ -46,15 +46,15 @@ def fig_spi_bar(A):
     fig = go.Figure(go.Bar(
         y=spi["country"], x=spi["spi"],
         orientation="h", marker_color=colors,
-        text=[f"{v:.0f}" for v in spi["spi"]], textposition="outside",
+        text=[f"{v:.1f}" for v in spi["spi"]], textposition="outside",
         hovertemplate=(
             "<b>%{y}</b><br>"
             "SPI: %{x:.1f}/100<br>"
             "<extra></extra>"
         ),
     ))
-    # Tier reference lines
-    for thresh, label, col in [(28,"Developing",C["warning"]),(45,"Advancing",C["accent"]),(65,"Strong",C["success"])]:
+    # Tier reference lines (must match analytics.py tier cutoffs: spi>=75/50/30)
+    for thresh, label, col in [(30,"Developing",C["warning"]),(50,"Advancing",C["accent"]),(75,"Strong",C["success"])]:
         fig.add_vline(x=thresh, line_dash="dot", line_color=col, line_width=1.5,
                       annotation_text=label, annotation_position="top right",
                       annotation_font_size=10)
@@ -74,15 +74,15 @@ def fig_spi_choropleth(A):
     ).reset_index()
     fig = go.Figure(go.Choropleth(
         locations=iso_agg["iso3"], z=iso_agg["spi"], text=iso_agg["country"],
-        colorscale=[[0,"#fde8e8"],[0.28,"#c0392b"],[0.45,"#f7941d"],
-                    [0.65,"#4a90e2"],[1.0,"#00a651"]],
+        colorscale=[[0,"#fde8e8"],[0.30,"#c0392b"],[0.50,"#f7941d"],
+                    [0.75,"#4a90e2"],[1.0,"#00a651"]],
         zmin=0, zmax=100,
         marker_line_color=C["white"], marker_line_width=0.6,
         colorbar=dict(
             title=dict(text="SPI Score", font=dict(size=12)),
             thickness=14, len=0.55, x=0.93,
             tickvals=[0,30,50,75,100],
-            ticktext=["0","Critical","Developing","Advancing","Strong"],
+            ticktext=["0","Developing","Advancing","Strong","100"],
             tickfont=dict(size=10),
         ),
         hovertemplate="<b>%{text}</b><br>SPI: %{z:.1f}/100<extra></extra>",
@@ -430,6 +430,7 @@ def fig_survey_type_comparison(A):
         ("n_on_cycle",           "On Cycle",           CYCLE_STATUS_COLORS["On Cycle"]),
         ("n_attempt_to_update",  "Attempt to Update",  CYCLE_STATUS_COLORS["Attempt to update"]),
         ("n_off_cycle",          "Off Cycle",          CYCLE_STATUS_COLORS["Off Cycle"]),
+        ("n_first_attempt",      "First Attempt",      CYCLE_STATUS_COLORS["First Attempt"]),
         ("n_never",              "Never Conducted",    CYCLE_STATUS_COLORS["Never Conducted"]),
     ]
 
@@ -454,7 +455,8 @@ def fig_survey_type_comparison(A):
         barmode="stack",
         xaxis=dict(title="Number of Countries", range=[0, 52]),
         yaxis=dict(tickfont=dict(size=12)),
-        legend=dict(orientation="h", y=-0.28, x=0.5, xanchor="center", font=dict(size=11)),
+        legend=dict(orientation="h", y=-0.28, x=0.5, xanchor="center", font=dict(size=11),
+                    traceorder="reversed"),
         margin=dict(l=10, r=30, t=50, b=80),
     )
     return fig

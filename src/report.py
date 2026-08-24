@@ -637,7 +637,7 @@ JS = """
     if(typeof Plotly==='undefined'){_plotlyOffline(el);return;}
     var valMap={
       'On Cycle':d.n_on_cycle,'Attempt to update':d.n_attempt_to_update,
-      'Off Cycle':d.n_off_cycle,'Never Conducted':d.n_never
+      'Off Cycle':d.n_off_cycle,'First Attempt':d.n_first_attempt,'Never Conducted':d.n_never
     };
     var total=d.n_total;
     var vals=_STATUS_LABELS.map(function(s){return valMap[s];});
@@ -852,8 +852,8 @@ JS = """
     if(typeof Plotly==='undefined'){_plotlyOffline(chartEl);return;}
     var cgap=d.countries_gap||[];
     var MAXGAP=40;
-    var _SYMBOL={'On Cycle':'circle','Attempt to update':'triangle-up','Off Cycle':'square','Never Conducted':'circle-open'};
-    var _SIZE  ={'On Cycle':15,'Attempt to update':14,'Off Cycle':13,'Never Conducted':12};
+    var _SYMBOL={'On Cycle':'circle','Attempt to update':'triangle-up','Off Cycle':'square','First Attempt':'diamond','Never Conducted':'circle-open'};
+    var _SIZE  ={'On Cycle':15,'Attempt to update':14,'Off Cycle':13,'First Attempt':13,'Never Conducted':12};
     var statusCfg={};
     _STATUS_LABELS.forEach(function(s){
       var isOpen=s==='Never Conducted';
@@ -953,7 +953,8 @@ JS = """
       ['exec-n-oncycle',  d.n_on_cycle,          d.n_on_cycle+' of '+n+' countries',          'Completed \u2264\u20095 years ago \u2014 current, usable evidence'],
       ['exec-n-implement',d.n_attempt_to_update, d.n_attempt_to_update+' of '+n+' countries', 'Prior evidence exists \u2014 actively updating with new survey'],
       ['exec-n-offcycle', d.n_off_cycle,         d.n_off_cycle+' of '+n+' countries',         'Has prior evidence but surveillance is idle \u2014 off-cycle'],
-      ['exec-n-never',    d.n_never,             d.n_never+' of '+n+' countries',             'Never completed \u2014 no policy-usable evidence exists'],
+      ['exec-n-firstattempt',d.n_first_attempt,  d.n_first_attempt+' of '+n+' countries',     'No prior evidence, but a first-ever survey is in progress now'],
+      ['exec-n-never',    d.n_never,             d.n_never+' of '+n+' countries',             'Never completed nor attempted \u2014 no policy-usable evidence exists'],
     ];
     updates.forEach(function(u){
       var id=u[0],val=u[1],sub=u[2],def=u[3];
@@ -1820,7 +1821,8 @@ def per_survey_sections(A):
             status_tally[c] += 1
         pill_tally = {
             "On Cycle": k["n_on_cycle"], "Attempt to update": k["n_attempt_to_update"],
-            "Off Cycle": k["n_off_cycle"], "Never Conducted": k["n_never"],
+            "Off Cycle": k["n_off_cycle"], "First Attempt": k["n_first_attempt"],
+            "Never Conducted": k["n_never"],
         }
         assert status_tally == pill_tally, (
             f"{code}: per-country status tally {status_tally} != header pill tally {pill_tally}")
@@ -1858,10 +1860,11 @@ def per_survey_sections(A):
       <span style="background:{CYCLE_STATUS_COLORS['On Cycle']}1a;color:{CYCLE_STATUS_COLORS['On Cycle']};padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;">{k['n_on_cycle']} On Cycle</span>
       <span style="background:{CYCLE_STATUS_COLORS['Attempt to update']}1a;color:{CYCLE_STATUS_COLORS['Attempt to update']};padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;">{k['n_attempt_to_update']} Attempt to update</span>
       <span style="background:{CYCLE_STATUS_COLORS['Off Cycle']}1a;color:{CYCLE_STATUS_COLORS['Off Cycle']};padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;">{k['n_off_cycle']} Off Cycle</span>
+      <span style="background:{CYCLE_STATUS_COLORS['First Attempt']}1a;color:{CYCLE_STATUS_COLORS['First Attempt']};padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;">{k['n_first_attempt']} First Attempt</span>
       <span style="background:{CYCLE_STATUS_COLORS['Never Conducted']}1a;color:{CYCLE_STATUS_COLORS['Never Conducted']};padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;">{k['n_never']} Never Conducted</span>
     </div>
   </div>
-  <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.7;">{k['briefing']}</p>
+  <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.7;"><strong>Action priority for {code}:</strong> {k['n_off_cycle']} {'country needs' if k['n_off_cycle'] == 1 else 'countries need'} re-engagement &mdash; prior evidence exists but no update is currently in progress. {k['n_attempt_to_update'] + k['n_first_attempt']} {'country is' if (k['n_attempt_to_update'] + k['n_first_attempt']) == 1 else 'countries are'} already in motion (a round is underway, whether renewing or first-ever) and should be supported through to completion. {k['n_never']} {'country has' if k['n_never'] == 1 else 'countries have'} no {code} evidence and nothing in progress &mdash; the highest-priority gap for new technical and financial investment.</p>
   <div style="overflow-x:auto;max-height:420px;overflow-y:auto;">
   <table style="width:100%;border-collapse:collapse;">
   <caption style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">{code} surveillance status by country</caption>
@@ -1912,8 +1915,9 @@ def build_html(A: dict) -> str:
     # Status palette shortcuts (single source of truth: config.CYCLE_STATUS_COLORS)
     # — never reuse TIER_COLORS' hex values here, so a reader can't mistake a
     # status badge for an SPI-tier badge when moving between tabs.
-    st_on, st_att, st_off, st_nev = (CYCLE_STATUS_COLORS["On Cycle"], CYCLE_STATUS_COLORS["Attempt to update"],
-                                      CYCLE_STATUS_COLORS["Off Cycle"], CYCLE_STATUS_COLORS["Never Conducted"])
+    st_on, st_att, st_off, st_first, st_nev = (CYCLE_STATUS_COLORS["On Cycle"], CYCLE_STATUS_COLORS["Attempt to update"],
+                                      CYCLE_STATUS_COLORS["Off Cycle"], CYCLE_STATUS_COLORS["First Attempt"],
+                                      CYCLE_STATUS_COLORS["Never Conducted"])
     # Colour must encode the VALUE, not just announce the category: a "0 Strong
     # performers" stat should not carry a celebratory green dot.
     strong_dot_color = "#909090" if n_strong == 0 else TIER_COLORS[1]
@@ -2041,9 +2045,9 @@ def build_html(A: dict) -> str:
       <h1>NCD Population-based Surveillance <span class="grad">Intelligence</span> Platform</h1>
       <p class="hero-sub">A strategic intelligence platform synthesizing <strong>five core NCD population-based surveillance systems</strong> across 47 WHO AFRO Member States + Zanzibar</p>
       <div class="hero-quick-stats">
-        <span class="hero-qs"><i class="fas fa-circle" style="color:{strong_dot_color}"></i> {n_strong} Strong performers</span>
-        <span class="hero-qs"><i class="fas fa-circle" style="color:{crit_dot_color}"></i> {n_crit} Critical</span>
-        <span class="hero-qs"><i class="fas fa-sync-alt" style="color:#4a90e2"></i> {n_curr} surveys this cycle</span>
+        <span class="hero-qs" title="SPI ≥ 75 — Strong surveillance system tier, not a health-outcomes ranking"><i class="fas fa-circle" style="color:{strong_dot_color}"></i> {n_strong} Strong SPI systems</span>
+        <span class="hero-qs" title="SPI &lt; 30 — Critical surveillance system tier, not a health-outcomes ranking"><i class="fas fa-circle" style="color:{crit_dot_color}"></i> {n_crit} Critical SPI systems</span>
+        <span class="hero-qs" title="Countries with at least one completed survey since {CURRENT_CYCLE_START}"><i class="fas fa-sync-alt" style="color:#4a90e2"></i> {n_curr} countries active this cycle</span>
       </div>
     </div>
     <div class="hero-right">
@@ -2108,7 +2112,7 @@ def build_html(A: dict) -> str:
           <div class="chart-card reveal">
             {ch_survey_cmp}
             <div class="chart-commentary">
-              Status distribution across all five NCD surveillance instruments (N&#160;=&#160;48 countries per instrument). Each bar shows how countries distribute across four mutually exclusive states: <strong style="color:{st_on};">On Cycle</strong> (completed &#8804;&#160;5 yr), <strong style="color:{st_att};">Attempt to Update</strong> (prior evidence + active new round), <strong style="color:{st_off};">Off Cycle</strong> (prior evidence but surveillance idle), and <strong style="color:{st_nev};">Never Conducted</strong> (no completed survey on record). This panel is static and reflects system-wide status across all survey types.
+              Status distribution across all five NCD surveillance instruments (N&#160;=&#160;48 countries per instrument). Each bar shows how countries distribute across five mutually exclusive states: <strong style="color:{st_on};">On Cycle</strong> (completed &#8804;&#160;5 yr), <strong style="color:{st_att};">Attempt to Update</strong> (prior evidence + active new round), <strong style="color:{st_off};">Off Cycle</strong> (prior evidence but surveillance idle), <strong style="color:{st_first};">First Attempt</strong> (no prior evidence, first-ever round in progress), and <strong style="color:{st_nev};">Never Conducted</strong> (no completed survey and nothing in progress). This panel is static and reflects system-wide status across all survey types.
             </div>
           </div>
         </div>
@@ -2138,14 +2142,15 @@ def build_html(A: dict) -> str:
         <span>
           <strong>Unit of analysis:</strong> All counts represent <strong>unique countries/territories</strong> (N&nbsp;=&nbsp;48). Categories are mutually exclusive per country per survey type.
           &nbsp;<strong style="color:{st_on};">&#9632; On Cycle</strong>: completed &#8804;&nbsp;5 yr &mdash; current, usable evidence &nbsp;|&nbsp;
-          <strong style="color:{st_att};">&#9632; Attempt to update</strong>: prior completed data + new round actively in progress (never-conducted excluded) &nbsp;|&nbsp;
+          <strong style="color:{st_att};">&#9632; Attempt to update</strong>: prior completed data + new round actively in progress &nbsp;|&nbsp;
           <strong style="color:{st_off};">&#9632; Off Cycle</strong>: has prior evidence but surveillance is currently idle &nbsp;|&nbsp;
-          <strong style="color:{st_nev};">&#9632; Never Conducted</strong>: no completed survey ever &mdash; includes countries currently in a first-time attempt
+          <strong style="color:{st_first};">&#9632; First Attempt</strong>: no prior evidence, but a first-ever round is actively in progress &nbsp;|&nbsp;
+          <strong style="color:{st_nev};">&#9632; Never Conducted</strong>: no completed survey and nothing currently in progress
         </span>
       </div>
 
-      <!-- ② FOUR DYNAMIC KPI SIGNAL CARDS -->
-      <div class="signal-grid" style="grid-template-columns:repeat(4,1fr);">
+      <!-- ② FIVE DYNAMIC KPI SIGNAL CARDS -->
+      <div class="signal-grid" style="grid-template-columns:repeat(5,1fr);">
 
         <div class="signal-card reveal" style="color:{st_on};">
           <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:{st_on};margin-bottom:4px;">
@@ -2183,6 +2188,18 @@ def build_html(A: dict) -> str:
           </div>
         </div>
 
+        <div class="signal-card reveal" style="color:{st_first};">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:{st_first};margin-bottom:4px;">
+            <i class="fas fa-flag"></i>&nbsp; First Attempt
+          </div>
+          <div class="signal-val" id="exec-n-firstattempt" data-count="{exec_steps['n_first_attempt']}">{exec_steps['n_first_attempt']}</div>
+          <div class="signal-lbl">Countries</div>
+          <div class="signal-sub" id="exec-n-firstattempt-sub">{exec_steps['n_first_attempt']} of {n_ent} countries</div>
+          <div id="exec-n-firstattempt-def" style="font-size:11px;color:#6b7280;margin-top:5px;line-height:1.4;">
+            No prior evidence, but a first-ever survey is in progress now
+          </div>
+        </div>
+
         <div class="signal-card reveal" style="color:{st_nev};">
           <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:{st_nev};margin-bottom:4px;">
             <i class="fas fa-ban"></i>&nbsp; Never Conducted
@@ -2191,7 +2208,7 @@ def build_html(A: dict) -> str:
           <div class="signal-lbl">Countries</div>
           <div class="signal-sub" id="exec-n-never-sub">{exec_steps['n_never']} of {n_ent} countries</div>
           <div id="exec-n-never-def" style="font-size:11px;color:#6b7280;margin-top:5px;line-height:1.4;">
-            Never completed &mdash; no policy-usable evidence exists
+            Never completed nor attempted &mdash; no policy-usable evidence exists
           </div>
         </div>
 
@@ -2238,7 +2255,7 @@ def build_html(A: dict) -> str:
           <span class="section-num">2</span>
           <h2 class="section-title">Surveillance Performance</h2>
         </div>
-        <p class="section-subtitle">Surveillance Performance Index (SPI) &mdash; composite score across Coverage, Recency &amp; Regularity &mdash; all {n_ent} countries ranked</p>
+        <p class="section-subtitle">Surveillance Performance Index (SPI) &mdash; composite score across Breadth, Currency &amp; Regularity &mdash; all {n_ent} countries ranked</p>
       </div>
 
       <!-- Regional SPI + Tier overview -->
@@ -2275,7 +2292,7 @@ def build_html(A: dict) -> str:
         </div>
       </div>
 
-      {insight_box(f"<strong>Regional SPI: {reg_spi}/100</strong> - Median: {A['median_spi']} &nbsp;·&nbsp; <strong>{n_strong}</strong> countries achieve Strong status (SPI ≥ 75), while <strong>{n_crit}</strong> remain Critical (SPI < 30). The SPI is a composite of three equally-weighted dimensions: <strong>Coverage</strong> (how many of 5 instruments used), <strong>Recency</strong> (currency of evidence), and <strong>Regularity</strong> (cycle adherence). Scroll down to explore dimension-level breakdowns.", "info")}
+      {insight_box(f"<strong>Regional SPI: {reg_spi}/100</strong> - Median: {A['median_spi']} &nbsp;·&nbsp; <strong>{n_strong}</strong> countries achieve Strong status (SPI ≥ 75), while <strong>{n_crit}</strong> remain Critical (SPI < 30). The SPI is a composite of three equally-weighted dimensions: <strong>Breadth</strong> (how many of 5 instruments used), <strong>Currency</strong> (recency of evidence), and <strong>Regularity</strong> (cycle adherence). Scroll down to explore dimension-level breakdowns.", "info")}
 
       <!-- SPI bar chart -->
       <div class="row">
