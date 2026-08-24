@@ -50,6 +50,59 @@ def fmt_spi(v, decimals: int = 1) -> str:
     return f"{float(v):.{decimals}f}"
 
 
+def _hero_constellation(spi_df) -> str:
+    """Hero decorative graphic, built from real per-country SPI data instead
+    of arbitrary coordinates: one dot per WHO AFRO entity, positioned on a
+    golden-angle spiral (even, non-overlapping distribution for any N),
+    coloured by the country's actual performance tier and sized by its SPI
+    score, with nearest-neighbour lines for the constellation texture. The
+    one purely decorative element on the page is now the data, not a stock
+    node-link graphic that could belong to any dashboard."""
+    import math
+    rows = spi_df.sort_values("spi", ascending=False).reset_index(drop=True)
+    n = len(rows)
+    if n == 0:
+        return '<svg class="hero-network" viewBox="0 0 400 320" aria-hidden="true"></svg>'
+
+    cx, cy, max_r = 198.0, 155.0, 148.0
+    golden_angle = math.pi * (3 - math.sqrt(5))
+    pts = []
+    for i, row in rows.iterrows():
+        frac = (i + 0.5) / n
+        r = max_r * math.sqrt(frac)
+        theta = i * golden_angle
+        x = cx + r * math.cos(theta) * 1.3
+        y = cy + r * math.sin(theta)
+        color = TIER_COLORS[int(row["tier"])]
+        size = 1.6 + 1.7 * (float(row["spi"]) / 100.0)
+        pts.append((x, y, color, size))
+
+    lines = set()
+    for i, (x1, y1, *_rest) in enumerate(pts):
+        nearest = sorted(
+            range(n),
+            key=lambda j: (pts[j][0] - x1) ** 2 + (pts[j][1] - y1) ** 2,
+        )
+        picked = [j for j in nearest if j != i][:2]
+        for j in picked:
+            lines.add((min(i, j), max(i, j)))
+
+    line_svg = "".join(
+        f'<line x1="{pts[i][0]:.1f}" y1="{pts[i][1]:.1f}" x2="{pts[j][0]:.1f}" y2="{pts[j][1]:.1f}"/>'
+        for i, j in lines
+    )
+    dot_svg = "".join(
+        f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{s:.1f}" fill="{color}"/>'
+        for x, y, color, s in pts
+    )
+    return (
+        '<svg class="hero-network" viewBox="0 0 400 320" preserveAspectRatio="xMidYMid meet" '
+        'role="img" aria-label="Constellation of 48 WHO AFRO countries and territories, '
+        'each dot positioned by rank and coloured by its surveillance performance tier">'
+        f'<g class="hn-lines">{line_svg}</g><g class="hn-dots">{dot_svg}</g></svg>'
+    )
+
+
 # ── CSS ────────────────────────────────────────────────────────────────────────
 CSS = """
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -81,7 +134,7 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible,
   outline:3px solid #56d0ff;outline-offset:2px;border-radius:4px;
 }
 .skip-link{position:absolute;left:-9999px;top:0;z-index:10000;background:var(--primary);color:#fff;
-  padding:10px 18px;border-radius:0 0 8px 0;font-weight:700;font-size:13px;text-decoration:none}
+  padding:10px 18px;border-radius:0 0 8px 0;font-weight:700;font-size:14px;text-decoration:none}
 .skip-link:focus{left:0;}
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{
@@ -133,9 +186,9 @@ body{font-family:var(--font);background:#f6f7fb;color:var(--text);line-height:1.
    neighbour lines — as the platform's own signature motif: a literal
    "surveillance network" rendered as quiet linework behind the headline
    numbers, rather than generic decoration. */
-.hero-network{position:absolute;inset:0;width:100%;height:100%;z-index:1;opacity:.55}
-.hero-network .hn-lines line{stroke:rgba(86,208,255,.32);stroke-width:.6}
-.hero-network .hn-dots circle{fill:rgba(255,255,255,.55)}
+.hero-network{position:absolute;inset:0;width:100%;height:100%;z-index:1;opacity:.8}
+.hero-network .hn-lines line{stroke:rgba(86,208,255,.25);stroke-width:.6}
+.hero-network .hn-dots circle{opacity:.85}
 .hero-stats{display:flex;flex-direction:column;gap:12px;position:relative;z-index:2;width:100%}
 /* Each badge staggered entrance */
 .hero-stat-badge{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:0;overflow:hidden;transition:background 240ms,transform 240ms,box-shadow 240ms;cursor:default;animation:badgeIn .55s ease both}
@@ -360,9 +413,9 @@ hr.section-divider{border:none;border-top:1px solid var(--border);margin:32px 0}
 .profile-section-head span.sec-step{font-size:11px;color:rgba(255,255,255,.65);font-style:italic;}
 .profile-section-head .sec-chevron{color:rgba(255,255,255,.85);font-size:12px;transition:transform 200ms;}
 details.profile-section-card[open] .sec-chevron{transform:rotate(180deg);}
-.profile-ind-table{width:100%;border-collapse:collapse;font-size:11px;}
-.profile-ind-table th{padding:6px 8px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;font-weight:700;background:#f7f9ff;border-bottom:1px solid var(--border);white-space:nowrap;}
-.profile-ind-table td{padding:6px 8px;border-bottom:1px solid #f3f5fb;vertical-align:middle;line-height:1.45;}
+.profile-ind-table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:11px;}
+.profile-ind-table th{padding:8px 6px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;font-weight:700;background:#f7f9ff;border-bottom:1px solid var(--border);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.profile-ind-table td{padding:8px 6px;border-bottom:1px solid #f3f5fb;vertical-align:middle;line-height:1.5;word-wrap:break-word;overflow-wrap:break-word;}
 .profile-ind-table tbody tr:last-child td{border-bottom:none;}
 .profile-ind-table tbody tr:hover td{background:#f0f5ff;}
 .profile-no-data{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:64px 20px;color:var(--muted);text-align:center;gap:16px;}
@@ -609,7 +662,7 @@ JS = """
     el.dataset.plotlyOfflineMsg='1';
     el.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:160px;color:var(--muted);text-align:center;padding:20px;gap:8px;">'+
       '<i class="ti ti-wifi" style="font-size:22px;opacity:.35;"></i>'+
-      '<div style="font-size:12.5px;font-weight:600;">Chart unavailable — Plotly failed to load from the CDN</div>'+
+      '<div style="font-size:12px;font-weight:600;">Chart unavailable — Plotly failed to load from the CDN</div>'+
       '<div style="font-size:11px;">This usually means no internet access or a blocked script host. Other page content still works.</div>'+
       '</div>';
   }
@@ -1190,7 +1243,7 @@ JS = """
       kpi+='<div class="profile-kpi-value" style="color:'+k.col+';"'+loStr+'>'+valStr+'</div>';
       if(hasCI){kpi+='<div class="profile-kpi-ci">95% CI '+d.lo.toFixed(1)+'\u2013'+d.hi.toFixed(1)+unit+'</div>';}
       var kConf=(d.conf!==undefined&&d.conf!==null&&d.conf<0.7)
-        ? ' <i class="ti ti-alert-triangle" style="color:#d97706;font-size:9px;cursor:help;" title="Low-confidence label match from PDF extraction (score '+d.conf.toFixed(2)+'/1.00) — verify before citing"></i>' : '';
+        ? ' <i class="ti ti-alert-triangle" style="color:#d97706;font-size:11px;cursor:help;" title="Low-confidence label match from PDF extraction (score '+d.conf.toFixed(2)+'/1.00) — verify before citing"></i>' : '';
       kpi+='<div class="profile-kpi-label">'+k.label+kConf+'</div>';
       if(arrow){kpi+='<div class="profile-kpi-trend">'+arrow+'<span style="font-size:11px;color:var(--muted);font-weight:400;"> vs '+prevYr+'</span></div>';}
       if(mV!==null||fV!==null){
@@ -1221,7 +1274,7 @@ JS = """
     charts+='<h4 class="profile-chart-title"><i class="ti ti-chart-line"></i>&nbsp; Trend — Key Indicators Over Time</h4>';
     if(hasMulti){
       charts+='<div id="profile-trend-chart" style="height:340px;"></div>';
-      charts+='<div style="font-size:10.5px;color:var(--muted);padding:0 8px 4px;">Consecutive survey rounds may differ in target age range or sampling frame &mdash; read trend lines as indicative, not strictly comparable across rounds.</div>';
+      charts+='<div style="font-size:11px;color:var(--muted);padding:0 8px 4px;">Consecutive survey rounds may differ in target age range or sampling frame &mdash; read trend lines as indicative, not strictly comparable across rounds.</div>';
     }else{
       charts+='<div style="display:flex;align-items:center;justify-content:center;height:120px;color:var(--muted);font-size:12px;text-align:center;padding:0 20px;">'+
         'Trend requires 2+ survey rounds — '+country+' has 1 completed '+surveyType+' round so far ('+latYr+').</div>';
@@ -1230,7 +1283,7 @@ JS = """
     charts+='<div class="chart-card reveal">';
     charts+='<h4 class="profile-chart-title"><i class="ti ti-scale"></i>&nbsp; '+country+' vs AFRO Regional Average</h4>';
     charts+='<div id="profile-compare-chart" style="height:360px;"></div>';
-    charts+='<div style="font-size:10.5px;color:var(--muted);padding:0 8px 4px;">AFRO Avg sample size (n) shown on hover &mdash; indicators marked ⚠ are averaged over fewer than 5 countries and should be read with caution.</div>';
+    charts+='<div style="font-size:11px;color:var(--muted);padding:0 8px 4px;">AFRO Avg sample size (n) shown on hover &mdash; indicators marked ⚠ are averaged over fewer than 5 countries and should be read with caution.</div>';
     charts+='</div>';
     charts+='<div class="chart-card reveal">';
     charts+='<h4 class="profile-chart-title"><i class="ti ti-gender-bigender"></i>&nbsp; Sex Disaggregation — Latest Round</h4>';
@@ -1290,11 +1343,11 @@ JS = """
       grid += '<table class="profile-ind-table">';
       grid += '<caption style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">'+sv.name+' indicators for the selected country and survey round</caption>';
       grid += '<thead><tr>';
-      grid += '<th scope="col" style="text-align:left;min-width:140px;">Indicator</th>';
-      grid += '<th scope="col" style="text-align:center;">Both</th>';
-      grid += '<th scope="col" style="text-align:center;color:#2980b9;">Male</th>';
-      grid += '<th scope="col" style="text-align:center;color:#c0392b;">Female</th>';
-      grid += '<th scope="col" style="text-align:center;">Trend</th>';
+      grid += '<th scope="col" style="text-align:left;width:34%;">Indicator</th>';
+      grid += '<th scope="col" style="text-align:center;width:24%;">Both</th>';
+      grid += '<th scope="col" style="text-align:center;width:11%;color:#2980b9;" title="Male"><span aria-hidden="true">M</span><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Male</span></th>';
+      grid += '<th scope="col" style="text-align:center;width:11%;color:#c0392b;" title="Female"><span aria-hidden="true">F</span><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Female</span></th>';
+      grid += '<th scope="col" style="text-align:center;width:20%;">Trend</th>';
       grid += '</tr></thead><tbody>';
 
       secInds.forEach(function(entry, idx){
@@ -1311,7 +1364,7 @@ JS = """
         var lbl  = i2.label.length > 58 ? i2.label.substring(0, 57) + '\u2026' : i2.label;
         var conf = d.conf;
         var confFlag = (conf !== undefined && conf !== null && conf < 0.7)
-          ? ' <i class="ti ti-alert-triangle" style="color:#d97706;font-size:9px;cursor:help;" title="Low-confidence label match from PDF extraction (score '+conf.toFixed(2)+'/1.00) \u2014 verify this indicator against the source fact sheet before citing it"></i>'
+          ? ' <i class="ti ti-alert-triangle" style="color:#d97706;font-size:11px;cursor:help;" title="Low-confidence label match from PDF extraction (score '+conf.toFixed(2)+'/1.00) \u2014 verify this indicator against the source fact sheet before citing it"></i>'
           : '';
         lbl = lbl + confFlag;
         var hasCI = (d.lo !== null && d.lo !== undefined && d.hi !== null && d.hi !== undefined);
@@ -1893,12 +1946,12 @@ def per_survey_sections(A):
                 gap_s = "&mdash;"
             bg     = "#fafbff" if i % 2 == 0 else "#ffffff"
             rows_html += f"""<tr style="background:{bg};">
-  <td style="padding:6px 12px;font-size:12px;">{row['country']}</td>
-  <td style="padding:6px 12px;text-align:center;">
+  <td style="padding:9px 12px;font-size:12px;">{row['country']}</td>
+  <td style="padding:9px 12px;text-align:center;">
     <span style="background:{sc};color:#fff;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">{status}</span>
   </td>
-  <td style="padding:6px 12px;text-align:center;font-size:12px;">{last_s}</td>
-  <td style="padding:6px 12px;text-align:center;font-size:12px;">{gap_s}</td>
+  <td style="padding:9px 12px;text-align:center;font-size:12px;">{last_s}</td>
+  <td style="padding:9px 12px;text-align:center;font-size:12px;">{gap_s}</td>
 </tr>"""
 
         html += f"""
@@ -1956,6 +2009,7 @@ def build_html(A: dict) -> str:
     survey_sections = per_survey_sections(A)
 
     spi      = A["spi"]
+    hero_constellation_svg = _hero_constellation(spi)
     top5     = spi.head(5)["country"].tolist()
     n_crit   = A["n_critical"]
     n_strong = A["n_strong"]
@@ -2107,7 +2161,7 @@ def build_html(A: dict) -> str:
       <div class="hero-right-orb hero-right-orb-1"></div>
       <div class="hero-right-orb hero-right-orb-2"></div>
       <div class="hero-right-orb hero-right-orb-3"></div>
-      <svg class="hero-network" viewBox="0 0 400 320" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><g class="hn-lines"><line x1="66.2" y1="189.9" x2="52.2" y2="224.0"/><line x1="80.2" y1="127.4" x2="43.9" y2="147.8"/><line x1="152.5" y1="152.1" x2="132.3" y2="185.0"/><line x1="332.1" y1="114.1" x2="341.0" y2="79.3"/><line x1="152.5" y1="152.1" x2="126.8" y2="122.3"/><line x1="273.4" y1="251.2" x2="275.5" y2="292.7"/><line x1="194.6" y1="77.0" x2="208.8" y2="31.6"/><line x1="226.8" y1="160.0" x2="211.7" y2="126.5"/><line x1="260.6" y1="133.3" x2="244.5" y2="97.6"/><line x1="330.0" y1="173.1" x2="363.5" y2="149.7"/><line x1="226.8" y1="160.0" x2="260.6" y2="133.3"/><line x1="104.6" y1="217.6" x2="100.5" y2="252.9"/><line x1="184.0" y1="177.6" x2="190.4" y2="212.3"/><line x1="132.3" y1="185.0" x2="97.0" y2="163.7"/><line x1="288.6" y1="59.7" x2="269.6" y2="27.1"/><line x1="97.0" y1="163.7" x2="66.2" y2="189.9"/><line x1="244.5" y1="97.6" x2="289.0" y2="95.5"/><line x1="131.0" y1="86.1" x2="116.9" y2="44.2"/><line x1="154.2" y1="262.8" x2="177.7" y2="293.0"/><line x1="303.3" y1="143.2" x2="332.1" y2="114.1"/><line x1="190.4" y1="212.3" x2="149.8" y2="226.2"/><line x1="233.6" y1="279.4" x2="275.5" y2="292.7"/><line x1="289.0" y1="95.5" x2="288.6" y2="59.7"/><line x1="131.0" y1="86.1" x2="160.0" y2="53.3"/><line x1="335.7" y1="213.7" x2="317.3" y2="256.4"/><line x1="80.2" y1="127.4" x2="44.3" y2="98.0"/><line x1="332.1" y1="114.1" x2="382.9" y2="116.9"/><line x1="149.8" y1="226.2" x2="154.2" y2="262.8"/><line x1="211.7" y1="126.5" x2="174.5" y2="108.4"/><line x1="236.3" y1="59.5" x2="208.8" y2="31.6"/><line x1="363.5" y1="149.7" x2="375.0" y2="196.6"/><line x1="132.3" y1="185.0" x2="104.6" y2="217.6"/><line x1="235.0" y1="228.7" x2="202.6" y2="253.7"/><line x1="104.6" y1="217.6" x2="52.2" y2="224.0"/><line x1="244.5" y1="97.6" x2="236.3" y2="59.5"/><line x1="202.6" y1="253.7" x2="233.6" y2="279.4"/><line x1="66.2" y1="189.9" x2="43.9" y2="147.8"/><line x1="160.0" y1="53.3" x2="116.9" y2="44.2"/><line x1="174.5" y1="108.4" x2="194.6" y2="77.0"/><line x1="290.5" y1="215.6" x2="273.4" y2="251.2"/><line x1="194.6" y1="77.0" x2="160.0" y2="53.3"/><line x1="80.2" y1="127.4" x2="86.5" y2="84.7"/><line x1="273.4" y1="251.2" x2="317.3" y2="256.4"/><line x1="238.2" y1="191.5" x2="235.0" y2="228.7"/><line x1="86.5" y1="84.7" x2="44.3" y2="98.0"/><line x1="238.2" y1="191.5" x2="280.7" y2="181.2"/><line x1="126.8" y1="122.3" x2="131.0" y2="86.1"/><line x1="330.0" y1="173.1" x2="335.7" y2="213.7"/><line x1="335.7" y1="213.7" x2="375.0" y2="196.6"/><line x1="289.0" y1="95.5" x2="341.0" y2="79.3"/><line x1="226.8" y1="160.0" x2="238.2" y2="191.5"/><line x1="280.7" y1="181.2" x2="290.5" y2="215.6"/><line x1="184.0" y1="177.6" x2="152.5" y2="152.1"/><line x1="236.3" y1="59.5" x2="269.6" y2="27.1"/><line x1="97.0" y1="163.7" x2="80.2" y2="127.4"/><line x1="363.5" y1="149.7" x2="382.9" y2="116.9"/><line x1="154.2" y1="262.8" x2="100.5" y2="252.9"/><line x1="303.3" y1="143.2" x2="330.0" y2="173.1"/><line x1="202.6" y1="253.7" x2="177.7" y2="293.0"/></g><g class="hn-dots"><circle cx="226.8" cy="160.0" r="2.1"/><circle cx="184.0" cy="177.6" r="2.1"/><circle cx="211.7" cy="126.5" r="2.1"/><circle cx="238.2" cy="191.5" r="2.1"/><circle cx="152.5" cy="152.1" r="2.1"/><circle cx="260.6" cy="133.3" r="2.1"/><circle cx="190.4" cy="212.3" r="2.1"/><circle cx="174.5" cy="108.4" r="2.1"/><circle cx="280.7" cy="181.2" r="2.1"/><circle cx="132.3" cy="185.0" r="2.1"/><circle cx="244.5" cy="97.6" r="2.1"/><circle cx="235.0" cy="228.7" r="2.1"/><circle cx="126.8" cy="122.3" r="2.1"/><circle cx="303.3" cy="143.2" r="2.1"/><circle cx="149.8" cy="226.2" r="2.1"/><circle cx="194.6" cy="77.0" r="2.1"/><circle cx="290.5" cy="215.6" r="2.1"/><circle cx="97.0" cy="163.7" r="2.1"/><circle cx="289.0" cy="95.5" r="2.1"/><circle cx="202.6" cy="253.7" r="2.1"/><circle cx="131.0" cy="86.1" r="2.1"/><circle cx="330.0" cy="173.1" r="2.1"/><circle cx="104.6" cy="217.6" r="2.1"/><circle cx="236.3" cy="59.5" r="2.1"/><circle cx="273.4" cy="251.2" r="2.1"/><circle cx="80.2" cy="127.4" r="2.1"/><circle cx="332.1" cy="114.1" r="2.1"/><circle cx="154.2" cy="262.8" r="2.1"/><circle cx="160.0" cy="53.3" r="2.1"/><circle cx="335.7" cy="213.7" r="2.1"/><circle cx="66.2" cy="189.9" r="2.1"/><circle cx="288.6" cy="59.7" r="2.1"/><circle cx="233.6" cy="279.4" r="2.1"/><circle cx="86.5" cy="84.7" r="2.1"/><circle cx="363.5" cy="149.7" r="2.1"/><circle cx="100.5" cy="252.9" r="2.1"/><circle cx="208.8" cy="31.6" r="2.1"/><circle cx="317.3" cy="256.4" r="2.1"/><circle cx="43.9" cy="147.8" r="2.1"/><circle cx="341.0" cy="79.3" r="2.1"/><circle cx="177.7" cy="293.0" r="2.1"/><circle cx="116.9" cy="44.2" r="2.1"/><circle cx="375.0" cy="196.6" r="2.1"/><circle cx="52.2" cy="224.0" r="2.1"/><circle cx="269.6" cy="27.1" r="2.1"/><circle cx="275.5" cy="292.7" r="2.1"/><circle cx="44.3" cy="98.0" r="2.1"/><circle cx="382.9" cy="116.9" r="2.1"/></g></svg>
+      {hero_constellation_svg}
       <div class="hero-stats">
         <div class="hero-stat-badge">
           <div class="hero-stat-inner">
@@ -2316,11 +2370,11 @@ def build_html(A: dict) -> str:
       <div class="stat-highlight-row reveal">
         <div class="stat-highlight-item" style="text-align:center;padding:0 24px 0 0;">
           <div class="stat-hl-val" style="color:{spi_tier_color};">{fmt_spi(reg_spi)}<span style="font-size:1rem;font-weight:600;opacity:.6;">/100</span></div>
-          <div class="stat-hl-lbl" title="Simple unweighted mean across all {n_ent} entities — not weighted by population. Zanzibar and mainland Tanzania are counted as two separate entities sharing one ISO3 code.">Regional SPI Average&nbsp;<i class="ti ti-info-circle" style="font-size:9px;opacity:.6;"></i></div>
+          <div class="stat-hl-lbl" title="Simple unweighted mean across all {n_ent} entities — not weighted by population. Zanzibar and mainland Tanzania are counted as two separate entities sharing one ISO3 code.">Regional SPI Average&nbsp;<i class="ti ti-info-circle" style="font-size:11px;opacity:.6;"></i></div>
         </div>
         <div class="stat-highlight-item" style="text-align:center;padding:0 24px;">
           <div class="stat-hl-val" style="color:var(--muted);">{A['median_spi']}</div>
-          <div class="stat-hl-lbl" title="Simple unweighted median across all {n_ent} entities — not weighted by population.">Median SPI&nbsp;<i class="ti ti-info-circle" style="font-size:9px;opacity:.6;"></i></div>
+          <div class="stat-hl-lbl" title="Simple unweighted median across all {n_ent} entities — not weighted by population.">Median SPI&nbsp;<i class="ti ti-info-circle" style="font-size:11px;opacity:.6;"></i></div>
         </div>
         <div style="flex:1;display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;">
           <div class="tier-card" style="border-top-color:#00a651;min-width:110px;">
@@ -2473,7 +2527,7 @@ def build_html(A: dict) -> str:
           {_prof_n} countries with STEPS, GYTS and/or GATS indicator data available &mdash;
           <span title="GSHS and GSHPP are tracked for surveillance status/cycle (Tabs 1-3, 5) but their indicator-level results are not yet pipelined into this profile view">GSHS and GSHPP results are not yet available at indicator level here</span>
         </p>
-        <div style="background:#eef4ff;border:1px solid #c8d8f8;border-left:4px solid #003d82;border-radius:10px;padding:10px 16px;font-size:11.5px;color:#1a3a6b;margin-top:10px;display:flex;align-items:flex-start;gap:9px;">
+        <div style="background:#eef4ff;border:1px solid #c8d8f8;border-left:4px solid #003d82;border-radius:10px;padding:10px 16px;font-size:12px;color:#1a3a6b;margin-top:10px;display:flex;align-items:flex-start;gap:9px;">
           <i class="ti ti-shield" style="margin-top:2px;color:#003d82;"></i>
           <span><strong>Data provenance:</strong> STEPS indicator values are sourced from the WHO validated STEPS database. GYTS and GATS indicator values are extracted programmatically from published country fact-sheet PDFs (gtssacademy.org) via automated table parsing and have not been independently re-verified against the source documents &mdash; treat individual GYTS/GATS figures as indicative pending manual spot-check, and note the provenance badge shown on each country's profile below.</span>
         </div>
