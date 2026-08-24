@@ -2443,7 +2443,8 @@ def build_html(A: dict) -> str:
         <p class="section-subtitle">
           Tabs 1&ndash;3 answered whether countries are surveying on schedule. This tab shows what their most recent survey actually found &mdash;
           in-depth NCD risk factor data by domain, sex &amp; survey round &mdash;
-          {_prof_n} countries with STEPS, GYTS and/or GATS indicator data available
+          {_prof_n} countries with STEPS, GYTS and/or GATS indicator data available &mdash;
+          <span title="GSHS and GSHPP are tracked for surveillance status/cycle (Tabs 1-3, 5) but their indicator-level results are not yet pipelined into this profile view">GSHS and GSHPP results are not yet available at indicator level here</span>
         </p>
         <div style="background:#eef4ff;border:1px solid #c8d8f8;border-left:4px solid #003d82;border-radius:10px;padding:10px 16px;font-size:11.5px;color:#1a3a6b;margin-top:10px;display:flex;align-items:flex-start;gap:9px;">
           <i class="fas fa-shield-alt" style="margin-top:2px;color:#003d82;"></i>
