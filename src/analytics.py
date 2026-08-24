@@ -129,7 +129,7 @@ def compute_spi(df: pd.DataFrame) -> pd.DataFrame:
             "reg_cat":            reg_cat,
             "d_coverage":         round(BS  * 100, 1),   # BS  → breadth
             "d_recency":          round(CS  * 100, 1),   # CS  → currency
-            "d_regularity":       round(CA_ARI * 100, 1) if ari_assessable else np.nan,
+            "d_regularity":       round(CA_ARI * 100, 1),   # 0.0 when not yet assessable — still enters the SPI average at full weight, see report.py display
             "ari_assessable":     ari_assessable,
             "spi":                round(spi, 1),
             "tier":               tier,

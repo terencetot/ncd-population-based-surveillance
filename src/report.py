@@ -1134,7 +1134,16 @@ JS = """
     hdr+='<div style="font-family:var(--font-serif);font-size:24px;font-weight:600;color:var(--dark);letter-spacing:-.005em;">'+country+'</div>';
     hdr+='<div style="font-size:12px;color:var(--muted);margin-top:5px;display:flex;flex-wrap:wrap;gap:10px;">';
     hdr+='<span class="profile-survey-pill"><i class="fas fa-flask"></i>&nbsp;'+surveyType+' surveys: <strong>'+yrsStr+'</strong></span>';
-    if(latS.rr) hdr+='<span class="profile-survey-pill"><i class="fas fa-percentage"></i>&nbsp;Response rate: '+latS.rr+'%</span>';
+    hdr+='<span class="profile-survey-pill"><i class="fas fa-percentage"></i>&nbsp;Response rate: '+(latS.rr?latS.rr+'%':'not recorded')+'</span>';
+    if(surveyType==='STEPS'){
+      hdr+='<span class="profile-survey-pill" style="background:#e6f5ec;color:#00693e;" title="Sourced from the WHO validated STEPS database">'+
+           '<i class="fas fa-check-shield"></i>&nbsp;Validated database source</span>';
+    }else{
+      var srcTip='Extracted programmatically from a published '+surveyType+' country fact-sheet PDF via automated table parsing; not independently re-verified against the source document'+
+                 (p.source_file?(' (file: '+p.source_file+')'):'');
+      hdr+='<span class="profile-survey-pill" style="background:#fff7ed;color:#b45309;" title="'+srcTip.replace(/"/g,'&quot;')+'">'+
+           '<i class="fas fa-exclamation-triangle"></i>&nbsp;Auto-extracted from PDF &mdash; unverified</span>';
+    }
     hdr+='</div></div></div>';
     hdr+='<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">';
     if(p.spi!==null&&p.spi!==undefined){
@@ -1196,6 +1205,7 @@ JS = """
     charts+='<h4 class="profile-chart-title"><i class="fas fa-chart-line"></i>&nbsp; Trend — Key Indicators Over Time</h4>';
     if(hasMulti){
       charts+='<div id="profile-trend-chart" style="height:340px;"></div>';
+      charts+='<div style="font-size:10.5px;color:var(--muted);padding:0 8px 4px;">Consecutive survey rounds may differ in target age range or sampling frame &mdash; read trend lines as indicative, not strictly comparable across rounds.</div>';
     }else{
       charts+='<div style="display:flex;align-items:center;justify-content:center;height:120px;color:var(--muted);font-size:12px;text-align:center;padding:0 20px;">'+
         'Trend requires 2+ survey rounds — '+country+' has 1 completed '+surveyType+' round so far ('+latYr+').</div>';
@@ -1204,6 +1214,7 @@ JS = """
     charts+='<div class="chart-card reveal">';
     charts+='<h4 class="profile-chart-title"><i class="fas fa-balance-scale"></i>&nbsp; '+country+' vs AFRO Regional Average</h4>';
     charts+='<div id="profile-compare-chart" style="height:360px;"></div>';
+    charts+='<div style="font-size:10.5px;color:var(--muted);padding:0 8px 4px;">AFRO Avg sample size (n) shown on hover &mdash; indicators marked ⚠ are averaged over fewer than 5 countries and should be read with caution.</div>';
     charts+='</div>';
     charts+='<div class="chart-card reveal">';
     charts+='<h4 class="profile-chart-title"><i class="fas fa-venus-mars"></i>&nbsp; Sex Disaggregation — Latest Round</h4>';
@@ -1311,22 +1322,23 @@ JS = """
     var el=document.getElementById(divId);
     if(!el)return;
     if(typeof Plotly==='undefined'){_plotlyOffline(el);return;}
-    var names=[],cVals=[],rVals=[],clrs=[];
+    var names=[],cVals=[],rVals=[],clrs=[],rN=[];
+    var LOW_N=5;
     (radarCfg||[]).forEach(function(r){
       var i2=ind[r.code]; if(!i2) return;
       var d=latData[r.code]||{}, rv=reg[r.code]||{};
       var cv=d.b!==null&&d.b!==undefined?d.b:null;
       var rvB=rv.b!==null&&rv.b!==undefined?rv.b:null;
       if(cv===null&&rvB===null) return;
-      names.push(r.label);
-      cVals.push(cv); rVals.push(rvB);
+      names.push(r.label+(rv.n_countries!==undefined&&rv.n_countries<LOW_N?' ⚠':''));
+      cVals.push(cv); rVals.push(rvB); rN.push(rv.n_countries!==undefined?rv.n_countries:'?');
       clrs.push((sec[i2.sec]&&sec[i2.sec].color)||'#6b7280');
     });
     if(!names.length){el.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);">No comparable indicators available</div>';return;}
     try{Plotly.react(divId,[
-      {type:'bar',orientation:'h',x:rVals,y:names,name:'AFRO Avg',
+      {type:'bar',orientation:'h',x:rVals,y:names,name:'AFRO Avg',customdata:rN,
        marker:{color:'rgba(173,181,189,.5)',line:{color:'#adb5bd',width:1}},
-       hovertemplate:'AFRO Avg: <b>%{x:.1f}%</b><extra></extra>'},
+       hovertemplate:'AFRO Avg: <b>%{x:.1f}%</b> (n=%{customdata} countries)<extra></extra>'},
       {type:'bar',orientation:'h',x:cVals,y:names,name:country,
        marker:{color:clrs,opacity:.88,line:{color:'rgba(0,0,0,.08)',width:1}},
        hovertemplate:country+': <b>%{x:.1f}%</b><extra></extra>'},
@@ -1520,9 +1532,15 @@ JS = """
 
   // ── SPI export ────────────────────────────────────────────────────────────────
   var _SPI_TABLE = __SPI_TABLE_PLACEHOLDER__;
+  var _REPORT_DATE = __REPORT_DATE_PLACEHOLDER__;
 
   function _doExportSPI(btn) {
-    var rows = [['Rank','Country','ISO3','SPI Score','Tier','Tier Label',
+    var rows = [
+      ['NCD AFRO Surveillance Intelligence Platform — SPI Rankings Export'],
+      ['Data compiled', _REPORT_DATE],
+      ['Source', 'WHO Noncommunicable Diseases Country Tracking / gtssacademy.org'],
+      [],
+      ['Rank','Country','ISO3','SPI Score','Tier','Tier Label',
                  'Breadth (%)','Currency (%)','Regularity (%)','Last Survey Year',
                  'Gap (years)','Completed Surveys','Instrument Types Used']];
     (_SPI_TABLE || []).forEach(function(r, i) {
@@ -1550,7 +1568,13 @@ JS = """
     var p = PROFILE_DATA.profiles[_profileCurrent]; if (!p) return;
     var ind = PROFILE_DATA.indicators || {};
     var sec = PROFILE_DATA.sections   || {};
-    var rows = [['Country','ISO3','Survey Year','Section','Indicator Code',
+    var provenance = _profileSurvey==='STEPS' ? 'Validated database' : 'Auto-extracted from PDF (unverified)';
+    var rows = [
+      ['NCD AFRO Surveillance Intelligence Platform — Country Profile Export'],
+      ['Data compiled', _REPORT_DATE],
+      ['Data provenance', provenance + (p.source_file ? (' — ' + p.source_file) : '')],
+      [],
+      ['Country','ISO3','Survey Type','Survey Year','Section','Indicator Code',
                  'Indicator','Unit','Both Sexes','Males','Females',
                  '95% CI Lower','95% CI Upper']];
     p.surveys.forEach(function(sv) {
@@ -1560,7 +1584,7 @@ JS = """
         var i2 = ind[code] || {};
         var sc = sec[i2.sec] || {};
         rows.push([
-          _profileCurrent, p.iso3 || '', sv.year,
+          _profileCurrent, p.iso3 || '', _profileSurvey, sv.year,
           sc.name || i2.sec || '', code, i2.label || code, i2.unit || '%',
           (vals.b  !== undefined && vals.b  !== null) ? vals.b  : '',
           (vals.m  !== undefined && vals.m  !== null) ? vals.m  : '',
@@ -1704,10 +1728,11 @@ def scorecard_table(spi):
         map_img = (f'<img class="country-map" src="data:image/png;base64,{COUNTRY_MAPS[r["iso3"]]}" '
                    f'alt="{r["iso3"]}"/>'
                    if r["iso3"] in COUNTRY_MAPS else "")
-        _NOT_COMPUTABLE = '<span style="color:#aaa;cursor:help;" title="Not computable — fewer than 2 completed rounds">—</span>'
-        reg_s  = f"{r['d_regularity']:.1f}" if r["n_renewable"] > 0 else _NOT_COMPUTABLE
+        _NO_INTERVAL = '<span style="color:#aaa;cursor:help;" title="No renewal interval yet — fewer than 2 completed rounds">n/a</span>'
+        reg_s  = (f"{r['d_regularity']:.1f}" if r["n_renewable"] > 0 else
+                   f'<span style="color:#aaa;cursor:help;" title="Fewer than 2 completed rounds means renewal regularity cannot yet be assessed. This scores as 0.0, not excluded — it still counts at full weight in the SPI average below.">0.0</span>')
         avg_iv = (fmt_years(r["avg_cycle_interval"], prefix="~")
-                  if pd.notna(r["avg_cycle_interval"]) else _NOT_COMPUTABLE)
+                  if pd.notna(r["avg_cycle_interval"]) else _NO_INTERVAL)
         rows += f"""
 <tr data-country="{r['country'].lower()}" data-tier="{r['tier']}" data-gap="{r['gap_cat']}" data-cycle="{cycle_val}" data-reg="{r['reg_cat']}">
   <td class="rank-cell" style="padding:8px 10px;">{i}</td>
@@ -1721,8 +1746,8 @@ def scorecard_table(spi):
       <span style="background:{tc};color:#fff;padding:1px 7px;border-radius:10px;font-size:11px;font-weight:700">{r['tier_label']}</span>
     </div>
   </td>
-  <td class="num-cell" style="padding:8px 10px;text-align:center;">{r['d_coverage']:.0f}%</td>
-  <td class="num-cell" style="padding:8px 10px;text-align:center;">{r['d_recency']:.0f}%</td>
+  <td class="num-cell" style="padding:8px 10px;text-align:center;">{r['d_coverage']:.1f}%</td>
+  <td class="num-cell" style="padding:8px 10px;text-align:center;">{r['d_recency']:.1f}%</td>
   <td class="num-cell" style="padding:8px 10px;text-align:center;">{reg_s}</td>
   <td class="num-cell" style="padding:8px 10px;text-align:center;font-size:11px;color:var(--muted);">{avg_iv}</td>
   <td class="num-cell" style="padding:8px 10px;text-align:center;">{last_s}</td>
@@ -1734,6 +1759,7 @@ def scorecard_table(spi):
 <caption style="text-align:left;font-size:11px;color:var(--muted);font-style:italic;padding-bottom:10px;">
   Country Surveillance Scorecard — SPI ranking and dimension scores. The <strong>Last Survey</strong> and <strong>Gap</strong> columns span
   <strong>all five instruments</strong> (most recent completed survey of any type); see the Strategic Priority tab for instrument-specific recency.
+  SPI is a point estimate with no confidence interval; adjacent ranks separated by a fraction of a point should not be read as a meaningful difference.
 </caption>
 <thead><tr style="background:{C['primary']};color:#fff;">
   <th scope="col" style="padding:9px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">#</th>
@@ -1741,7 +1767,7 @@ def scorecard_table(spi):
   <th scope="col" style="padding:9px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">SPI / Tier</th>
   <th scope="col" style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;" title="Breadth — count of instrument types completed ≥1 time, out of 5">Breadth</th>
   <th scope="col" style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;" title="Currency — mean exponential-decay recency score (half-life ≈7 yr) over all 5 instruments">Currency</th>
-  <th scope="col" style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;" title="Regularity — coverage-adjusted average renewal interval score; not computable if no instrument has ≥2 rounds">Regularity</th>
+  <th scope="col" style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;" title="Regularity — coverage-adjusted average renewal interval score. Scores 0.0 (not excluded) if no instrument yet has ≥2 completed rounds">Regularity</th>
   <th scope="col" style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;" title="Average years between consecutive survey rounds, across all instruments with ≥2 rounds">Avg Interval</th>
   <th scope="col" style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;" title="Most recent completed survey across ALL five instruments — not instrument-specific">Last Survey (any instrument)</th>
   <th scope="col" style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Gap</th>
@@ -1992,7 +2018,8 @@ def build_html(A: dict) -> str:
                       .replace("__COUNTRY_SURVEYS_PLACEHOLDER__", country_surveys_json)
                       .replace("__STATUS_LABELS_PLACEHOLDER__", _json.dumps(CYCLE_STATUS_LABELS))
                       .replace("__STATUS_COLORS_PLACEHOLDER__", _json.dumps(CYCLE_STATUS_COLORS))
-                      .replace("__SPI_TABLE_PLACEHOLDER__", spi_table_json))
+                      .replace("__SPI_TABLE_PLACEHOLDER__", spi_table_json)
+                      .replace("__REPORT_DATE_PLACEHOLDER__", _json.dumps(REPORT_DATE)))
 
     # Build favicon link and logo img tags (empty string if asset not found)
     fav_link = f'<link rel="icon" type="image/png" href="data:image/png;base64,{FAV_LOGO_B64}"/>' if FAV_LOGO_B64 else ""
@@ -2112,7 +2139,7 @@ def build_html(A: dict) -> str:
           <div class="chart-card reveal">
             {ch_survey_cmp}
             <div class="chart-commentary">
-              Status distribution across all five NCD surveillance instruments (N&#160;=&#160;48 countries per instrument). Each bar shows how countries distribute across five mutually exclusive states: <strong style="color:{st_on};">On Cycle</strong> (completed &#8804;&#160;5 yr), <strong style="color:{st_att};">Attempt to Update</strong> (prior evidence + active new round), <strong style="color:{st_off};">Off Cycle</strong> (prior evidence but surveillance idle), <strong style="color:{st_first};">First Attempt</strong> (no prior evidence, first-ever round in progress), and <strong style="color:{st_nev};">Never Conducted</strong> (no completed survey and nothing in progress). This panel is static and reflects system-wide status across all survey types.
+              Status distribution across all five NCD surveillance instruments (N&#160;=&#160;48 countries per instrument). Each bar shows how countries distribute across five mutually exclusive states: <strong style="color:{st_on};">On Cycle</strong> (completed &#8804;&#160;5 yr), <strong style="color:{st_att};">Attempt to update</strong> (prior evidence + active new round), <strong style="color:{st_off};">Off Cycle</strong> (prior evidence but surveillance idle), <strong style="color:{st_first};">First Attempt</strong> (no prior evidence, first-ever round in progress), and <strong style="color:{st_nev};">Never Conducted</strong> (no completed survey and nothing in progress). This panel is static and reflects system-wide status across all survey types.
             </div>
           </div>
         </div>
@@ -2166,7 +2193,7 @@ def build_html(A: dict) -> str:
 
         <div class="signal-card reveal" style="color:{st_att};">
           <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:{st_att};margin-bottom:4px;">
-            <i class="fas fa-sync-alt"></i>&nbsp; Attempt to Update
+            <i class="fas fa-sync-alt"></i>&nbsp; Attempt to update
           </div>
           <div class="signal-val" id="exec-n-implement" data-count="{exec_steps['n_attempt_to_update']}">{exec_steps['n_attempt_to_update']}</div>
           <div class="signal-lbl">Countries</div>
@@ -2262,11 +2289,11 @@ def build_html(A: dict) -> str:
       <div class="stat-highlight-row reveal">
         <div class="stat-highlight-item" style="text-align:center;padding:0 24px 0 0;">
           <div class="stat-hl-val" style="color:{spi_tier_color};">{fmt_spi(reg_spi)}<span style="font-size:1rem;font-weight:600;opacity:.6;">/100</span></div>
-          <div class="stat-hl-lbl">Regional SPI Average</div>
+          <div class="stat-hl-lbl" title="Simple unweighted mean across all {n_ent} entities — not weighted by population. Zanzibar and mainland Tanzania are counted as two separate entities sharing one ISO3 code.">Regional SPI Average&nbsp;<i class="fas fa-info-circle" style="font-size:9px;opacity:.6;"></i></div>
         </div>
         <div class="stat-highlight-item" style="text-align:center;padding:0 24px;">
           <div class="stat-hl-val" style="color:var(--muted);">{A['median_spi']}</div>
-          <div class="stat-hl-lbl">Median SPI</div>
+          <div class="stat-hl-lbl" title="Simple unweighted median across all {n_ent} entities — not weighted by population.">Median SPI&nbsp;<i class="fas fa-info-circle" style="font-size:9px;opacity:.6;"></i></div>
         </div>
         <div style="flex:1;display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;">
           <div class="tier-card" style="border-top-color:#00a651;min-width:110px;">
@@ -2414,9 +2441,14 @@ def build_html(A: dict) -> str:
           <h2 class="section-title">Country Profile</h2>
         </div>
         <p class="section-subtitle">
-          In-depth NCD risk factor profile &mdash; indicator data by domain, sex &amp; survey round &mdash;
+          Tabs 1&ndash;3 answered whether countries are surveying on schedule. This tab shows what their most recent survey actually found &mdash;
+          in-depth NCD risk factor data by domain, sex &amp; survey round &mdash;
           {_prof_n} countries with STEPS, GYTS and/or GATS indicator data available
         </p>
+        <div style="background:#eef4ff;border:1px solid #c8d8f8;border-left:4px solid #003d82;border-radius:10px;padding:10px 16px;font-size:11.5px;color:#1a3a6b;margin-top:10px;display:flex;align-items:flex-start;gap:9px;">
+          <i class="fas fa-shield-alt" style="margin-top:2px;color:#003d82;"></i>
+          <span><strong>Data provenance:</strong> STEPS indicator values are sourced from the WHO validated STEPS database. GYTS and GATS indicator values are extracted programmatically from published country fact-sheet PDFs (gtssacademy.org) via automated table parsing and have not been independently re-verified against the source documents &mdash; treat individual GYTS/GATS figures as indicative pending manual spot-check, and note the provenance badge shown on each country's profile below.</span>
+        </div>
       </div>
 
       {'<div class="profile-no-data" style="padding:40px;text-align:center;color:var(--muted);"><i class="fas fa-database" style="font-size:36px;opacity:.3;margin-bottom:12px;display:block;"></i><p>No indicator data found. Ensure STEP.db and the GYTS/GATS profile JSON files are present in the data/ folder and run the pipeline.</p></div>' if not _prof_countries else ""}
@@ -2499,6 +2531,10 @@ def build_html(A: dict) -> str:
           <span style="font-size:11px;color:var(--muted);font-style:italic;margin-left:auto;"><i class="fas fa-hand-pointer"></i>&nbsp; Sliders update the chart in real time</span>
         </div>
         <div id="prio-scatter-chart" style="height:490px;width:100%;"></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;padding:8px 12px;background:#fffbeb;border-left:3px solid #f59e0b;border-radius:6px;">
+          <i class="fas fa-info-circle" style="color:#f59e0b;"></i>&nbsp;
+          Quadrant position reflects <strong>surveillance gap and SPI only</strong> &mdash; it does not weight by NCD burden of disease (mortality/DALYs). A country outside URGENT may still carry a larger health burden than one flagged URGENT here. The dot color/shape (survey status for the instrument selected below) can therefore disagree with the quadrant a country falls into, since SPI is computed across all five instruments while the gap axis is instrument-specific. Use this chart to prioritize surveillance re-engagement, not to infer health need.
+        </div>
       </div>
 
       <!-- Per-instrument operational detail -->
@@ -2525,11 +2561,11 @@ def build_html(A: dict) -> str:
         <div class="method-card reveal" style="border-top:4px solid #003d82;">
           <h4 style="color:#003d82;"><i class="fas fa-globe-africa"></i>&nbsp; Data Source</h4>
           <ul>
-            <li><strong>Source:</strong> WHO Noncommunicable Diseases Country Tracking</li>
+            <li><strong>Source:</strong> WHO Noncommunicable Diseases Country Tracking (surveillance status &amp; cycle metadata); STEPS indicator values from the WHO validated STEPS database; GYTS/GATS indicator values extracted from published country fact sheets on <a href="https://gtssacademy.org/" target="_blank" rel="noopener">gtssacademy.org</a></li>
             <li><strong>Coverage:</strong> {n_ent} entities (47 WHO AFRO Member States + Zanzibar)</li>
             <li><strong>Instruments:</strong> 5 NCD population-based surveillance systems</li>
             <li><strong>Period:</strong> {A['year_min']}&ndash;{CURRENT_YEAR} &nbsp;&middot;&nbsp; {A['n_records']} survey records</li>
-
+            <li><strong>Compiled:</strong> {REPORT_DATE}</li>
           </ul>
         </div>
 
@@ -2563,9 +2599,10 @@ def build_html(A: dict) -> str:
           </p>
           <ul>
             <li><strong style="color:{st_on};">On Cycle:</strong> Completed within the last 5 years. Evidence is current and policy-usable.</li>
-            <li><strong style="color:{st_att};">Attempt to Update:</strong> Prior completed evidence exists and a new survey round is actively in progress. Countries with no prior completion are excluded even if attempting a first round.</li>
+            <li><strong style="color:{st_att};">Attempt to update:</strong> Prior completed evidence exists and a new survey round is actively in progress.</li>
             <li><strong style="color:{st_off};">Off Cycle:</strong> Has completed before but no current survey process is active. Surveillance is idle and evidence is ageing.</li>
-            <li><strong style="color:{st_nev};">Never Conducted:</strong> No completed survey on record. Countries in a first-time attempt remain here until completion is confirmed.</li>
+            <li><strong style="color:{st_first};">First Attempt:</strong> No completed survey on record, but a first-ever round is actively in progress. Kept distinct from Never Conducted so active first-time engagement is not scored the same as no engagement at all.</li>
+            <li><strong style="color:{st_nev};">Never Conducted:</strong> No completed survey and nothing currently in progress &mdash; the region's most severe evidence gap.</li>
           </ul>
         </div>
 
@@ -2588,10 +2625,23 @@ def build_html(A: dict) -> str:
           <ul>
             <li><strong>Unit of analysis:</strong> Country/territory (N=48). Sub-national units are not tracked.</li>
             <li><strong>Data currency:</strong> Status reflects the most recent available WHO tracking data. In-progress surveys may have completed since last extraction.</li>
-            <li><strong>Regularity dimension:</strong> Requires &#8805;&nbsp;2 completed rounds per instrument. Countries with a single completion score zero on Regularity by methodology, not by performance failure.</li>
+            <li><strong>Regularity dimension:</strong> Requires &#8805;&nbsp;2 completed rounds per instrument. Countries with a single completion score zero on Regularity by methodology, not by performance failure &mdash; this still enters the SPI average at full weight.</li>
             <li><strong>Gap calculation:</strong> Computed relative to {CURRENT_YEAR}. Countries with only &ldquo;Not Usable&rdquo; records are treated as having no completed survey.</li>
-            <li><strong>SPI interpretation:</strong> The index is designed for relative ranking and trend monitoring, not for absolute quality assessment of individual surveys.</li>
+            <li><strong>SPI interpretation:</strong> The index is a point estimate designed for relative ranking and trend monitoring, not for absolute quality assessment of individual surveys, and carries no confidence interval.</li>
+            <li><strong>Regional averages:</strong> Regional SPI mean/median are unweighted by population. Zanzibar and mainland Tanzania are tracked as two separate entities sharing one ISO3 code.</li>
+            <li><strong>School-based instruments:</strong> GYTS and GSHS sample <em>school-attending</em> students only; out-of-school youth &mdash; often at higher risk &mdash; are not represented in these instruments' results.</li>
+            <li><strong>Response rates:</strong> Not consistently available in the source data for every survey round; where absent, no response-rate quality signal is shown rather than assuming full compliance.</li>
+            <li><strong>Surveillance capacity vs. health outcomes:</strong> The SPI measures whether surveillance <em>happened</em> on schedule &mdash; it says nothing about a country's underlying NCD burden or health status. A high SPI does not imply low NCD risk, and a low SPI does not imply high NCD risk.</li>
+            <li><strong>Strategic Priority quadrant:</strong> Ranks countries by surveillance gap and SPI only. It does not weight by NCD burden of disease (mortality/DALYs) &mdash; a country with a small surveillance gap may still carry a larger health burden than one flagged as URGENT here, and vice versa. Use alongside GBD/burden data for investment decisions.</li>
           </ul>
+        </div>
+
+        <!-- WHO Global Monitoring Framework -->
+        <div class="method-card reveal" style="border-top:4px solid #006eb6;">
+          <h4 style="color:#006eb6;"><i class="fas fa-link"></i>&nbsp; Link to WHO Global Monitoring Framework &amp; SDG 3.4</h4>
+          <p style="font-size:12px;color:var(--muted);line-height:1.7;">
+            These five instruments are the primary country-level data sources feeding the WHO Global Monitoring Framework on NCDs and SDG target 3.4 (reduce premature NCD mortality by one third by 2030). STEPS and GATS underpin indicators on tobacco use, blood pressure, glucose and obesity (SDG 3.a.1, 3.4.1 risk-factor inputs); GYTS and GSHS track youth risk-factor uptake; GSHPP tracks the school policy environment enabling prevention. Surveillance breadth, currency and regularity &mdash; as measured by the SPI &mdash; are therefore a proxy for a country's capacity to report against these global commitments, not for its NCD burden itself.
+          </p>
         </div>
 
 
@@ -2612,6 +2662,9 @@ def build_html(A: dict) -> str:
       <div>
         <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.9);line-height:1.6;">
           &copy; {CURRENT_YEAR} WHO African Region &ndash; Health Promotion / Disease Prevention and Control (DPC) Cluster
+        </div>
+        <div style="font-size:10.5px;color:rgba(255,255,255,.55);margin-top:2px;">
+          Data compiled: {REPORT_DATE} &middot; For internal WHO AFRO DPC planning use &mdash; not for public circulation without cluster review
         </div>
       </div>
     </div>
