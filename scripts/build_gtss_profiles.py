@@ -11,7 +11,7 @@ are skipped in favour of the single-year fact sheet for the latest year when
 both exist, since the single-year one is the clean template.
 
 Quality gate: a country is only included if enough canonical indicators were
-matched (GYTS >= 12, GATS >= 10 of the ~35-41/33 candidates) — fewer than
+matched (GYTS >= 12, GATS >= 10 of the ~35-41/33 candidates) - fewer than
 that means the fact sheet uses an older/incompatible template and the
 extraction is not trustworthy enough to publish.
 """
@@ -79,7 +79,7 @@ def main():
             if vals["b"] is not None and not (0 <= vals["b"] <= 100):
                 continue  # sanity bound
             if code in matched:
-                # Two raw PDF fragments mapped to the same canonical indicator —
+                # Two raw PDF fragments mapped to the same canonical indicator -
                 # keep the higher-confidence match and log the collision instead
                 # of silently keeping whichever was encountered first.
                 prior_score = matched[code]["score"]

@@ -4,7 +4,7 @@ Generic table extractor for GATS/GYTS WHO fact-sheet PDFs.
 
 The stat table on the second page is laid out in two side-by-side columns.
 Each sub-section starts with a header row like "OVERALL (%) BOYS (%) GIRLS (%)"
-(GYTS) or "OVERALL (%) MEN (%) WOMEN (%)" (GATS) — but some GATS sub-sections
+(GYTS) or "OVERALL (%) MEN (%) WOMEN (%)" (GATS) - but some GATS sub-sections
 use different column semantics (e.g. "OVERALL (%) CURRENT SMOKERS (%)
 NON-SMOKERS (%)"), so column names are read from the header text itself
 rather than assumed.
@@ -51,7 +51,7 @@ def _cluster_rows(words, y_tol=2.2):
 
 
 def _parse_row(words):
-    """Split a row's words into (label, [numbers]) — up to 3 trailing numeric tokens."""
+    """Split a row's words into (label, [numbers]) - up to 3 trailing numeric tokens."""
     toks = [w["text"] for w in sorted(words, key=lambda w: w["x0"])]
     nums = []
     while toks and NUMERIC_RE.match(toks[-1]) and len(nums) < 3:
@@ -174,12 +174,12 @@ def _col_role(col, overall_key, m_key, f_key):
 def extract_sex_disaggregated(pdf_path, page_index=1, overall_key="OVERALL", m_key="BOYS", f_key="GIRLS"):
     """
     Filter extract_stat_rows() down to rows whose header carries the three
-    wanted column roles (overall/male/female) — and return
+    wanted column roles (overall/male/female) - and return
     {fragment_label: {"b": x, "m": y, "f": z}}.
 
     `fragment_label` may be a partial/contaminated OCR-of-layout label (a
     multi-line label's continuation, or an adjacent section title picked up
-    by the same row cluster) — match it against a canonical indicator
+    by the same row cluster) - match it against a canonical indicator
     vocabulary downstream rather than trusting it verbatim.
     """
     rows = extract_stat_rows(pdf_path, page_index)

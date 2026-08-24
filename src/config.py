@@ -43,7 +43,7 @@ TIER_COLORS = {1: "#00a651", 2: "#4a90e2", 3: "#f7941d", 4: "#c0392b"}
 # ── Surveillance cycle status (single source of truth, used everywhere: KPI
 #    cards, donut, scatter, per-instrument tables, briefings). Named distinctly
 #    from STATUS_COLORS below (raw ETL record status: Completed/In Progress/
-#    Not Usable) — different concept, would otherwise collide on import. ──────
+#    Not Usable) - different concept, would otherwise collide on import. ──────
 CYCLE_STATUS_LABELS = ["On Cycle", "Attempt to update", "Off Cycle", "First Attempt", "Never Conducted"]
 CYCLE_STATUS_COLORS = {
     "On Cycle":          "#0d9488",   # teal    - current, usable evidence
@@ -63,7 +63,7 @@ C = {
     "muted":     "#6b7280", "border":    "#e2e8f0",
 }
 
-# ── Design-system scale tokens (fonts / radii / motion) — Phase 4 ────────────
+# ── Design-system scale tokens (fonts / radii / motion) - Phase 4 ────────────
 FS = {  # font-size scale: micro/body/lead/h3/h2/display
     "micro": "11px", "body": "12px", "lead": "14px",
     "h3": "16px", "h2": "22px", "display": "34px",

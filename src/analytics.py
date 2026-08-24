@@ -137,7 +137,7 @@ def compute_spi(df: pd.DataFrame) -> pd.DataFrame:
             "reg_cat":            reg_cat,
             "d_coverage":         round(BS  * 100, 1),   # BS  → breadth
             "d_recency":          round(CS  * 100, 1),   # CS  → currency
-            "d_regularity":       round(CA_ARI * 100, 1),   # 0.0 when not yet assessable — still enters the SPI average at full weight, see report.py display
+            "d_regularity":       round(CA_ARI * 100, 1),   # 0.0 when not yet assessable - still enters the SPI average at full weight, see report.py display
             "ari_assessable":     ari_assessable,
             "spi":                round(spi, 1),
             "tier":               tier,
@@ -293,11 +293,11 @@ def compute_exec_kpis(df: pd.DataFrame) -> dict:
             f"conducting a new round to update {'its' if n_att == 1 else 'their'} surveillance baseline. "
             f"<strong>{n_off}</strong> {'country' if n_off == 1 else 'countries'} "
             f"{'has' if n_off == 1 else 'have'} conducted {st} before but {'is' if n_off == 1 else 'are'} "
-            f"not currently active \u2014 {'its' if n_off == 1 else 'their'} surveillance data is off-cycle and ageing. "
+            f"not currently active - {'its' if n_off == 1 else 'their'} surveillance data is off-cycle and ageing. "
             f"<strong>{n_first}</strong> {'country has' if n_first == 1 else 'countries have'} "
             f"no prior {st} evidence but {'is' if n_first == 1 else 'are'} actively fielding a first-ever round right now. "
             f"<strong>{n_nev}</strong> {'country' if n_nev == 1 else 'countries'} "
-            f"{'has' if n_nev == 1 else 'have'} <em>never completed nor attempted</em> a {st} survey \u2014 "
+            f"{'has' if n_nev == 1 else 'have'} <em>never completed nor attempted</em> a {st} survey - "
             f"no {st}-generated evidence exists and none is currently in progress."
         )
 
@@ -369,11 +369,11 @@ def compute_exec_kpis(df: pd.DataFrame) -> dict:
         f"<strong>{gn_att}</strong> additional {'country' if gn_att == 1 else 'countries'} "
         f"{'has' if gn_att == 1 else 'have'} prior evidence and {'is' if gn_att == 1 else 'are'} actively "
         f"conducting a new survey round in the current cycle ({CURRENT_CYCLE_START}&#8211;{CURRENT_YEAR}). "
-        f"<strong>{gn_off}</strong> countries have prior survey evidence but are not currently active \u2014 "
+        f"<strong>{gn_off}</strong> countries have prior survey evidence but are not currently active - "
         f"their surveillance systems are off-cycle and require re-engagement. "
         f"<strong>{gn_first}</strong> {'country has' if gn_first == 1 else 'countries have'} no completed survey of any type "
         f"but {'is' if gn_first == 1 else 'are'} actively fielding a first-ever round right now. "
-        f"<strong>{gn_nev}</strong> countries have <em>never completed nor attempted</em> any of the five NCD survey instruments \u2014 "
+        f"<strong>{gn_nev}</strong> countries have <em>never completed nor attempted</em> any of the five NCD survey instruments - "
         f"representing the region\u2019s most severe evidence deficits for NCD policy and programming."
     )
 
@@ -385,7 +385,7 @@ def compute_exec_kpis(df: pd.DataFrame) -> dict:
         "n_first_attempt":    gn_first,
         "n_never":            gn_nev,
         "briefing":           global_briefing,
-        "full_name":          "All Survey Types \u2014 System-wide view",
+        "full_name":          "All Survey Types - System-wide view",
         "target":             "All 48 WHO AFRO entities",
         "domain":             "NCD surveillance system",
         "color":              "#003d82",
