@@ -76,13 +76,22 @@ def main():
             if not m:
                 continue
             code, canon_label, sec_code, sec_name, score = m
-            if code in matched:
-                continue  # keep first (best positional) match if duplicate
             if vals["b"] is not None and not (0 <= vals["b"] <= 100):
                 continue  # sanity bound
+            if code in matched:
+                # Two raw PDF fragments mapped to the same canonical indicator —
+                # keep the higher-confidence match and log the collision instead
+                # of silently keeping whichever was encountered first.
+                prior_score = matched[code]["score"]
+                kept, discarded = (score, prior_score) if score > prior_score else (prior_score, score)
+                report_lines.append(
+                    f"COLLISION      {survey_type:5s} {country:35s} {code}: "
+                    f"kept score={kept:.3f}, discarded score={discarded:.3f}")
+                if score <= prior_score:
+                    continue
             matched[code] = {
                 "label": canon_label, "sec": sec_code, "sec_name": sec_name,
-                "b": vals["b"], "m": vals["m"], "f": vals["f"],
+                "b": vals["b"], "m": vals["m"], "f": vals["f"], "score": score,
             }
 
         gate = QUALITY_GATE[survey_type]

@@ -354,9 +354,12 @@ hr.section-divider{border:none;border-top:1px solid var(--border);margin:32px 0}
 .profile-section-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:16px;margin-bottom:24px;}
 .profile-section-card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow-sm);border:2px solid var(--border);overflow:hidden;transition:transform 240ms,box-shadow 240ms;}
 .profile-section-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);}
-.profile-section-head{padding:10px 15px;display:flex;align-items:center;gap:8px;}
+.profile-section-head{padding:10px 15px;display:flex;align-items:center;gap:8px;cursor:pointer;list-style:none;user-select:none;}
+.profile-section-head::-webkit-details-marker{display:none;}
 .profile-section-head span.sec-title{font-size:12px;font-weight:700;color:#fff;flex:1;}
 .profile-section-head span.sec-step{font-size:11px;color:rgba(255,255,255,.65);font-style:italic;}
+.profile-section-head .sec-chevron{color:rgba(255,255,255,.85);font-size:12px;transition:transform 200ms;}
+details.profile-section-card[open] .sec-chevron{transform:rotate(180deg);}
 .profile-ind-table{width:100%;border-collapse:collapse;font-size:11px;}
 .profile-ind-table th{padding:6px 8px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;font-weight:700;background:#f7f9ff;border-bottom:1px solid var(--border);white-space:nowrap;}
 .profile-ind-table td{padding:6px 8px;border-bottom:1px solid #f3f5fb;vertical-align:middle;line-height:1.45;}
@@ -630,41 +633,49 @@ JS = """
   const _STATUS_LABELS = __STATUS_LABELS_PLACEHOLDER__;
   const _STATUS_CLR = __STATUS_COLORS_PLACEHOLDER__;
 
+  // Compares the selected instrument's status mix against the all-instruments
+  // system-wide mix, so this chart adds a dimension the KPI cards above it
+  // don't (relative standing), instead of re-displaying the same 4-5 numbers
+  // a second time in a different chart type.
   function updateExecDonut(d) {
     var divId='exec-donut-chart';
     var el=document.getElementById(divId);
     if(!el)return;
     if(typeof Plotly==='undefined'){_plotlyOffline(el);return;}
-    var valMap={
+    var g=EXEC_DATA['global']||d;
+    var selMap={
       'On Cycle':d.n_on_cycle,'Attempt to update':d.n_attempt_to_update,
       'Off Cycle':d.n_off_cycle,'First Attempt':d.n_first_attempt,'Never Conducted':d.n_never
     };
-    var total=d.n_total;
-    var vals=_STATUS_LABELS.map(function(s){return valMap[s];});
+    var gloMap={
+      'On Cycle':g.n_on_cycle,'Attempt to update':g.n_attempt_to_update,
+      'Off Cycle':g.n_off_cycle,'First Attempt':g.n_first_attempt,'Never Conducted':g.n_never
+    };
+    var selTotal=d.n_total, gloTotal=g.n_total;
+    var selPct=_STATUS_LABELS.map(function(s){return Math.round(selMap[s]/selTotal*1000)/10;});
+    var gloPct=_STATUS_LABELS.map(function(s){return Math.round(gloMap[s]/gloTotal*1000)/10;});
     var colors=_STATUS_LABELS.map(function(s){return _STATUS_CLR[s];});
-    var customText=_STATUS_LABELS.map(function(s){
-      var v=valMap[s],pct=Math.round(v/total*100);
-      return '<b>'+v+'</b><br>'+pct+'%';
+    var traces=_STATUS_LABELS.map(function(s,i){
+      return {
+        type:'bar', orientation:'h',
+        y:['All 5 Instruments (system-wide)','Selected Instrument'],
+        x:[gloPct[i],selPct[i]],
+        customdata:[[gloMap[s],gloTotal],[selMap[s],selTotal]],
+        name:s, marker:{color:colors[i]},
+        text:[gloPct[i]+'%',selPct[i]+'%'],
+        textposition:'inside', insidetextanchor:'middle',
+        textfont:{size:11,color:'#fff',family:_FONT},
+        hovertemplate:'<b>%{y}</b> — '+s+': <b>%{customdata[0]}</b> of %{customdata[1]} countries (%{x}%)<extra></extra>',
+      };
     });
-    Plotly.react(divId,[{
-      type:'pie',labels:_STATUS_LABELS,values:vals,
-      text:customText,textinfo:'text',textposition:'outside',
-      textfont:{family:_FONT,size:12,color:'#333e5c'},
-      marker:{colors:colors,line:{color:'#ffffff',width:3}},
-      hole:0.65,sort:false,pull:[0.05,0,0,0],automargin:true,
-      hovertemplate:'<b>%{label}</b><br>Countries: <b>%{value}</b> of '+total+'<br>%{percent}<extra></extra>',
-    }],{
+    Plotly.react(divId,traces,{
+      barmode:'stack',
       paper_bgcolor:'#ffffff',plot_bgcolor:'#ffffff',
       font:{family:_FONT,size:12,color:'#333e5c'},
-      height:420,margin:{l:60,r:60,t:64,b:40},
-      showlegend:true,
-      legend:{orientation:'h',y:-0.08,x:0.5,xanchor:'center',font:{size:12,family:_FONT},itemsizing:'constant'},
-      title:{text:'<b>Surveillance Status Distribution</b>',font:{size:14,color:'#14265c',family:_FONT},x:0,xanchor:'left',pad:{l:4,t:4}},
-      annotations:[{
-        text:'<b>'+total+'</b><br><span style="font-size:11px">countries</span>',
-        x:0.5,y:0.5,xref:'paper',yref:'paper',
-        showarrow:false,font:{size:20,color:'#14265c',family:_FONT},align:'center',
-      }],
+      height:220,margin:{l:170,r:20,t:20,b:10},
+      xaxis:{range:[0,100],ticksuffix:'%',showgrid:false,zeroline:false},
+      yaxis:{automargin:true,tickfont:{size:12,family:_FONT}},
+      showlegend:false,
     },_PLOTLY_CFG);
   }
 
@@ -1178,7 +1189,9 @@ JS = """
       kpi+='<div class="profile-kpi-icon"><i class="fas '+k.icon+'" style="color:'+k.col+';"></i></div>';
       kpi+='<div class="profile-kpi-value" style="color:'+k.col+';"'+loStr+'>'+valStr+'</div>';
       if(hasCI){kpi+='<div class="profile-kpi-ci">95% CI '+d.lo.toFixed(1)+'\u2013'+d.hi.toFixed(1)+unit+'</div>';}
-      kpi+='<div class="profile-kpi-label">'+k.label+'</div>';
+      var kConf=(d.conf!==undefined&&d.conf!==null&&d.conf<0.7)
+        ? ' <i class="fas fa-exclamation-triangle" style="color:#d97706;font-size:9px;cursor:help;" title="Low-confidence label match from PDF extraction (score '+d.conf.toFixed(2)+'/1.00) — verify before citing"></i>' : '';
+      kpi+='<div class="profile-kpi-label">'+k.label+kConf+'</div>';
       if(arrow){kpi+='<div class="profile-kpi-trend">'+arrow+'<span style="font-size:11px;color:var(--muted);font-weight:400;"> vs '+prevYr+'</span></div>';}
       if(mV!==null||fV!==null){
         kpi+='<div class="profile-kpi-sex">';
@@ -1197,7 +1210,10 @@ JS = """
       country: country, sectionOrder: sectionOrder
     };
     // ── Section divider label ──────────────────────────────────────────────
-    var sdiv='<div class="section-divider-label" style="margin:28px 0 18px;">Detailed Indicator Dashboard \u2014 All '+surveyType+' Sections</div>';
+    var sdiv='<div class="section-divider-label" style="margin:28px 0 18px;">Detailed Indicator Dashboard \u2014 All '+surveyType+' Sections <span style="font-weight:400;font-size:11px;color:var(--muted);text-transform:none;letter-spacing:0;">(click a section to expand)</span></div>';
+    if(surveyType!=='STEPS'){
+      sdiv+='<div style="font-size:11px;color:var(--muted);margin:-10px 0 14px;"><i class="fas fa-exclamation-triangle" style="color:#d97706;"></i>&nbsp;Indicators marked with this icon were matched to their label with lower confidence during automated PDF extraction \u2014 verify against the source fact sheet before citing.</div>';
+    }
     sdiv+='<div id="profile-section-detail-grid"></div>';
 
     var charts='<div class="profile-charts-grid">';
@@ -1255,16 +1271,20 @@ JS = """
     var sectionOrder = s.sectionOrder || _SECTION_ORDER;
 
     var grid = '<div class="profile-section-grid">';
-    sectionOrder.forEach(function(sc){
+    sectionOrder.forEach(function(sc, sIdx){
       var sv = sec[sc]; if(!sv) return;
       var secInds = Object.entries(ind).filter(function(e){return e[1].sec===sc;});
 
-      grid += '<div class="profile-section-card">';
-      grid += '<div class="profile-section-head" style="background:'+sv.color+';">';
+      // First section (usually the KPI-strip's own domain) opens expanded;
+      // the rest start collapsed so the page keeps a scannable top-to-bottom
+      // hierarchy instead of nine equal-weight blocks fighting for attention.
+      grid += '<details class="profile-section-card"'+(sIdx===0?' open':'')+'>';
+      grid += '<summary class="profile-section-head" style="background:'+sv.color+';">';
       grid += '<i class="fas '+sv.icon+'" style="color:rgba(255,255,255,.9);font-size:14px;"></i>';
       grid += '<span class="sec-title">'+sv.name+'</span>';
       grid += '<span class="sec-step">'+sv.step+'</span>';
-      grid += '</div>';
+      grid += '<i class="fas fa-chevron-down sec-chevron"></i>';
+      grid += '</summary>';
 
       grid += '<div style="overflow-x:auto;">';
       grid += '<table class="profile-ind-table">';
@@ -1289,6 +1309,11 @@ JS = """
         var hib  = i2.hib;
         var bg   = idx % 2 === 0 ? '#fff' : '#f9fafb';
         var lbl  = i2.label.length > 58 ? i2.label.substring(0, 57) + '\u2026' : i2.label;
+        var conf = d.conf;
+        var confFlag = (conf !== undefined && conf !== null && conf < 0.7)
+          ? ' <i class="fas fa-exclamation-triangle" style="color:#d97706;font-size:9px;cursor:help;" title="Low-confidence label match from PDF extraction (score '+conf.toFixed(2)+'/1.00) \u2014 verify this indicator against the source fact sheet before citing it"></i>'
+          : '';
+        lbl = lbl + confFlag;
         var hasCI = (d.lo !== null && d.lo !== undefined && d.hi !== null && d.hi !== undefined);
         var ciAttr = hasCI ? ' title="95% CI: ' + d.lo.toFixed(1) + '\u2013' + d.hi.toFixed(1) + unit + '"' : '';
         var ciInline = hasCI
@@ -1310,7 +1335,7 @@ JS = """
         grid += '<td style="text-align:center;">' + (tArr || '<span style="color:#ccc;">\u2014</span>') + '</td>';
         grid += '</tr>';
       });
-      grid += '</tbody></table></div></div>';
+      grid += '</tbody></table></div></details>';
     });
     grid += '</div>';
     el.innerHTML = grid;
@@ -1576,7 +1601,7 @@ JS = """
       [],
       ['Country','ISO3','Survey Type','Survey Year','Section','Indicator Code',
                  'Indicator','Unit','Both Sexes','Males','Females',
-                 '95% CI Lower','95% CI Upper']];
+                 '95% CI Lower','95% CI Upper','Label Match Confidence']];
     p.surveys.forEach(function(sv) {
       var yrData = p.data[String(sv.year)] || {};
       Object.keys(yrData).sort().forEach(function(code) {
@@ -1590,7 +1615,8 @@ JS = """
           (vals.m  !== undefined && vals.m  !== null) ? vals.m  : '',
           (vals.f  !== undefined && vals.f  !== null) ? vals.f  : '',
           (vals.lo !== undefined && vals.lo !== null) ? vals.lo : '',
-          (vals.hi !== undefined && vals.hi !== null) ? vals.hi : ''
+          (vals.hi !== undefined && vals.hi !== null) ? vals.hi : '',
+          (vals.conf !== undefined && vals.conf !== null) ? vals.conf : ''
         ]);
       });
     });
@@ -1766,7 +1792,7 @@ def scorecard_table(spi):
   <th scope="col" style="padding:9px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Country</th>
   <th scope="col" style="padding:9px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">SPI / Tier</th>
   <th scope="col" style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;" title="Breadth — count of instrument types completed ≥1 time, out of 5">Breadth</th>
-  <th scope="col" style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;" title="Currency — mean exponential-decay recency score (half-life ≈7 yr) over all 5 instruments">Currency</th>
+  <th scope="col" style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;" title="Currency — mean exponential-decay recency score (5-yr half-life, matching the WHO cycle) over all 5 instruments">Currency</th>
   <th scope="col" style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;" title="Regularity — coverage-adjusted average renewal interval score. Scores 0.0 (not excluded) if no instrument yet has ≥2 completed rounds">Regularity</th>
   <th scope="col" style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;" title="Average years between consecutive survey rounds, across all instruments with ≥2 rounds">Avg Interval</th>
   <th scope="col" style="padding:9px 10px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;" title="Most recent completed survey across ALL five instruments — not instrument-specific">Last Survey (any instrument)</th>
@@ -2245,9 +2271,10 @@ def build_html(A: dict) -> str:
       <div class="row">
         <div class="col-12">
           <div class="chart-card reveal">
-            <div id="exec-donut-chart" style="min-height:420px;"></div>
+            <h3 style="font-size:14px;font-weight:700;color:{C['primary']};margin:0 0 4px;">Selected Instrument vs. System-Wide Status Mix</h3>
+            <div id="exec-donut-chart" style="min-height:220px;"></div>
             <div class="chart-commentary">
-              Distribution of 48 countries by surveillance status for the selected survey instrument. Each slice shows the count and percentage for that status category. Categories are mutually exclusive and exhaustive &mdash; every country falls into exactly one group. Switch the survey filter above to compare status profiles across instruments.
+              Compares the status mix of the currently selected instrument against the all-instruments system-wide mix (bottom bar) &mdash; use it to see whether the selected instrument is ahead of or behind the region's overall surveillance posture. Switch the survey filter above to compare a different instrument.
             </div>
           </div>
         </div>
@@ -2534,7 +2561,7 @@ def build_html(A: dict) -> str:
         <div id="prio-scatter-chart" style="height:490px;width:100%;"></div>
         <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;padding:8px 12px;background:#fffbeb;border-left:3px solid #f59e0b;border-radius:6px;">
           <i class="fas fa-info-circle" style="color:#f59e0b;"></i>&nbsp;
-          Quadrant position reflects <strong>surveillance gap and SPI only</strong> &mdash; it does not weight by NCD burden of disease (mortality/DALYs). A country outside URGENT may still carry a larger health burden than one flagged URGENT here. The dot color/shape (survey status for the instrument selected below) can therefore disagree with the quadrant a country falls into, since SPI is computed across all five instruments while the gap axis is instrument-specific. Use this chart to prioritize surveillance re-engagement, not to infer health need.
+          Quadrant position reflects <strong>surveillance gap and SPI only</strong> &mdash; a tool for prioritizing surveillance re-engagement, consistent with this platform's scope (surveillance instruments and the prevalence indicators they produce, not disease burden). The dot color/shape (survey status for the instrument selected below) can disagree with the quadrant a country falls into, since SPI is computed across all five instruments while the gap axis is instrument-specific.
         </div>
       </div>
 
@@ -2578,7 +2605,7 @@ def build_html(A: dict) -> str:
           </p>
           <ul>
             <li style="margin-bottom:8px;"><strong style="color:#003d82;">Breadth:</strong> Has the country ever completed each of the five NCD surveillance instruments? A country that has used more instruments scores higher on this dimension, reflecting the <em>institutional range</em> of its surveillance system.</li>
-            <li style="margin-bottom:8px;"><strong style="color:#003d82;">Currency:</strong> How recent is the available evidence? Older surveys contribute progressively less, with evidence value halving roughly every seven years. This dimension rewards countries that keep their data fresh and penalises those whose most recent survey is distant in time.</li>
+            <li style="margin-bottom:8px;"><strong style="color:#003d82;">Currency:</strong> How recent is the available evidence? Older surveys contribute progressively less, with evidence value halving every 5 years &mdash; the WHO-recommended survey cycle, so a survey exactly at the cycle boundary carries half credit. This dimension rewards countries that keep their data fresh and penalises those whose most recent survey is distant in time.</li>
             <li><strong style="color:#003d82;">Regularity:</strong> Does the country survey on schedule? Countries that complete each instrument close to the WHO-recommended five-year cycle score well. This dimension is only applicable when a country has conducted a given instrument at least twice, as a single round is not enough to assess cycling behaviour.</li>
           </ul>
           <p style="font-size:11px;color:var(--muted);margin-top:12px;margin-bottom:12px;line-height:1.75;font-style:italic;">
@@ -2632,8 +2659,8 @@ def build_html(A: dict) -> str:
             <li><strong>Regional averages:</strong> Regional SPI mean/median are unweighted by population. Zanzibar and mainland Tanzania are tracked as two separate entities sharing one ISO3 code.</li>
             <li><strong>School-based instruments:</strong> GYTS and GSHS sample <em>school-attending</em> students only; out-of-school youth &mdash; often at higher risk &mdash; are not represented in these instruments' results.</li>
             <li><strong>Response rates:</strong> Not consistently available in the source data for every survey round; where absent, no response-rate quality signal is shown rather than assuming full compliance.</li>
-            <li><strong>Surveillance capacity vs. health outcomes:</strong> The SPI measures whether surveillance <em>happened</em> on schedule &mdash; it says nothing about a country's underlying NCD burden or health status. A high SPI does not imply low NCD risk, and a low SPI does not imply high NCD risk.</li>
-            <li><strong>Strategic Priority quadrant:</strong> Ranks countries by surveillance gap and SPI only. It does not weight by NCD burden of disease (mortality/DALYs) &mdash; a country with a small surveillance gap may still carry a larger health burden than one flagged as URGENT here, and vice versa. Use alongside GBD/burden data for investment decisions.</li>
+            <li><strong>Scope, by design:</strong> This platform tracks surveillance <em>instruments</em> &mdash; whether a survey happened, how current it is, and the prevalence indicators it produced. It does not model disease, mortality, or burden (e.g. GBD/DALYs); that is a distinct data domain outside this platform's remit. A high SPI reflects a well-run surveillance system, not low NCD risk in that country, and a low SPI reflects a surveillance gap, not necessarily high NCD risk.</li>
+            <li><strong>Strategic Priority quadrant:</strong> Ranks countries by surveillance gap and SPI only, consistent with the platform's scope above &mdash; it is a surveillance re-engagement tool, not a health-burden prioritization tool, and should not be read as one.</li>
           </ul>
         </div>
 

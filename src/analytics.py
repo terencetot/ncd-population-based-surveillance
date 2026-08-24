@@ -21,7 +21,11 @@ def compute_spi(df: pd.DataFrame) -> pd.DataFrame:
          Measures permanent institutional capacity - not time-decaying.
 
     CS  Currency Score  (continuous, single exponential decay):
-         c_k = exp(−μ · g_k),  μ = ln(2)/7  (7-yr half-life)
+         c_k = exp(−μ · g_k),  μ = ln(2)/CYCLE_YEARS  (5-yr half-life, matching
+              the WHO-recommended cycle: a survey at exactly the "On Cycle" gap
+              boundary has decayed to 50% currency value, not ~61% as with the
+              previous 7-yr half-life -- the earlier value understated how much
+              a survey is due once a country's own status badge calls it Off Cycle)
          c_k = 0 if instrument k was never completed
          CS = mean(c_k) over all 5 instrument types
          Measures recency of the entire surveillance portfolio.
@@ -39,7 +43,11 @@ def compute_spi(df: pd.DataFrame) -> pd.DataFrame:
     done   = df[df["completed"]]
     inprog = df[df["status"] == "In Progress"]
 
-    MU      = np.log(2) / 7    # Currency half-life: 7 years
+    MU      = np.log(2) / CYCLE_YEARS  # Currency half-life = the WHO 5-yr cycle,
+                                        # so a survey exactly "on cycle" (gap==CYCLE_YEARS)
+                                        # scores 50% Currency, not ~61% (was half-life=7,
+                                        # inconsistent with the 5-yr "On Cycle" badge used
+                                        # throughout the rest of the platform)
     CYCLE   = 5                # Recommended renewal cycle (years)
     K       = len(SURVEY_META) # Number of instrument types (5)
     survey_types = list(SURVEY_META.keys())
@@ -655,7 +663,8 @@ def build_gtss_profile_data(json_path: Path, survey_code: str, spi_df: pd.DataFr
                                  "color": meta["color"], "icon": meta["icon"]}
             if code not in indicators:
                 indicators[code] = {"label": ind["label"], "unit": "%", "sec": sc, "hib": None}
-            yd[code] = {"b": ind["b"], "lo": None, "hi": None, "m": ind["m"], "f": ind["f"]}
+            yd[code] = {"b": ind["b"], "lo": None, "hi": None, "m": ind["m"], "f": ind["f"],
+                        "conf": ind.get("score")}
             bucket = sums.setdefault(code, {"b": [], "m": [], "f": []})
             if ind["b"] is not None:
                 bucket["b"].append(ind["b"])
