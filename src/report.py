@@ -608,7 +608,7 @@ JS = """
     if(!el||el.dataset.plotlyOfflineMsg)return;
     el.dataset.plotlyOfflineMsg='1';
     el.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:160px;color:var(--muted);text-align:center;padding:20px;gap:8px;">'+
-      '<i class="fas fa-wifi" style="font-size:22px;opacity:.35;"></i>'+
+      '<i class="ti ti-wifi" style="font-size:22px;opacity:.35;"></i>'+
       '<div style="font-size:12.5px;font-weight:600;">Chart unavailable — Plotly failed to load from the CDN</div>'+
       '<div style="font-size:11px;">This usually means no internet access or a blocked script host. Other page content still works.</div>'+
       '</div>';
@@ -1061,28 +1061,28 @@ JS = """
     {code:'risk_3plus_pct',                label:'Multi-Risk'},
   ];
   var _KPI_CFG = [
-    {code:'tobacco_current_smoke_pct',  icon:'fa-smoking',            label:'Tobacco Use',          col:'#c0392b'},
-    {code:'alcohol_binge_pct',          icon:'fa-wine-glass-alt',     label:'Heavy/Binge Drinking',  col:'#8e44ad'},
-    {code:'bp_raised_140_pct',          icon:'fa-heartbeat',          label:'Raised Blood Pressure', col:'#e74c3c'},
-    {code:'bmi_obese_pct',              icon:'fa-weight',             label:'Obesity (BMI\u226530)', col:'#e67e22'},
-    {code:'glucose_raised_7_pct',       icon:'fa-tint',               label:'Raised Glucose',        col:'#d35400'},
-    {code:'risk_3plus_pct',             icon:'fa-exclamation-circle', label:'3+ Risk Factors',       col:'#2c3e50'},
+    {code:'tobacco_current_smoke_pct',  icon:'ti-smoking',            label:'Tobacco Use',          col:'#c0392b'},
+    {code:'alcohol_binge_pct',          icon:'ti-glass-full',     label:'Heavy/Binge Drinking',  col:'#8e44ad'},
+    {code:'bp_raised_140_pct',          icon:'ti-heartbeat',          label:'Raised Blood Pressure', col:'#e74c3c'},
+    {code:'bmi_obese_pct',              icon:'ti-weight',             label:'Obesity (BMI\u226530)', col:'#e67e22'},
+    {code:'glucose_raised_7_pct',       icon:'ti-droplet',               label:'Raised Glucose',        col:'#d35400'},
+    {code:'risk_3plus_pct',             icon:'ti-alert-circle', label:'3+ Risk Factors',       col:'#2c3e50'},
   ];
   var _GYTS_KPI_CFG = [
-    {code:'gyts_current_any_tobacco',      icon:'fa-smoking',            label:'Current Tobacco Use',        col:'#c0392b'},
-    {code:'gyts_current_ecig',             icon:'fa-bolt',                label:'Current E-Cigarette Use',    col:'#16a085'},
-    {code:'gyts_shs_home',                 icon:'fa-wind',                label:'SHS Exposure at Home',       col:'#d35400'},
-    {code:'gyts_noticed_ads_pos',          icon:'fa-store',               label:'Noticed Tobacco Ads (POS)',  col:'#27ae60'},
-    {code:'gyts_susceptible_future_use',   icon:'fa-exclamation-triangle',label:'Susceptible Never-Users',    col:'#2c3e50'},
-    {code:'gyts_favor_ban_enclosed',       icon:'fa-brain',               label:'Favor Indoor Smoking Ban',   col:'#34495e'},
+    {code:'gyts_current_any_tobacco',      icon:'ti-smoking',            label:'Current Tobacco Use',        col:'#c0392b'},
+    {code:'gyts_current_ecig',             icon:'ti-bolt',                label:'Current E-Cigarette Use',    col:'#16a085'},
+    {code:'gyts_shs_home',                 icon:'ti-wind',                label:'SHS Exposure at Home',       col:'#d35400'},
+    {code:'gyts_noticed_ads_pos',          icon:'ti-building-store',               label:'Noticed Tobacco Ads (POS)',  col:'#27ae60'},
+    {code:'gyts_susceptible_future_use',   icon:'ti-alert-triangle',label:'Susceptible Never-Users',    col:'#2c3e50'},
+    {code:'gyts_favor_ban_enclosed',       icon:'ti-brain',               label:'Favor Indoor Smoking Ban',   col:'#34495e'},
   ];
   var _GATS_KPI_CFG = [
-    {code:'gats_current_tobacco_users',    icon:'fa-smoking',            label:'Current Tobacco Use',        col:'#8e44ad'},
-    {code:'gats_current_cigarette_smokers',icon:'fa-fire',                label:'Current Cigarette Smoking',  col:'#c0392b'},
-    {code:'gats_current_ecig',             icon:'fa-bolt',                label:'Current E-Cigarette Use',    col:'#16a085'},
-    {code:'gats_exposed_workplace',        icon:'fa-wind',                label:'SHS Exposure at Workplace',  col:'#7f8c8d'},
-    {code:'gats_smokers_planning_quit',    icon:'fa-briefcase-medical',   label:'Smokers Planning to Quit',   col:'#2980b9'},
-    {code:'gats_belief_smoking_illness',   icon:'fa-brain',               label:'Believe Smoking Causes Illness', col:'#34495e'},
+    {code:'gats_current_tobacco_users',    icon:'ti-smoking',            label:'Current Tobacco Use',        col:'#8e44ad'},
+    {code:'gats_current_cigarette_smokers',icon:'ti-flame',                label:'Current Cigarette Smoking',  col:'#c0392b'},
+    {code:'gats_current_ecig',             icon:'ti-bolt',                label:'Current E-Cigarette Use',    col:'#16a085'},
+    {code:'gats_exposed_workplace',        icon:'ti-wind',                label:'SHS Exposure at Workplace',  col:'#7f8c8d'},
+    {code:'gats_smokers_planning_quit',    icon:'ti-first-aid-kit',   label:'Smokers Planning to Quit',   col:'#2980b9'},
+    {code:'gats_belief_smoking_illness',   icon:'ti-brain',               label:'Believe Smoking Causes Illness', col:'#34495e'},
   ];
   var _KPI_CFG_BY_SURVEY  = {STEPS: _KPI_CFG,  GYTS: _GYTS_KPI_CFG, GATS: _GATS_KPI_CFG};
   var _SURVEY_LABEL = {STEPS:'STEPS \u2014 NCD Risk Factor Surveillance', GYTS:'GYTS \u2014 Global Youth Tobacco Survey', GATS:'GATS \u2014 Global Adult Tobacco Survey'};
@@ -1110,14 +1110,14 @@ JS = """
     var PROFILE_DATA = _profileDataFor(surveyType);
     if(!PROFILE_DATA||!PROFILE_DATA.profiles){
       document.getElementById('country-profile-content').innerHTML=
-        '<div class="profile-no-data"><i class="fas fa-database"></i><p>No '+surveyType+' indicator data available.</p></div>';
+        '<div class="profile-no-data"><i class="ti ti-database"></i><p>No '+surveyType+' indicator data available.</p></div>';
       return;
     }
     _profileCurrent=country;
     var p=PROFILE_DATA.profiles[country];
     if(!p||!p.surveys||p.surveys.length===0){
       document.getElementById('country-profile-content').innerHTML=
-        '<div class="profile-no-data"><i class="fas fa-info-circle"></i><p>No '+surveyType+' data available for <strong>'+country+'</strong>.</p></div>';
+        '<div class="profile-no-data"><i class="ti ti-info-circle"></i><p>No '+surveyType+' data available for <strong>'+country+'</strong>.</p></div>';
       return;
     }
     var ind=PROFILE_DATA.indicators||{};
@@ -1144,16 +1144,16 @@ JS = """
     hdr+='<div>';
     hdr+='<div style="font-family:var(--font-serif);font-size:24px;font-weight:600;color:var(--dark);letter-spacing:-.005em;">'+country+'</div>';
     hdr+='<div style="font-size:12px;color:var(--muted);margin-top:5px;display:flex;flex-wrap:wrap;gap:10px;">';
-    hdr+='<span class="profile-survey-pill"><i class="fas fa-flask"></i>&nbsp;'+surveyType+' surveys: <strong>'+yrsStr+'</strong></span>';
-    hdr+='<span class="profile-survey-pill"><i class="fas fa-percentage"></i>&nbsp;Response rate: '+(latS.rr?latS.rr+'%':'not recorded')+'</span>';
+    hdr+='<span class="profile-survey-pill"><i class="ti ti-flask"></i>&nbsp;'+surveyType+' surveys: <strong>'+yrsStr+'</strong></span>';
+    hdr+='<span class="profile-survey-pill"><i class="ti ti-percentage"></i>&nbsp;Response rate: '+(latS.rr?latS.rr+'%':'not recorded')+'</span>';
     if(surveyType==='STEPS'){
       hdr+='<span class="profile-survey-pill" style="background:#e6f5ec;color:#00693e;" title="Sourced from the WHO validated STEPS database">'+
-           '<i class="fas fa-check-shield"></i>&nbsp;Validated database source</span>';
+           '<i class="ti ti-shield-check"></i>&nbsp;Validated database source</span>';
     }else{
       var srcTip='Extracted programmatically from a published '+surveyType+' country fact-sheet PDF via automated table parsing; not independently re-verified against the source document'+
                  (p.source_file?(' (file: '+p.source_file+')'):'');
       hdr+='<span class="profile-survey-pill" style="background:#fff7ed;color:#b45309;" title="'+srcTip.replace(/"/g,'&quot;')+'">'+
-           '<i class="fas fa-exclamation-triangle"></i>&nbsp;Auto-extracted from PDF &mdash; unverified</span>';
+           '<i class="ti ti-alert-triangle"></i>&nbsp;Auto-extracted from PDF &mdash; unverified</span>';
     }
     hdr+='</div></div></div>';
     hdr+='<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">';
@@ -1186,11 +1186,11 @@ JS = """
       var hasCI=(d.lo!==null&&d.lo!==undefined&&d.hi!==null&&d.hi!==undefined);
       var loStr=hasCI?' title="95% CI: '+d.lo.toFixed(1)+'\u2013'+d.hi.toFixed(1)+unit+'"':'';
       kpi+='<div class="profile-kpi-card" style="color:'+k.col+';">';
-      kpi+='<div class="profile-kpi-icon"><i class="fas '+k.icon+'" style="color:'+k.col+';"></i></div>';
+      kpi+='<div class="profile-kpi-icon"><i class="ti '+k.icon+'" style="color:'+k.col+';"></i></div>';
       kpi+='<div class="profile-kpi-value" style="color:'+k.col+';"'+loStr+'>'+valStr+'</div>';
       if(hasCI){kpi+='<div class="profile-kpi-ci">95% CI '+d.lo.toFixed(1)+'\u2013'+d.hi.toFixed(1)+unit+'</div>';}
       var kConf=(d.conf!==undefined&&d.conf!==null&&d.conf<0.7)
-        ? ' <i class="fas fa-exclamation-triangle" style="color:#d97706;font-size:9px;cursor:help;" title="Low-confidence label match from PDF extraction (score '+d.conf.toFixed(2)+'/1.00) — verify before citing"></i>' : '';
+        ? ' <i class="ti ti-alert-triangle" style="color:#d97706;font-size:9px;cursor:help;" title="Low-confidence label match from PDF extraction (score '+d.conf.toFixed(2)+'/1.00) — verify before citing"></i>' : '';
       kpi+='<div class="profile-kpi-label">'+k.label+kConf+'</div>';
       if(arrow){kpi+='<div class="profile-kpi-trend">'+arrow+'<span style="font-size:11px;color:var(--muted);font-weight:400;"> vs '+prevYr+'</span></div>';}
       if(mV!==null||fV!==null){
@@ -1212,13 +1212,13 @@ JS = """
     // ── Section divider label ──────────────────────────────────────────────
     var sdiv='<div class="section-divider-label" style="margin:28px 0 18px;">Detailed Indicator Dashboard \u2014 All '+surveyType+' Sections <span style="font-weight:400;font-size:11px;color:var(--muted);text-transform:none;letter-spacing:0;">(click a section to expand)</span></div>';
     if(surveyType!=='STEPS'){
-      sdiv+='<div style="font-size:11px;color:var(--muted);margin:-10px 0 14px;"><i class="fas fa-exclamation-triangle" style="color:#d97706;"></i>&nbsp;Indicators marked with this icon were matched to their label with lower confidence during automated PDF extraction \u2014 verify against the source fact sheet before citing.</div>';
+      sdiv+='<div style="font-size:11px;color:var(--muted);margin:-10px 0 14px;"><i class="ti ti-alert-triangle" style="color:#d97706;"></i>&nbsp;Indicators marked with this icon were matched to their label with lower confidence during automated PDF extraction \u2014 verify against the source fact sheet before citing.</div>';
     }
     sdiv+='<div id="profile-section-detail-grid"></div>';
 
     var charts='<div class="profile-charts-grid">';
     charts+='<div class="chart-card reveal">';
-    charts+='<h4 class="profile-chart-title"><i class="fas fa-chart-line"></i>&nbsp; Trend — Key Indicators Over Time</h4>';
+    charts+='<h4 class="profile-chart-title"><i class="ti ti-chart-line"></i>&nbsp; Trend — Key Indicators Over Time</h4>';
     if(hasMulti){
       charts+='<div id="profile-trend-chart" style="height:340px;"></div>';
       charts+='<div style="font-size:10.5px;color:var(--muted);padding:0 8px 4px;">Consecutive survey rounds may differ in target age range or sampling frame &mdash; read trend lines as indicative, not strictly comparable across rounds.</div>';
@@ -1228,12 +1228,12 @@ JS = """
     }
     charts+='</div>';
     charts+='<div class="chart-card reveal">';
-    charts+='<h4 class="profile-chart-title"><i class="fas fa-balance-scale"></i>&nbsp; '+country+' vs AFRO Regional Average</h4>';
+    charts+='<h4 class="profile-chart-title"><i class="ti ti-scale"></i>&nbsp; '+country+' vs AFRO Regional Average</h4>';
     charts+='<div id="profile-compare-chart" style="height:360px;"></div>';
     charts+='<div style="font-size:10.5px;color:var(--muted);padding:0 8px 4px;">AFRO Avg sample size (n) shown on hover &mdash; indicators marked ⚠ are averaged over fewer than 5 countries and should be read with caution.</div>';
     charts+='</div>';
     charts+='<div class="chart-card reveal">';
-    charts+='<h4 class="profile-chart-title"><i class="fas fa-venus-mars"></i>&nbsp; Sex Disaggregation — Latest Round</h4>';
+    charts+='<h4 class="profile-chart-title"><i class="ti ti-gender-bigender"></i>&nbsp; Sex Disaggregation — Latest Round</h4>';
     charts+='<div id="profile-sex-chart" style="height:380px;"></div>';
     charts+='</div>';
     charts+='</div>';
@@ -1280,10 +1280,10 @@ JS = """
       // hierarchy instead of nine equal-weight blocks fighting for attention.
       grid += '<details class="profile-section-card"'+(sIdx===0?' open':'')+'>';
       grid += '<summary class="profile-section-head" style="background:'+sv.color+';">';
-      grid += '<i class="fas '+sv.icon+'" style="color:rgba(255,255,255,.9);font-size:14px;"></i>';
+      grid += '<i class="ti '+sv.icon+'" style="color:rgba(255,255,255,.9);font-size:14px;"></i>';
       grid += '<span class="sec-title">'+sv.name+'</span>';
       grid += '<span class="sec-step">'+sv.step+'</span>';
-      grid += '<i class="fas fa-chevron-down sec-chevron"></i>';
+      grid += '<i class="ti ti-chevron-down sec-chevron"></i>';
       grid += '</summary>';
 
       grid += '<div style="overflow-x:auto;">';
@@ -1311,7 +1311,7 @@ JS = """
         var lbl  = i2.label.length > 58 ? i2.label.substring(0, 57) + '\u2026' : i2.label;
         var conf = d.conf;
         var confFlag = (conf !== undefined && conf !== null && conf < 0.7)
-          ? ' <i class="fas fa-exclamation-triangle" style="color:#d97706;font-size:9px;cursor:help;" title="Low-confidence label match from PDF extraction (score '+conf.toFixed(2)+'/1.00) \u2014 verify this indicator against the source fact sheet before citing it"></i>'
+          ? ' <i class="ti ti-alert-triangle" style="color:#d97706;font-size:9px;cursor:help;" title="Low-confidence label match from PDF extraction (score '+conf.toFixed(2)+'/1.00) \u2014 verify this indicator against the source fact sheet before citing it"></i>'
           : '';
         lbl = lbl + confFlag;
         var hasCI = (d.lo !== null && d.lo !== undefined && d.hi !== null && d.hi !== undefined);
@@ -1637,20 +1637,20 @@ JS = """
 
 # ── Font Awesome icon map ──────────────────────────────────────────────────────
 _FA = {
-    "globe":    "fa-globe-africa",   "clipboard": "fa-clipboard-list",
-    "check":    "fa-check-circle",   "sync":      "fa-sync-alt",
-    "times":    "fa-times-circle",   "flask":     "fa-flask",
-    "calendar": "fa-calendar-alt",   "trophy":    "fa-trophy",
-    "chart":    "fa-chart-bar",      "map":       "fa-map-marker-alt",
-    "star":     "fa-star",           "gauge":     "fa-tachometer-alt",
-    "users":    "fa-users",          "exclaim":   "fa-exclamation-triangle",
+    "globe":    "ti-world",   "clipboard": "ti-clipboard-list",
+    "check":    "ti-circle-check",   "sync":      "ti-refresh",
+    "times":    "ti-circle-x",   "flask":     "ti-flask",
+    "calendar": "ti-calendar",   "trophy":    "ti-trophy",
+    "chart":    "ti-chart-bar",      "map":       "ti-map-pin",
+    "star":     "ti-star",           "gauge":     "ti-gauge",
+    "users":    "ti-users",          "exclaim":   "ti-alert-triangle",
 }
 
 
 def kpi_card(fa_key, value, label, delta=None, color=None, bg=None):
     color = color or C["primary"]
     bg    = bg    or "#f0f6ff"
-    fa    = _FA.get(fa_key, "fa-circle")
+    fa    = _FA.get(fa_key, "ti-circle")
     try:
         num = float(str(value).replace(",", "").replace("%", ""))
         val_html = (f'<div class="kpi-value" style="color:{color};" '
@@ -1660,10 +1660,10 @@ def kpi_card(fa_key, value, label, delta=None, color=None, bg=None):
     delta_html = ""
     if delta:
         delta_html = (f'<div class="kpi-delta" style="color:{color};">'
-                      f'<i class="fas fa-arrow-up" style="font-size:11px;"></i> {delta}</div>')
+                      f'<i class="ti ti-arrow-up" style="font-size:11px;"></i> {delta}</div>')
     return f"""
 <div class="kpi-card reveal" style="color:{color};background:{bg};">
-  <div class="kpi-icon"><i class="fas {fa}" style="color:{color};"></i></div>
+  <div class="kpi-icon"><i class="ti {fa}" style="color:{color};"></i></div>
   {val_html}
   <div class="kpi-label">{label}</div>
   {delta_html}
@@ -1683,8 +1683,8 @@ def section_header(anchor, num, title, subtitle=""):
 
 
 def insight_box(text, kind="info"):
-    fa_map  = {"info":"fa-info-circle","warning":"fa-exclamation-triangle",
-               "success":"fa-check-circle","critical":"fa-exclamation-circle"}
+    fa_map  = {"info":"ti-info-circle","warning":"ti-alert-triangle",
+               "success":"ti-circle-check","critical":"ti-alert-circle"}
     colors  = {
         "info":     ("#003d82","#eef4ff","#c5d9f5"),
         "warning":  ("#7a4500","#fff8e1","#ffe082"),
@@ -1692,10 +1692,10 @@ def insight_box(text, kind="info"):
         "critical": ("#7f1d1d","#fff0f0","#fca5a5"),
     }
     fg, bg, border = colors.get(kind, colors["info"])
-    fa = fa_map.get(kind, "fa-info-circle")
+    fa = fa_map.get(kind, "ti-info-circle")
     return f"""
 <div class="insight-box reveal" style="background:{bg};border-left:5px solid {border};color:{fg};">
-  <span class="insight-icon"><i class="fas {fa}"></i></span>
+  <span class="insight-icon"><i class="ti {fa}"></i></span>
   <span>{text}</span>
 </div>"""
 
@@ -1725,8 +1725,8 @@ def instrument_cards(A):
   <div class="inst-type" style="color:{meta['color']};">{code}</div>
   <div class="inst-full">{meta['full']}</div>
   <div class="inst-meta">
-    <span><i class="fas fa-users" style="font-size:11px;margin-right:4px;"></i>{meta['target']}</span>
-    <span><i class="fas fa-tag" style="font-size:11px;margin-right:4px;"></i>{meta['domain']}</span>
+    <span><i class="ti ti-users" style="font-size:11px;margin-right:4px;"></i>{meta['target']}</span>
+    <span><i class="ti ti-tag" style="font-size:11px;margin-right:4px;"></i>{meta['domain']}</span>
   </div>
   <div class="inst-stats">
     <div class="inst-stat"><span class="stat-val">{int(row['total'])}</span><span class="stat-lbl">Surveys</span></div>
@@ -1805,28 +1805,28 @@ def scorecard_table(spi):
 
 def schema_cards():
     tables = [
-        ("#003d82", "fa-globe",          "dim_country",
+        ("#003d82", "ti-world",          "dim_country",
          [("country_id","PK · INTEGER"),("country_name","TEXT UNIQUE"),
           ("iso3","TEXT"),("is_zanzibar","INTEGER"),("sub_region","TEXT")]),
-        ("#8e44ad", "fa-flask",          "dim_survey_type",
+        ("#8e44ad", "ti-flask",          "dim_survey_type",
          [("survey_type_id","PK · INTEGER"),("survey_code","TEXT UNIQUE"),
           ("survey_full_name","TEXT"),("target_population","TEXT"),
           ("domain","TEXT"),("cycle_years","INTEGER DEFAULT 5")]),
-        ("#27ae60", "fa-check-circle",   "dim_status",
+        ("#27ae60", "ti-circle-check",   "dim_status",
          [("status_id","PK · INTEGER"),("status_code","TEXT UNIQUE"),
           ("is_completed","INTEGER"),("completion_weight","REAL")]),
-        ("#e67e22", "fa-calendar-alt",   "dim_year",
+        ("#e67e22", "ti-calendar",   "dim_year",
          [("year_id","PK = year value"),("year","INTEGER UNIQUE"),
           ("decade","TEXT"),("five_yr_period","TEXT"),("cycle_label","TEXT")]),
-        ("#c0392b", "fa-table",          "fact_surveys",
+        ("#c0392b", "ti-table",          "fact_surveys",
          [("survey_id","PK · INTEGER"),("country_id","FK → dim_country"),
           ("survey_type_id","FK → dim_survey_type"),("year_id","FK → dim_year"),
           ("status_id","FK → dim_status"),("survey_year","INTEGER")]),
-        ("#718096", "fa-layer-group",    "dim_indicator (future)",
+        ("#718096", "ti-layers-intersect",    "dim_indicator (future)",
          [("indicator_id","PK · INTEGER"),("indicator_code","TEXT UNIQUE"),
           ("indicator_name","TEXT"),("survey_type_id","FK → dim_survey_type"),
           ("unit","TEXT"),("direction","TEXT")]),
-        ("#718096", "fa-chart-line",     "fact_indicators (future)",
+        ("#718096", "ti-chart-line",     "fact_indicators (future)",
          [("fact_id","PK · INTEGER"),("country_id","FK → dim_country"),
           ("indicator_id","FK → dim_indicator"),("year_id","FK → dim_year"),
           ("value","REAL"),("ci_lower / ci_upper","REAL")]),
@@ -1837,7 +1837,7 @@ def schema_cards():
         html += f"""
 <div class="schema-card">
   <div class="schema-card-head" style="background:{color};">
-    <i class="fas {icon}"></i> {name}
+    <i class="ti {icon}"></i> {name}
   </div>
   <table>{trows}</table>
 </div>"""
@@ -2070,7 +2070,7 @@ def build_html(A: dict) -> str:
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Lora:ital,wght@0,500;0,600;0,700;1,500&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link rel="stylesheet" href="https://unpkg.com/@tabler/icons-webfont@3.46.0/dist/tabler-icons.min.css"/>
 <style>{CSS}</style>
 </head>
 <body>
@@ -2098,9 +2098,9 @@ def build_html(A: dict) -> str:
       <h1>NCD Population-based Surveillance <span class="grad">Intelligence</span> Platform</h1>
       <p class="hero-sub">A strategic intelligence platform synthesizing <strong>five core NCD population-based surveillance systems</strong> across 47 WHO AFRO Member States + Zanzibar</p>
       <div class="hero-quick-stats">
-        <span class="hero-qs" title="SPI ≥ 75 — Strong surveillance system tier, not a health-outcomes ranking"><i class="fas fa-circle" style="color:{strong_dot_color}"></i> {n_strong} Strong SPI systems</span>
-        <span class="hero-qs" title="SPI &lt; 30 — Critical surveillance system tier, not a health-outcomes ranking"><i class="fas fa-circle" style="color:{crit_dot_color}"></i> {n_crit} Critical SPI systems</span>
-        <span class="hero-qs" title="Countries with at least one completed survey since {CURRENT_CYCLE_START}"><i class="fas fa-sync-alt" style="color:#4a90e2"></i> {n_curr} countries active this cycle</span>
+        <span class="hero-qs" title="SPI ≥ 75 — Strong surveillance system tier, not a health-outcomes ranking"><i class="ti ti-circle" style="color:{strong_dot_color}"></i> {n_strong} Strong SPI systems</span>
+        <span class="hero-qs" title="SPI &lt; 30 — Critical surveillance system tier, not a health-outcomes ranking"><i class="ti ti-circle" style="color:{crit_dot_color}"></i> {n_crit} Critical SPI systems</span>
+        <span class="hero-qs" title="Countries with at least one completed survey since {CURRENT_CYCLE_START}"><i class="ti ti-refresh" style="color:#4a90e2"></i> {n_curr} countries active this cycle</span>
       </div>
     </div>
     <div class="hero-right">
@@ -2135,12 +2135,12 @@ def build_html(A: dict) -> str:
 
 <div class="tab-nav">
   <div class="tab-nav-inner" role="tablist" aria-label="Dashboard sections">
-    <button class="tab-btn" id="tabbtn-tab-exec" data-tab="tab-exec" role="tab" aria-selected="true" aria-controls="tab-exec" tabindex="0"><i class="fas fa-tachometer-alt" aria-hidden="true"></i> Executive Overview</button>
-    <button class="tab-btn" id="tabbtn-tab-perf" data-tab="tab-perf" role="tab" aria-selected="false" aria-controls="tab-perf" tabindex="-1"><i class="fas fa-medal" aria-hidden="true"></i> Surveillance Performance</button>
-    <button class="tab-btn" id="tabbtn-tab-cycle" data-tab="tab-cycle" role="tab" aria-selected="false" aria-controls="tab-cycle" tabindex="-1"><i class="fas fa-sync-alt" aria-hidden="true"></i> Cycle &amp; Gap</button>
-    <button class="tab-btn" id="tabbtn-tab-profile" data-tab="tab-profile" role="tab" aria-selected="false" aria-controls="tab-profile" tabindex="-1"><i class="fas fa-user-md" aria-hidden="true"></i> Country Profile</button>
-    <button class="tab-btn" id="tabbtn-tab-priority" data-tab="tab-priority" role="tab" aria-selected="false" aria-controls="tab-priority" tabindex="-1"><i class="fas fa-crosshairs" aria-hidden="true"></i> Strategic Priority</button>
-    <button class="tab-btn" id="tabbtn-tab-methods" data-tab="tab-methods" role="tab" aria-selected="false" aria-controls="tab-methods" tabindex="-1"><i class="fas fa-book" aria-hidden="true"></i> Methods</button>
+    <button class="tab-btn" id="tabbtn-tab-exec" data-tab="tab-exec" role="tab" aria-selected="true" aria-controls="tab-exec" tabindex="0"><i class="ti ti-gauge" aria-hidden="true"></i> Executive Overview</button>
+    <button class="tab-btn" id="tabbtn-tab-perf" data-tab="tab-perf" role="tab" aria-selected="false" aria-controls="tab-perf" tabindex="-1"><i class="ti ti-medal" aria-hidden="true"></i> Surveillance Performance</button>
+    <button class="tab-btn" id="tabbtn-tab-cycle" data-tab="tab-cycle" role="tab" aria-selected="false" aria-controls="tab-cycle" tabindex="-1"><i class="ti ti-refresh" aria-hidden="true"></i> Cycle &amp; Gap</button>
+    <button class="tab-btn" id="tabbtn-tab-profile" data-tab="tab-profile" role="tab" aria-selected="false" aria-controls="tab-profile" tabindex="-1"><i class="ti ti-stethoscope" aria-hidden="true"></i> Country Profile</button>
+    <button class="tab-btn" id="tabbtn-tab-priority" data-tab="tab-priority" role="tab" aria-selected="false" aria-controls="tab-priority" tabindex="-1"><i class="ti ti-target" aria-hidden="true"></i> Strategic Priority</button>
+    <button class="tab-btn" id="tabbtn-tab-methods" data-tab="tab-methods" role="tab" aria-selected="false" aria-controls="tab-methods" tabindex="-1"><i class="ti ti-book" aria-hidden="true"></i> Methods</button>
   </div>
 </div>
 
@@ -2173,7 +2173,7 @@ def build_html(A: dict) -> str:
 
       <!-- Filter bar - STEPS default, no "All Survey Types" option -->
       <div class="filter-bar">
-        <span class="filter-label"><i class="fas fa-filter"></i>&nbsp; View by Survey</span>
+        <span class="filter-label"><i class="ti ti-filter"></i>&nbsp; View by Survey</span>
         <select id="exec-survey-filter" class="filter-select" style="min-width:240px;">
           <option value="STEPS" selected>STEPS &mdash; NCD Risk Factor Surveillance</option>
           <option value="GYTS">GYTS &mdash; Global Youth Tobacco Survey</option>
@@ -2182,7 +2182,7 @@ def build_html(A: dict) -> str:
           <option value="GSHPP">GSHPP &mdash; School Health Policies &amp; Practices</option>
         </select>
         <button id="exec-filter-reset" class="filter-reset" style="padding:7px 14px;">
-          <i class="fas fa-undo"></i>&nbsp; Reset to STEPS
+          <i class="ti ti-arrow-back-up"></i>&nbsp; Reset to STEPS
         </button>
         <span id="exec-survey-badge" style="font-size:11px;font-weight:600;color:var(--primary);margin-left:6px;padding:5px 12px;background:#eef4ff;border-radius:9999px;border:1px solid #c8d8f8;">
           STEPS &mdash; NCD Risk Factor Surveillance
@@ -2191,7 +2191,7 @@ def build_html(A: dict) -> str:
 
       <!-- Analytical note -->
       <div style="background:#fffbeb;border:1px solid #fde68a;border-left:4px solid #f59e0b;border-radius:10px;padding:11px 16px;font-size:12px;color:#78350f;margin-bottom:20px;display:flex;align-items:flex-start;gap:10px;">
-        <i class="fas fa-info-circle" style="margin-top:2px;color:#f59e0b;"></i>
+        <i class="ti ti-info-circle" style="margin-top:2px;color:#f59e0b;"></i>
         <span>
           <strong>Unit of analysis:</strong> All counts represent <strong>unique countries/territories</strong> (N&nbsp;=&nbsp;48). Categories are mutually exclusive per country per survey type.
           &nbsp;<strong style="color:{st_on};">&#9632; On Cycle</strong>: completed &#8804;&nbsp;5 yr &mdash; current, usable evidence &nbsp;|&nbsp;
@@ -2207,7 +2207,7 @@ def build_html(A: dict) -> str:
 
         <div class="signal-card reveal" style="color:{st_on};">
           <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:{st_on};margin-bottom:4px;">
-            <i class="fas fa-check-circle"></i>&nbsp; On Cycle
+            <i class="ti ti-circle-check"></i>&nbsp; On Cycle
           </div>
           <div class="signal-val" id="exec-n-oncycle" data-count="{exec_steps['n_on_cycle']}">{exec_steps['n_on_cycle']}</div>
           <div class="signal-lbl">Countries</div>
@@ -2219,7 +2219,7 @@ def build_html(A: dict) -> str:
 
         <div class="signal-card reveal" style="color:{st_att};">
           <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:{st_att};margin-bottom:4px;">
-            <i class="fas fa-sync-alt"></i>&nbsp; Attempt to update
+            <i class="ti ti-refresh"></i>&nbsp; Attempt to update
           </div>
           <div class="signal-val" id="exec-n-implement" data-count="{exec_steps['n_attempt_to_update']}">{exec_steps['n_attempt_to_update']}</div>
           <div class="signal-lbl">Countries</div>
@@ -2231,7 +2231,7 @@ def build_html(A: dict) -> str:
 
         <div class="signal-card reveal" style="color:{st_off};">
           <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:{st_off};margin-bottom:4px;">
-            <i class="fas fa-pause-circle"></i>&nbsp; Off Cycle
+            <i class="ti ti-player-pause"></i>&nbsp; Off Cycle
           </div>
           <div class="signal-val" id="exec-n-offcycle" data-count="{exec_steps['n_off_cycle']}">{exec_steps['n_off_cycle']}</div>
           <div class="signal-lbl">Countries</div>
@@ -2243,7 +2243,7 @@ def build_html(A: dict) -> str:
 
         <div class="signal-card reveal" style="color:{st_first};">
           <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:{st_first};margin-bottom:4px;">
-            <i class="fas fa-flag"></i>&nbsp; First Attempt
+            <i class="ti ti-flag"></i>&nbsp; First Attempt
           </div>
           <div class="signal-val" id="exec-n-firstattempt" data-count="{exec_steps['n_first_attempt']}">{exec_steps['n_first_attempt']}</div>
           <div class="signal-lbl">Countries</div>
@@ -2255,7 +2255,7 @@ def build_html(A: dict) -> str:
 
         <div class="signal-card reveal" style="color:{st_nev};">
           <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:{st_nev};margin-bottom:4px;">
-            <i class="fas fa-ban"></i>&nbsp; Never Conducted
+            <i class="ti ti-ban"></i>&nbsp; Never Conducted
           </div>
           <div class="signal-val" id="exec-n-never" data-count="{exec_steps['n_never']}">{exec_steps['n_never']}</div>
           <div class="signal-lbl">Countries</div>
@@ -2294,7 +2294,7 @@ def build_html(A: dict) -> str:
 
       <!-- Executive briefing (dynamic narrative) -->
       <div class="exec-message reveal">
-        <h3><i class="fas fa-satellite-dish"></i>&nbsp; Regional Surveillance Intelligence Briefing</h3>
+        <h3><i class="ti ti-satellite"></i>&nbsp; Regional Surveillance Intelligence Briefing</h3>
         <p id="exec-briefing-text">{exec_steps['briefing']}</p>
       </div>
 
@@ -2316,11 +2316,11 @@ def build_html(A: dict) -> str:
       <div class="stat-highlight-row reveal">
         <div class="stat-highlight-item" style="text-align:center;padding:0 24px 0 0;">
           <div class="stat-hl-val" style="color:{spi_tier_color};">{fmt_spi(reg_spi)}<span style="font-size:1rem;font-weight:600;opacity:.6;">/100</span></div>
-          <div class="stat-hl-lbl" title="Simple unweighted mean across all {n_ent} entities — not weighted by population. Zanzibar and mainland Tanzania are counted as two separate entities sharing one ISO3 code.">Regional SPI Average&nbsp;<i class="fas fa-info-circle" style="font-size:9px;opacity:.6;"></i></div>
+          <div class="stat-hl-lbl" title="Simple unweighted mean across all {n_ent} entities — not weighted by population. Zanzibar and mainland Tanzania are counted as two separate entities sharing one ISO3 code.">Regional SPI Average&nbsp;<i class="ti ti-info-circle" style="font-size:9px;opacity:.6;"></i></div>
         </div>
         <div class="stat-highlight-item" style="text-align:center;padding:0 24px;">
           <div class="stat-hl-val" style="color:var(--muted);">{A['median_spi']}</div>
-          <div class="stat-hl-lbl" title="Simple unweighted median across all {n_ent} entities — not weighted by population.">Median SPI&nbsp;<i class="fas fa-info-circle" style="font-size:9px;opacity:.6;"></i></div>
+          <div class="stat-hl-lbl" title="Simple unweighted median across all {n_ent} entities — not weighted by population.">Median SPI&nbsp;<i class="ti ti-info-circle" style="font-size:9px;opacity:.6;"></i></div>
         </div>
         <div style="flex:1;display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;">
           <div class="tier-card" style="border-top-color:#00a651;min-width:110px;">
@@ -2363,7 +2363,7 @@ def build_html(A: dict) -> str:
 
       <!-- Filter + Scorecard table -->
       <div class="filter-bar">
-        <span class="filter-label"><i class="fas fa-search"></i></span>
+        <span class="filter-label"><i class="ti ti-search"></i></span>
         <input id="sc-search" class="filter-input" type="text" placeholder="Search country&#8230;"/>
         <span class="filter-label">Tier</span>
         <select id="sc-tier" class="filter-select">
@@ -2402,13 +2402,13 @@ def build_html(A: dict) -> str:
           <option value="20">Top 20</option>
           <option value="30">Top 30</option>
         </select>
-        <button id="sc-reset" class="filter-reset"><i class="fas fa-undo"></i> Reset</button>
+        <button id="sc-reset" class="filter-reset"><i class="ti ti-arrow-back-up"></i> Reset</button>
         <span id="sc-count" class="filter-count"></span>
       </div>
 
       <div class="chart-card reveal" style="margin-bottom:20px;">
         <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
-          <button id="btn-export-spi" style="font-family:var(--font);font-size:11px;font-weight:700;padding:7px 16px;border-radius:10px;border:none;background:#003d82;color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:6px;"><i class="fas fa-file-csv"></i>&nbsp;Export CSV</button>
+          <button id="btn-export-spi" style="font-family:var(--font);font-size:11px;font-weight:700;padding:7px 16px;border-radius:10px;border:none;background:#003d82;color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:6px;"><i class="ti ti-file-type-csv"></i>&nbsp;Export CSV</button>
         </div>
         {scorecard_table(spi)}
       </div>
@@ -2438,7 +2438,7 @@ def build_html(A: dict) -> str:
           <option value="GATS">GATS - Global Adult Tobacco Survey</option>
           <option value="GSHPP">GSHPP - School Health Policies &amp; Practices</option>
         </select>
-        <button onclick="(function(){{var f=document.getElementById('cycle-timeline-filter');f.value='STEPS';updateTimeline('STEPS');}})();" style="font-family:var(--font);font-size:11px;font-weight:600;border:2px solid var(--border);border-radius:10px;padding:7px 14px;background:#f4f7fb;color:var(--muted);cursor:pointer;transition:all .2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f4f7fb'"><i class="fas fa-undo" style="margin-right:5px;"></i>Reset</button>
+        <button onclick="(function(){{var f=document.getElementById('cycle-timeline-filter');f.value='STEPS';updateTimeline('STEPS');}})();" style="font-family:var(--font);font-size:11px;font-weight:600;border:2px solid var(--border);border-radius:10px;padding:7px 14px;background:#f4f7fb;color:var(--muted);cursor:pointer;transition:all .2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f4f7fb'"><i class="ti ti-arrow-back-up" style="margin-right:5px;"></i>Reset</button>
       </div>
       <div class="chart-card reveal" style="margin-bottom:24px;">
         <div id="cycle-timeline-chart" style="width:100%;min-height:400px;"></div>
@@ -2474,27 +2474,27 @@ def build_html(A: dict) -> str:
           <span title="GSHS and GSHPP are tracked for surveillance status/cycle (Tabs 1-3, 5) but their indicator-level results are not yet pipelined into this profile view">GSHS and GSHPP results are not yet available at indicator level here</span>
         </p>
         <div style="background:#eef4ff;border:1px solid #c8d8f8;border-left:4px solid #003d82;border-radius:10px;padding:10px 16px;font-size:11.5px;color:#1a3a6b;margin-top:10px;display:flex;align-items:flex-start;gap:9px;">
-          <i class="fas fa-shield-alt" style="margin-top:2px;color:#003d82;"></i>
+          <i class="ti ti-shield" style="margin-top:2px;color:#003d82;"></i>
           <span><strong>Data provenance:</strong> STEPS indicator values are sourced from the WHO validated STEPS database. GYTS and GATS indicator values are extracted programmatically from published country fact-sheet PDFs (gtssacademy.org) via automated table parsing and have not been independently re-verified against the source documents &mdash; treat individual GYTS/GATS figures as indicative pending manual spot-check, and note the provenance badge shown on each country's profile below.</span>
         </div>
       </div>
 
-      {'<div class="profile-no-data" style="padding:40px;text-align:center;color:var(--muted);"><i class="fas fa-database" style="font-size:36px;opacity:.3;margin-bottom:12px;display:block;"></i><p>No indicator data found. Ensure STEP.db and the GYTS/GATS profile JSON files are present in the data/ folder and run the pipeline.</p></div>' if not _prof_countries else ""}
+      {'<div class="profile-no-data" style="padding:40px;text-align:center;color:var(--muted);"><i class="ti ti-database" style="font-size:36px;opacity:.3;margin-bottom:12px;display:block;"></i><p>No indicator data found. Ensure STEP.db and the GYTS/GATS profile JSON files are present in the data/ folder and run the pipeline.</p></div>' if not _prof_countries else ""}
 
       <div class="filter-bar" style="{'display:none;' if not _prof_countries else ''}">
-        <span class="filter-label"><i class="fas fa-map-marker-alt"></i>&nbsp; Country</span>
+        <span class="filter-label"><i class="ti ti-map-pin"></i>&nbsp; Country</span>
         <select id="profile-country-select" class="filter-select" style="min-width:270px;">
           {_prof_options}
         </select>
         <span class="filter-label" style="margin-left:6px;">Survey</span>
         <select id="profile-survey-select" class="filter-select" style="min-width:240px;">
         </select>
-        <button id="btn-export-profile" style="font-family:var(--font);font-size:11px;font-weight:700;padding:7px 16px;border-radius:10px;border:none;background:#003d82;color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:6px;margin-left:auto;"><i class="fas fa-file-csv"></i>&nbsp;Export CSV</button>
+        <button id="btn-export-profile" style="font-family:var(--font);font-size:11px;font-weight:700;padding:7px 16px;border-radius:10px;border:none;background:#003d82;color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:6px;margin-left:auto;"><i class="ti ti-file-type-csv"></i>&nbsp;Export CSV</button>
       </div>
 
       <div id="country-profile-content">
         <div class="profile-no-data">
-          <i class="fas fa-mouse-pointer" style="font-size:36px;opacity:.25;"></i>
+          <i class="ti ti-pointer" style="font-size:36px;opacity:.25;"></i>
           <p style="font-size:14px;font-weight:600;color:var(--text);">Click the <strong>Country Profile</strong> tab to load the selected country</p>
           <p style="font-size:12px;">Select a country from the filter above to explore its full STEPS indicator profile.</p>
         </div>
@@ -2515,7 +2515,7 @@ def build_html(A: dict) -> str:
 
       <!-- Survey instrument filter pills -->
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:24px;padding:16px 20px;background:linear-gradient(135deg,#f0f4fc,#e8eef8);border-radius:16px;border:1px solid #d8def0;box-shadow:0 2px 10px rgba(0,20,80,.06);">
-        <span style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.9px;margin-right:4px;white-space:nowrap;"><i class="fas fa-sliders-h"></i>&nbsp; Survey instrument:</span>
+        <span style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.9px;margin-right:4px;white-space:nowrap;"><i class="ti ti-adjustments-horizontal"></i>&nbsp; Survey instrument:</span>
         <button class="prio-pill" data-survey="STEPS"  data-color="#003d82" style="font-family:var(--font);font-size:12px;font-weight:700;padding:8px 20px;border-radius:9999px;border:2px solid #003d82;background:#003d82;color:#fff;cursor:pointer;transition:all 240ms;box-shadow:0 4px 12px rgba(0,61,130,.3);">STEPS</button>
         <button class="prio-pill" data-survey="GYTS"   data-color="#c0392b" style="font-family:var(--font);font-size:12px;font-weight:700;padding:8px 20px;border-radius:9999px;border:2px solid var(--border);background:#f4f7fb;color:var(--muted);cursor:pointer;transition:all 240ms;">GYTS</button>
         <button class="prio-pill" data-survey="GSHS"   data-color="#f7941d" style="font-family:var(--font);font-size:12px;font-weight:700;padding:8px 20px;border-radius:9999px;border:2px solid var(--border);background:#f4f7fb;color:var(--muted);cursor:pointer;transition:all 240ms;">GSHS</button>
@@ -2529,7 +2529,7 @@ def build_html(A: dict) -> str:
       <div class="chart-card reveal" style="margin-bottom:24px;">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:14px;">
           <div>
-            <h3 style="font-size:14px;font-weight:700;color:{C['primary']};margin:0 0 4px;"><i class="fas fa-crosshairs"></i>&nbsp; Strategic Quadrant Analysis</h3>
+            <h3 style="font-size:14px;font-weight:700;color:{C['primary']};margin:0 0 4px;"><i class="ti ti-target"></i>&nbsp; Strategic Quadrant Analysis</h3>
             <p style="font-size:11px;color:var(--muted);margin:0;line-height:1.5;">Country position: <strong>survey gap</strong> (x) vs <strong>overall SPI</strong> (y). Drag sliders to redefine quadrant boundaries.</p>
           </div>
           <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:11px;font-weight:600;align-items:center;">
@@ -2542,7 +2542,7 @@ def build_html(A: dict) -> str:
         <!-- Movable threshold sliders -->
         <div style="display:flex;gap:32px;flex-wrap:wrap;align-items:center;padding:12px 16px;background:#f0f4fc;border-radius:10px;margin-bottom:14px;border:1px solid #d8def0;">
           <div style="display:flex;align-items:center;gap:10px;">
-            <i class="fas fa-arrows-alt-h" style="color:#14265c;font-size:14px;"></i>
+            <i class="ti ti-arrows-horizontal" style="color:#14265c;font-size:14px;"></i>
             <span style="font-size:11px;font-weight:700;color:{C['primary']};white-space:nowrap;">Gap threshold:</span>
             <input type="range" id="prio-gap-cut" min="1" max="35" value="5"
               style="width:130px;accent-color:#003d82;cursor:pointer;"/>
@@ -2550,17 +2550,17 @@ def build_html(A: dict) -> str:
           </div>
           <div style="width:1px;height:28px;background:#d0d8ee;"></div>
           <div style="display:flex;align-items:center;gap:10px;">
-            <i class="fas fa-arrows-alt-v" style="color:#14265c;font-size:14px;"></i>
+            <i class="ti ti-arrows-vertical" style="color:#14265c;font-size:14px;"></i>
             <span style="font-size:11px;font-weight:700;color:{C['primary']};white-space:nowrap;">SPI threshold:</span>
             <input type="range" id="prio-spi-cut" min="5" max="95" value="50"
               style="width:130px;accent-color:#003d82;cursor:pointer;"/>
             <span style="font-size:14px;font-weight:800;color:#003d82;min-width:38px;"><span id="prio-spi-val">50</span>&nbsp;pts</span>
           </div>
-          <span style="font-size:11px;color:var(--muted);font-style:italic;margin-left:auto;"><i class="fas fa-hand-pointer"></i>&nbsp; Sliders update the chart in real time</span>
+          <span style="font-size:11px;color:var(--muted);font-style:italic;margin-left:auto;"><i class="ti ti-hand-click"></i>&nbsp; Sliders update the chart in real time</span>
         </div>
         <div id="prio-scatter-chart" style="height:490px;width:100%;"></div>
         <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;padding:8px 12px;background:#fffbeb;border-left:3px solid #f59e0b;border-radius:6px;">
-          <i class="fas fa-info-circle" style="color:#f59e0b;"></i>&nbsp;
+          <i class="ti ti-info-circle" style="color:#f59e0b;"></i>&nbsp;
           Quadrant position reflects <strong>surveillance gap and SPI only</strong> &mdash; a tool for prioritizing surveillance re-engagement, consistent with this platform's scope (surveillance instruments and the prevalence indicators they produce, not disease burden). The dot color/shape (survey status for the instrument selected below) can disagree with the quadrant a country falls into, since SPI is computed across all five instruments while the gap axis is instrument-specific.
         </div>
       </div>
@@ -2587,7 +2587,7 @@ def build_html(A: dict) -> str:
 
         <!-- Data Source -->
         <div class="method-card reveal" style="border-top:4px solid #003d82;">
-          <h4 style="color:#003d82;"><i class="fas fa-globe-africa"></i>&nbsp; Data Source</h4>
+          <h4 style="color:#003d82;"><i class="ti ti-world"></i>&nbsp; Data Source</h4>
           <ul>
             <li><strong>Source:</strong> WHO Noncommunicable Diseases Country Tracking (surveillance status &amp; cycle metadata); STEPS indicator values from the WHO validated STEPS database; GYTS/GATS indicator values extracted from published country fact sheets on <a href="https://gtssacademy.org/" target="_blank" rel="noopener">gtssacademy.org</a></li>
             <li><strong>Coverage:</strong> {n_ent} entities (47 WHO AFRO Member States + Zanzibar)</li>
@@ -2599,7 +2599,7 @@ def build_html(A: dict) -> str:
 
         <!-- SPI -->
         <div class="method-card reveal" style="border-top:4px solid #0070c0;">
-          <h4 style="color:#0070c0;"><i class="fas fa-tachometer-alt"></i>&nbsp; Surveillance Performance Index (SPI)</h4>
+          <h4 style="color:#0070c0;"><i class="ti ti-gauge"></i>&nbsp; Surveillance Performance Index (SPI)</h4>
           <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.8;">
             The SPI is a composite score from <strong>0 to 100</strong> that summarises how well a country&rsquo;s NCD surveillance system is performing across three equally weighted dimensions. It is designed for <strong>relative ranking and trend monitoring</strong> across WHO AFRO Member States.
           </p>
@@ -2621,7 +2621,7 @@ def build_html(A: dict) -> str:
 
         <!-- Surveillance Status -->
         <div class="method-card reveal" style="border-top:4px solid {st_on};">
-          <h4 style="color:{st_on};"><i class="fas fa-satellite-dish"></i>&nbsp; Surveillance Status Categories</h4>
+          <h4 style="color:{st_on};"><i class="ti ti-satellite"></i>&nbsp; Surveillance Status Categories</h4>
           <p style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.7;">
             Each country is assigned exactly <strong>one status per survey instrument</strong>. Categories are mutually exclusive and exhaustive; all 48 entities are covered. This is the single vocabulary used throughout the platform — Executive Overview, Strategic Priority tables, and here.
           </p>
@@ -2636,7 +2636,7 @@ def build_html(A: dict) -> str:
 
         <!-- Instruments -->
         <div class="method-card reveal" style="border-top:4px solid #8e44ad;">
-          <h4 style="color:#8e44ad;"><i class="fas fa-flask"></i>&nbsp; The 5 Population-Based Surveillance Instruments</h4>
+          <h4 style="color:#8e44ad;"><i class="ti ti-flask"></i>&nbsp; The 5 Population-Based Surveillance Instruments</h4>
           <ul>
             <li><strong style="color:#003d82;">STEPS:</strong> WHO STEPwise Approach to NCD Risk Factor Surveillance, adults 18-69, NCD risk factors (flagship instrument)</li>
             <li><strong style="color:#c0392b;">GYTS:</strong> Global Youth Tobacco Survey, students 13-15, youth tobacco use</li>
@@ -2649,7 +2649,7 @@ def build_html(A: dict) -> str:
 
         <!-- Limitations -->
         <div class="method-card reveal" style="border-top:4px solid #e67e22;">
-          <h4 style="color:#e67e22;"><i class="fas fa-exclamation-triangle"></i>&nbsp; Analytical Notes &amp; Limitations</h4>
+          <h4 style="color:#e67e22;"><i class="ti ti-alert-triangle"></i>&nbsp; Analytical Notes &amp; Limitations</h4>
           <ul>
             <li><strong>Unit of analysis:</strong> Country/territory (N=48). Sub-national units are not tracked.</li>
             <li><strong>Data currency:</strong> Status reflects the most recent available WHO tracking data. In-progress surveys may have completed since last extraction.</li>
@@ -2666,7 +2666,7 @@ def build_html(A: dict) -> str:
 
         <!-- WHO Global Monitoring Framework -->
         <div class="method-card reveal" style="border-top:4px solid #006eb6;">
-          <h4 style="color:#006eb6;"><i class="fas fa-link"></i>&nbsp; Link to WHO Global Monitoring Framework &amp; SDG 3.4</h4>
+          <h4 style="color:#006eb6;"><i class="ti ti-link"></i>&nbsp; Link to WHO Global Monitoring Framework &amp; SDG 3.4</h4>
           <p style="font-size:12px;color:var(--muted);line-height:1.7;">
             These five instruments are the primary country-level data sources feeding the WHO Global Monitoring Framework on NCDs and SDG target 3.4 (reduce premature NCD mortality by one third by 2030). STEPS and GATS underpin indicators on tobacco use, blood pressure, glucose and obesity (SDG 3.a.1, 3.4.1 risk-factor inputs); GYTS and GSHS track youth risk-factor uptake; GSHPP tracks the school policy environment enabling prevention. Surveillance breadth, currency and regularity &mdash; as measured by the SPI &mdash; are therefore a proxy for a country's capacity to report against these global commitments, not for its NCD burden itself.
           </p>
@@ -2691,15 +2691,12 @@ def build_html(A: dict) -> str:
         <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.9);line-height:1.6;">
           &copy; {CURRENT_YEAR} WHO African Region &ndash; Health Promotion / Disease Prevention and Control (DPC) Cluster
         </div>
-        <div style="font-size:10.5px;color:rgba(255,255,255,.55);margin-top:2px;">
-          Data compiled: {REPORT_DATE} &middot; For internal WHO AFRO DPC planning use &mdash; not for public circulation without cluster review
-        </div>
       </div>
     </div>
   </div>
 </footer>
 
-<button id="back-to-top" aria-label="Back to top"><i class="fas fa-arrow-up"></i></button>
+<button id="back-to-top" aria-label="Back to top"><i class="ti ti-arrow-up"></i></button>
 <script>{js_with_data}</script>
 </body>
 </html>"""
