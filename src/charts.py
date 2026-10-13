@@ -9,7 +9,9 @@ import plotly.express as px
 from plotly.subplots import make_subplots
 from src.config import (C, FONT, TIER_COLORS, TIER_LABELS, SURVEY_META,
                         CURRENT_YEAR, CYCLE_YEARS, CURRENT_CYCLE_START,
-                        PREV_CYCLE_START, STATUS_COLORS, CYCLE_STATUS_COLORS)
+                        PREV_CYCLE_START, STATUS_COLORS, CYCLE_STATUS_COLORS,
+                        CYCLE_STATUS_ON, CYCLE_STATUS_PATTERN, CYCLE_STATUS_PATTERN_FG,
+                        BRAND, TIER_INK, RECENCY_STEPS, RECENCY_NONE, recency_color)
 
 
 def _layout(fig, title="", height=420):
@@ -17,16 +19,16 @@ def _layout(fig, title="", height=420):
         title=dict(text=title, font=dict(family=FONT, size=14, color=C["dark"]),
                    x=0, xanchor="left", pad=dict(l=2, t=4)),
         paper_bgcolor=C["white"], plot_bgcolor=C["white"],
-        font=dict(family=FONT, size=12, color=C["text"]),
+        font=dict(family=FONT, size=13, color=C["text"]),
         autosize=True, height=height,
         margin=dict(l=10, r=10, t=50, b=10),
         legend=dict(bgcolor="rgba(255,255,255,0.92)", bordercolor=C["border"],
-                    borderwidth=1, font=dict(size=11)),
-        hoverlabel=dict(bgcolor=C["dark"], font_size=12,
+                    borderwidth=1, font=dict(size=12)),
+        hoverlabel=dict(bgcolor=C["dark"], font_size=13,
                         font_family=FONT, font_color="white"),
     )
-    fig.update_xaxes(showgrid=False, linecolor=C["border"], tickfont=dict(size=11))
-    fig.update_yaxes(gridcolor="#f0f0f0", linecolor=C["border"], tickfont=dict(size=11))
+    fig.update_xaxes(showgrid=False, linecolor=C["border"], tickfont=dict(size=12))
+    fig.update_yaxes(gridcolor=BRAND["border"], linecolor=C["border"], tickfont=dict(size=12))
     return fig
 
 
@@ -54,14 +56,17 @@ def fig_spi_bar(A):
         ),
     ))
     # Tier reference lines (must match analytics.py tier cutoffs: spi>=75/50/30)
-    for thresh, label, col in [(30,"Developing",C["warning"]),(50,"Advancing",C["accent"]),(75,"Strong",C["success"])]:
+    for thresh, label, col in [(30,"Developing",TIER_INK[3]),(50,"Advancing",TIER_INK[2]),(75,"Strong",TIER_INK[1])]:
         fig.add_vline(x=thresh, line_dash="dot", line_color=col, line_width=1.5,
                       annotation_text=label, annotation_position="top right",
-                      annotation_font_size=10)
+                      annotation_font_size=11)
+    # Direct label for the band below the first threshold (identity never colour-only)
+    fig.add_annotation(x=0, y=1, xref="x", yref="paper", text="Critical", showarrow=False,
+                       xanchor="left", yanchor="bottom", font=dict(size=11, color=TIER_INK[4], family=FONT))
     _layout(fig, "Surveillance Performance Index (SPI) - All Countries", max(420, len(spi) * 16 + 140))
     fig.update_layout(
         xaxis=dict(title="SPI Score (0–100)", range=[0, 110]),
-        yaxis=dict(title="", tickfont=dict(size=10)),
+        yaxis=dict(title="", tickfont=dict(size=11)),
         margin=dict(l=10, r=60, t=50, b=10),
     )
     return fig
@@ -74,24 +79,25 @@ def fig_spi_choropleth(A):
     ).reset_index()
     fig = go.Figure(go.Choropleth(
         locations=iso_agg["iso3"], z=iso_agg["spi"], text=iso_agg["country"],
-        colorscale=[[0,"#fde8e8"],[0.30,"#c0392b"],[0.50,"#f7941d"],
-                    [0.75,"#4a90e2"],[1.0,"#00a651"]],
+        colorscale=[[0, TIER_COLORS[4]], [0.299, TIER_COLORS[4]], [0.30, TIER_COLORS[3]],
+                    [0.499, TIER_COLORS[3]], [0.50, TIER_COLORS[2]], [0.749, TIER_COLORS[2]],
+                    [0.75, TIER_COLORS[1]], [1.0, TIER_COLORS[1]]],
         zmin=0, zmax=100,
         marker_line_color=C["white"], marker_line_width=0.6,
         colorbar=dict(
-            title=dict(text="SPI Score", font=dict(size=12)),
+            title=dict(text="SPI Score", font=dict(size=13)),
             thickness=14, len=0.55, x=0.93,
             tickvals=[0,30,50,75,100],
             ticktext=["0","Developing","Advancing","Strong","100"],
-            tickfont=dict(size=10),
+            tickfont=dict(size=11),
         ),
         hovertemplate="<b>%{text}</b><br>SPI: %{z:.1f}/100<extra></extra>",
     ))
     fig.update_geos(
         scope="africa", showframe=False,
         showcoastlines=True, coastlinecolor=C["border"],
-        showland=True, landcolor="#f8f9fa",
-        showocean=True, oceancolor="#e8f4f8",
+        showland=True, landcolor=BRAND["canvas"],
+        showocean=True, oceancolor=BRAND["surface"],
         projection_type="natural earth", bgcolor=C["white"],
     )
     _layout(fig, "Surveillance Performance Index - Geographic Distribution", 520)
@@ -109,7 +115,7 @@ def fig_tier_donut(A):
         labels=tier_counts["tier_label"], values=tier_counts["n"],
         marker_colors=colors, hole=0.60,
         textinfo="label+value",
-        textfont=dict(size=12, family=FONT),
+        textfont=dict(size=13, family=FONT),
         hovertemplate="<b>%{label}</b><br>Countries: %{value}<br>%{percent}<extra></extra>",
     ))
     fig.add_annotation(
@@ -126,9 +132,9 @@ def fig_spi_components(A):
     spi = A["spi"].copy().sort_values("spi", ascending=True)
     fig = go.Figure()
     dims = [
-        ("d_coverage",   "BS - Breadth Score",                   "#4a90e2"),
-        ("d_recency",    "CS - Currency Score",                   "#f7941d"),
-        ("d_regularity", "CA-ARI - Coverage-Adjusted Regularity", "#8e44ad"),
+        ("d_coverage",   "BS - Breadth Score",                   BRAND["navy"]),
+        ("d_recency",    "CS - Currency Score",                   BRAND["who_blue"]),
+        ("d_regularity", "CA-ARI - Coverage-Adjusted Regularity", "#9fc3e6"),
     ]
     for col, name, color in dims:
         fig.add_trace(go.Bar(
@@ -141,8 +147,8 @@ def fig_spi_components(A):
     fig.update_layout(
         barmode="stack",
         xaxis=dict(title="Weighted score contribution (0–100)", range=[0, 100]),
-        yaxis=dict(tickfont=dict(size=10)),
-        legend=dict(orientation="h", y=1.02, x=0, xanchor="left", font=dict(size=11)),
+        yaxis=dict(tickfont=dict(size=11)),
+        legend=dict(orientation="h", y=1.02, x=0, xanchor="left", font=dict(size=12)),
         margin=dict(l=10, r=30, t=60, b=10),
     )
     return fig
@@ -157,19 +163,20 @@ def fig_current_cycle(A):
     fig = go.Figure()
     fig.add_trace(go.Bar(
         y=active["country"], x=active["recent_done"],
-        name="Completed", orientation="h", marker_color=C["success"],
+        name="Completed", orientation="h", marker_color=BRAND["navy"],
         hovertemplate="<b>%{y}</b><br>Completed in 2021–2026: %{x}<extra></extra>",
     ))
     fig.add_trace(go.Bar(
         y=active["country"], x=active["recent_inprog"],
-        name="In Progress", orientation="h", marker_color=C["warning"],
+        name="In Progress", orientation="h", marker_color=CYCLE_STATUS_COLORS["Attempt to update"],
+        marker_pattern=dict(shape="/", fgcolor=CYCLE_STATUS_PATTERN_FG["Attempt to update"], fgopacity=0.45, size=7, fillmode="overlay"),
         hovertemplate="<b>%{y}</b><br>In Progress 2021–2026: %{x}<extra></extra>",
     ))
     _layout(fig, f"Current 5-Year Cycle Activity ({CURRENT_CYCLE_START}–{CURRENT_YEAR})", 580)
     fig.update_layout(
         barmode="stack",
         xaxis=dict(title="Number of Surveys", dtick=1),
-        yaxis=dict(title="", tickfont=dict(size=10)),
+        yaxis=dict(title="", tickfont=dict(size=11)),
         legend=dict(orientation="h", y=-0.12),
         margin=dict(l=10, r=20, t=50, b=10),
     )
@@ -179,7 +186,7 @@ def fig_current_cycle(A):
 def fig_last_year_heatmap(A):
     """
     Surveillance Recency Matrix - Country × Instrument.
-    Colour = gap in years since last completed survey (green=recent, red=old, grey=never).
+    Colour = gap in years since last completed survey (config.RECENCY_STEPS; grey=never).
     Cell text = last completed year. Countries sorted by SPI rank (best at top).
     """
     lym    = A["last_year_matrix"].copy()
@@ -214,7 +221,7 @@ def fig_last_year_heatmap(A):
                 zrow.append(z_val)
                 trow.append(str(yr_int))
                 tag = ("✓ On Cycle" if gap <= 5
-                       else f"⚠ {gap} yr gap" if gap <= 10
+                       else f"⚠ {gap} yr gap" if gap <= 12
                        else f"⛔ {gap} yr gap")
                 hrow.append(
                     f"<b>{c}</b><br><b>{st}</b>"
@@ -226,23 +233,23 @@ def fig_last_year_heatmap(A):
         text_arr.append(trow)
         hover_arr.append(hrow)
 
-    # ── Beautiful colorscale (gap 0=green → 28=dark red; sentinel=soft grey) ─
+    # ── Recency colorscale (config.RECENCY_STEPS; sentinel = no-evidence grey) ─
     # Plotly normalises [zmin, zmax] → [0, 1]
     # SENTINEL=-1, Z_MAX=28  →  range=29
     R = Z_MAX - SENTINEL          # = 29
     def _n(v): return (v - SENTINEL) / R   # normalize to [0,1]
 
-    colorscale = [
-        [_n(SENTINEL),       "#dde4ee"],   # no data: soft blue-grey
-        [_n(SENTINEL)+0.025, "#dde4ee"],   # keep grey for sentinel zone
-        [_n(0),              "#00693e"],   # gap 0: deep emerald - perfectly current
-        [_n(3),              "#00a651"],   # gap 3: WHO green
-        [_n(5),              "#52c41a"],   # gap 5: bright lime - on-cycle boundary
-        [_n(8),              "#fadb14"],   # gap 8: yellow - approaching overdue
-        [_n(12),             "#fa8c16"],   # gap 12: orange - clearly overdue
-        [_n(18),             "#cf1322"],   # gap 18: deep red - critical
-        [_n(Z_MAX),          "#5c0011"],   # gap 28+: dark wine - very critical
-    ]
+    # Stepped, not continuous: each cell reads as one recency band, identical
+    # to the gap bars and threshold lines (config.RECENCY_STEPS), and stays
+    # legible in greyscale print. Integers only, so band edges sit at +0.5.
+    colorscale = [[0, RECENCY_NONE], [_n(-0.5), RECENCY_NONE]]
+    lo = -0.5
+    for hi, fill, _ink, _lbl in RECENCY_STEPS:
+        top = min(hi + 0.5, Z_MAX)
+        colorscale += [[_n(lo) + 1e-6, fill], [_n(top), fill]]
+        lo = top
+        if top >= Z_MAX:
+            break
 
     n_rows = len(countries)
     height = max(580, n_rows * 20 + 180)
@@ -251,18 +258,18 @@ def fig_last_year_heatmap(A):
         z=z_arr, x=instruments, y=countries,
         text=text_arr,
         texttemplate="%{text}",
-        textfont=dict(size=10, family=FONT, color="white"),
+        textfont=dict(size=11, family=FONT),   # no colour: Plotly picks dark/light per cell
         customdata=hover_arr,
         hovertemplate="%{customdata}<extra></extra>",
         colorscale=colorscale,
         zmin=SENTINEL, zmax=Z_MAX,
         showscale=True,
         colorbar=dict(
-            title=dict(text="Gap (years)", font=dict(size=11, family=FONT), side="right"),
+            title=dict(text="Gap (years)", font=dict(size=12, family=FONT), side="right"),
             thickness=16, len=0.55, x=1.01,
             tickvals=[0, 5, 10, 15, 20, Z_MAX],
             ticktext=["0 - Current", "5", "10", "15", "20", "28+"],
-            tickfont=dict(size=10, family=FONT),
+            tickfont=dict(size=11, family=FONT),
             outlinewidth=0,
             bgcolor="rgba(255,255,255,0)",
         ),
@@ -276,43 +283,42 @@ def fig_last_year_heatmap(A):
             x=0, xanchor="left", pad=dict(l=4, t=6),
         ),
         paper_bgcolor="#ffffff",
-        plot_bgcolor="#f8faff",
-        font=dict(family=FONT, size=12),
+        plot_bgcolor=BRAND["surface"],
+        font=dict(family=FONT, size=13),
         autosize=True, height=height,
-        margin=dict(l=10, r=100, t=80, b=50),
+        margin=dict(l=10, r=100, t=80, b=70),
         xaxis=dict(
             side="top",
             tickangle=0,
-            tickfont=dict(size=13, color=C["dark"], family=FONT),
+            tickfont=dict(size=14, color=C["dark"], family=FONT),
             showgrid=False,
             linecolor=C["border"],
         ),
         yaxis=dict(
             autorange="reversed",
-            tickfont=dict(size=10, family=FONT),
+            tickfont=dict(size=11, family=FONT),
             showgrid=False,
             linecolor=C["border"],
             title="",
         ),
-        hoverlabel=dict(bgcolor=C["dark"], font_size=12,
+        hoverlabel=dict(bgcolor=C["dark"], font_size=13,
                         font_family=FONT, font_color="white"),
     )
 
     # ── Bottom caption strip (legend) ─────────────────────────────────────────
     leg_items = [
-        ("#dde4ee", "#555",  "No record"),
-        ("#00693e", "white", "On Cycle (0–5 yr)"),
-        ("#fa8c16", "white", "Off Cycle (6–12 yr)"),
-        ("#cf1322", "white", "Critical (>12 yr)"),
+        (RECENCY_NONE,             BRAND["ink"], "No record"),
+        (recency_color(0),         "#ffffff",    "On Cycle (0–5 yr)"),
+        (recency_color(6),         BRAND["ink"], "Off Cycle (6–12 yr)"),
+        (recency_color(13),        "#ffffff",    "Critical (>12 yr)"),
     ]
     annotations = []
     n = len(leg_items)
     for i, (bg, fg, lbl) in enumerate(leg_items):
         annotations.append(dict(
-            x=i / (n - 1), y=-0.06, xref="paper", yref="paper",
-            text=(f"<span style='background:{bg};color:{fg};padding:3px 10px;"
-                  f"border-radius:5px;font-size:10.5px;font-weight:600;"
-                  f"border:1px solid rgba(0,0,0,.1)'>&nbsp;{lbl}&nbsp;</span>"),
+            x=i / (n - 1), y=-0.015, xref="paper", yref="paper", yanchor="top",
+            text=f"<b>{lbl}</b>", font=dict(size=12, color=fg, family=FONT),
+            bgcolor=bg, borderpad=4, bordercolor="rgba(13,31,78,.12)", borderwidth=1,
             showarrow=False, xanchor="center",
         ))
     fig.update_layout(annotations=annotations)
@@ -335,10 +341,10 @@ def fig_priority_scatter(A):
     # Background rectangles per quadrant (added as shapes)
     quadrant_fills = [
         # (x0, x1, y0, y1, fillcolor, name)
-        (0,          GAP_THRESH, SPI_THRESH, 105, "rgba(0,166,81,0.07)"),    # SUSTAIN
-        (GAP_THRESH, x_max,      SPI_THRESH, 105, "rgba(247,148,29,0.07)"),  # REINVEST
-        (0,          GAP_THRESH, 0,          SPI_THRESH, "rgba(74,144,226,0.07)"),  # DEVELOP
-        (GAP_THRESH, x_max,      0,          SPI_THRESH, "rgba(192,57,43,0.08)"),   # URGENT
+        (0,          GAP_THRESH, SPI_THRESH, 105, "rgba(31,95,168,0.06)"),    # SUSTAIN
+        (GAP_THRESH, x_max,      SPI_THRESH, 105, "rgba(224,147,46,0.08)"),  # REINVEST
+        (0,          GAP_THRESH, 0,          SPI_THRESH, "rgba(134,182,224,0.10)"),  # DEVELOP
+        (GAP_THRESH, x_max,      0,          SPI_THRESH, "rgba(196,67,43,0.07)"),   # URGENT
     ]
 
     for tier in [4, 3, 2, 1]:
@@ -374,37 +380,37 @@ def fig_priority_scatter(A):
         ))
 
     # Divider lines at fixed thresholds
-    fig.add_vline(x=GAP_THRESH, line_dash="dash", line_color="#888", line_width=1.5)
-    fig.add_hline(y=SPI_THRESH, line_dash="dash", line_color="#888", line_width=1.5)
+    fig.add_vline(x=GAP_THRESH, line_dash="dash", line_color=BRAND["muted"], line_width=1.5)
+    fig.add_hline(y=SPI_THRESH, line_dash="dash", line_color=BRAND["muted"], line_width=1.5)
 
     # Quadrant background shading
     fig.update_layout(shapes=[
         dict(type="rect", xref="x", yref="y",
              x0=0,          x1=GAP_THRESH, y0=SPI_THRESH, y1=105,
-             fillcolor="rgba(0,166,81,0.06)",  line_width=0),
+             fillcolor="rgba(31,95,168,0.06)",  line_width=0),
         dict(type="rect", xref="x", yref="y",
              x0=GAP_THRESH, x1=x_max,      y0=SPI_THRESH, y1=105,
-             fillcolor="rgba(247,148,29,0.07)", line_width=0),
+             fillcolor="rgba(224,147,46,0.08)", line_width=0),
         dict(type="rect", xref="x", yref="y",
              x0=0,          x1=GAP_THRESH, y0=0,          y1=SPI_THRESH,
-             fillcolor="rgba(74,144,226,0.06)", line_width=0),
+             fillcolor="rgba(134,182,224,0.10)", line_width=0),
         dict(type="rect", xref="x", yref="y",
              x0=GAP_THRESH, x1=x_max,      y0=0,          y1=SPI_THRESH,
-             fillcolor="rgba(192,57,43,0.07)",  line_width=0),
+             fillcolor="rgba(196,67,43,0.07)",  line_width=0),
     ])
 
     # Quadrant labels (placed at data coords for stability)
     labels = [
-        (GAP_THRESH / 2,       92, "SUSTAIN",  C["success"]),
-        (GAP_THRESH + (x_max - GAP_THRESH) / 2, 92, "REINVEST", C["warning"]),
-        (GAP_THRESH / 2,        8, "DEVELOP",  C["accent"]),
-        (GAP_THRESH + (x_max - GAP_THRESH) / 2,  8, "URGENT",   C["danger"]),
+        (GAP_THRESH / 2,       92, "SUSTAIN",  TIER_INK[1]),
+        (GAP_THRESH + (x_max - GAP_THRESH) / 2, 92, "REINVEST", TIER_INK[3]),
+        (GAP_THRESH / 2,        8, "DEVELOP",  TIER_INK[2]),
+        (GAP_THRESH + (x_max - GAP_THRESH) / 2,  8, "URGENT",   TIER_INK[4]),
     ]
     for lx, ly, lbl, lc in labels:
         fig.add_annotation(
             x=lx, y=ly, xref="x", yref="y",
             text=f"<b>{lbl}</b>", showarrow=False,
-            font=dict(size=13, color=lc, family=FONT),
+            font=dict(size=14, color=lc, family=FONT),
             bgcolor="rgba(255,255,255,0.8)", borderpad=5,
             bordercolor=lc, borderwidth=1,
         )
@@ -436,17 +442,25 @@ def fig_survey_type_comparison(A):
 
     fig = go.Figure()
     for key, label, color in statuses:
+        key_label = {"Attempt to Update": "Attempt to update"}.get(label, label)
         values = [kpis[st][key] for st in survey_types]
         fig.add_trace(go.Bar(
             name=label,
             y=survey_types,
             x=values,
             orientation="h",
-            marker_color=color,
+            marker=dict(
+                color=color, line=dict(color="#ffffff", width=1),
+                pattern=(dict(shape=CYCLE_STATUS_PATTERN[key_label], fgcolor=CYCLE_STATUS_PATTERN_FG[key_label],
+                              fgopacity=0.3 if CYCLE_STATUS_PATTERN[key_label] == "." else 0.4,
+                              size=9 if CYCLE_STATUS_PATTERN[key_label] == "." else 7,
+                              solidity=0.15 if CYCLE_STATUS_PATTERN[key_label] == "." else 0.25, fillmode="overlay")
+                         if key_label in CYCLE_STATUS_PATTERN else None),
+            ),
             text=[str(v) if v > 0 else "" for v in values],
             textposition="inside",
             insidetextanchor="middle",
-            textfont=dict(size=11, color="white", family=FONT),
+            textfont=dict(size=12, color=CYCLE_STATUS_ON[key_label], family=FONT),
             hovertemplate=f"<b>%{{y}}</b> - {label}: <b>%{{x}}</b> countries<extra></extra>",
         ))
 
@@ -454,8 +468,8 @@ def fig_survey_type_comparison(A):
     fig.update_layout(
         barmode="stack",
         xaxis=dict(title="Number of Countries", range=[0, 52]),
-        yaxis=dict(tickfont=dict(size=12)),
-        legend=dict(orientation="h", y=-0.28, x=0.5, xanchor="center", font=dict(size=11),
+        yaxis=dict(tickfont=dict(size=13)),
+        legend=dict(orientation="h", y=-0.28, x=0.5, xanchor="center", font=dict(size=12),
                     traceorder="reversed"),
         margin=dict(l=10, r=30, t=50, b=80),
     )
@@ -498,11 +512,11 @@ def fig_timeline(A):
     )
     # Shade current cycle (no inline annotation - add separately for clean placement)
     fig.add_vrect(x0=CURRENT_CYCLE_START - 0.5, x1=CURRENT_YEAR + 0.5,
-                  fillcolor="rgba(0,166,81,0.07)", line_width=0)
+                  fillcolor="rgba(31,95,168,0.06)", line_width=0)
     fig.add_annotation(
         x=CURRENT_CYCLE_START, y=1.0, xref="x", yref="paper",
         text="Current cycle", showarrow=False,
-        font=dict(size=10, color=C["success"], family=FONT),
+        font=dict(size=11, color=TIER_INK[1], family=FONT),
         xanchor="left", yanchor="bottom",
     )
     return fig
@@ -512,13 +526,7 @@ def fig_gap_bar(A):
     spi = A["spi"].copy()
     spi["gap_plot"] = spi["gap_years"].fillna(CURRENT_YEAR - A["year_min"])
     spi_sorted = spi.sort_values("gap_plot", ascending=True)
-    colors = [
-        C["danger"]  if g >= 15 else
-        C["warning"] if g >= 10 else
-        "#f1c40f"    if g >= 5  else
-        C["success"]
-        for g in spi_sorted["gap_plot"]
-    ]
+    colors = [recency_color(g) for g in spi_sorted["gap_plot"]]
     fig = go.Figure(go.Bar(
         y=spi_sorted["country"], x=spi_sorted["gap_plot"],
         orientation="h", marker_color=colors,
@@ -526,10 +534,10 @@ def fig_gap_bar(A):
         textposition="outside",
         hovertemplate="<b>%{y}</b><br>Gap: %{x} years since last survey<extra></extra>",
     ))
-    for thresh, col, lbl in [(5,"#f1c40f","5yr"),(10,C["warning"],"10yr"),(15,C["danger"],"15yr")]:
+    for thresh, col, lbl in [(5.5,recency_color(6, ink=True),"5yr"),(12.5,recency_color(13, ink=True),"12yr")]:
         fig.add_vline(x=thresh, line_dash="dot", line_color=col, line_width=1.5,
                       annotation_text=lbl, annotation_position="top right",
-                      annotation_font_size=10)
+                      annotation_font_size=11)
     _layout(fig, "Years Since Most Recent Survey (Surveillance Gap)", 900)
     fig.update_layout(
         xaxis=dict(title="Years (relative to 2026)"),

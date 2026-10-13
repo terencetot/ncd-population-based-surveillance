@@ -24,3 +24,6 @@ Thumbs.db
 
 # Database
 output/*.db
+
+# Design baseline snapshots (local only)
+baseline/

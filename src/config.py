@@ -32,35 +32,106 @@ PREV_CYCLE_START    = CURRENT_CYCLE_START - CYCLE_YEARS  # 2016
 # D Regularity  (33.334%) : average renewal cycle interval vs 5-yr standard
 SPI_W = {"coverage": 1/3, "recency": 1/3, "regularity": 1/3}
 
-# ── Performance tiers ─────────────────────────────────────────────────────────
-# The green→amber→red performance ramp is reserved EXCLUSIVELY for SPI tiers
-# and gap severity. Surveillance STATUS (below) deliberately uses a distinct
-# palette family so a reader moving between the Performance tab and any
-# status view is never shown the same colour meaning two different things.
+# ══ COLOUR SYSTEM ═════════════════════════════════════════════════════════════
+# One system, one rule: colour encodes EVIDENCE QUALITY and nothing else.
+#   blue        current / strong evidence   (the WHO anchor carries "good")
+#   sand        ageing evidence
+#   amber, red  concern, critical
+#   grey        absence of evidence
+#   texture     a survey round is in progress (hatch = updating, dots = first ever)
+# Everything non-semantic (instruments, indicator domains, chrome) is WHO navy,
+# so hue is never spent on decoration and never means two things.
+#
+# Built for colour-vision deficiency: every status/tier pair is separated on
+# the two axes that survive protan-, deutan- and tritanopia (lightness and
+# blue<->yellow), verified with Machado-2009 simulation: min OKLab dE >= 9.4
+# between statuses under protan/deutan (6.8 under tritan, where First Attempt
+# also carries its dot pattern) and >= 19 between tiers. The two
+# in-progress statuses also carry a fill pattern, so greyscale print stays
+# unambiguous. Each colour has a FILL (marks, bars, swatches) and an INK
+# (text on white, >= 4.5:1). Text on a fill uses *_ON.
+#
+# report.py emits all of this as CSS custom properties and a JS object, so
+# server-rendered HTML, Plotly figures and client-side charts share one source.
+
+BRAND = {
+    "navy":     "#003d82",   # WHO AFRO navy - actions, headings, non-semantic marks
+    "who_blue": "#009ade",   # WHO blue (Pantone 2925) - accent hairlines, focus
+    "ink":      "#0d1f4e",   # darkest text / text on light fills
+    "text":     "#1e2a4a", "muted": "#5b6577",
+    "border":   "#e4e7ef", "canvas": "#f6f7fb", "surface": "#ffffff",
+    "tint":     "#eef3fa",   # navy-tinted panel background
+    "rule":     "#c9d3e3",   # neutral chart rules / gridlines
+}
+
+# Evidence primitives (shared by status, tier and recency)
+_BLUE, _BLUE_LT, _SAND, _AMBER, _RED, _SLATE, _GREY = (
+    "#1f5fa8", "#86b6e0", "#d8b863", "#e0932e", "#c4432b", "#636f84", "#d3d8e0")
+
+# ── Performance tiers (ordinal ramp: blue -> amber -> red) ────────────────────
 TIER_LABELS = {1: "Strong", 2: "Advancing", 3: "Developing", 4: "Critical"}
-TIER_COLORS = {1: "#00a651", 2: "#4a90e2", 3: "#f7941d", 4: "#c0392b"}
+TIER_COLORS = {1: _BLUE, 2: _BLUE_LT, 3: _AMBER, 4: _RED}
+TIER_INK    = {1: "#1f5fa8", 2: "#2f6ba8", 3: "#8a5a00", 4: "#b13a24"}
+TIER_ON     = {1: "#ffffff", 2: BRAND["ink"], 3: BRAND["ink"], 4: "#ffffff"}
+TIER_CUTS   = (75, 50, 30)   # must match analytics.py tier assignment
+
+def tier_of(spi: float) -> int:
+    return 1 if spi >= TIER_CUTS[0] else 2 if spi >= TIER_CUTS[1] else 3 if spi >= TIER_CUTS[2] else 4
 
 # ── Surveillance cycle status (single source of truth, used everywhere: KPI
-#    cards, donut, scatter, per-instrument tables, briefings). Named distinctly
+#    cards, bars, scatter, per-instrument tables, briefings). Named distinctly
 #    from STATUS_COLORS below (raw ETL record status: Completed/In Progress/
 #    Not Usable) - different concept, would otherwise collide on import. ──────
 CYCLE_STATUS_LABELS = ["On Cycle", "Attempt to update", "Off Cycle", "First Attempt", "Never Conducted"]
-CYCLE_STATUS_COLORS = {
-    "On Cycle":          "#0d9488",   # teal    - current, usable evidence
-    "Attempt to update": "#7c3aed",   # violet  - actively updating
-    "Off Cycle":         "#d97706",   # amber   - idle, ageing
-    "First Attempt":     "#0891b2",   # cyan    - no prior evidence, but fielding a first-ever round now
-    "Never Conducted":   "#64748b",   # slate   - no evidence (never red: red is reserved for URGENT/Critical tier)
+CYCLE_STATUS_COLORS = {                       # FILL
+    "On Cycle":          _BLUE,     # current, usable evidence (= Strong)
+    "Attempt to update": "#7fb2e5", # prior evidence + new round in progress (hatched)
+    "Off Cycle":         _SAND,     # evidence exists but ageing, nothing active
+    "First Attempt":     _SLATE,    # no evidence yet, first-ever round in progress (dotted)
+    "Never Conducted":   _GREY,     # no evidence (never red: red is the Critical tier)
 }
+CYCLE_STATUS_INK = {
+    "On Cycle": "#1f5fa8", "Attempt to update": "#2a6aa6", "Off Cycle": "#7a5c0e",
+    "First Attempt": "#4f5a6e", "Never Conducted": "#5b6475",
+}
+CYCLE_STATUS_ON = {
+    "On Cycle": "#ffffff", "Attempt to update": BRAND["ink"], "Off Cycle": BRAND["ink"],
+    "First Attempt": "#ffffff", "Never Conducted": BRAND["ink"],
+}
+# Plotly marker.pattern shapes - the non-colour cue for "in progress"
+CYCLE_STATUS_PATTERN = {"Attempt to update": "/", "First Attempt": "."}
+CYCLE_STATUS_PATTERN_FG = {"Attempt to update": "#1f5fa8", "First Attempt": "#ffffff"}
 
-# ── UI colour palette ─────────────────────────────────────────────────────────
+# ── Recency (years since last completed survey) ───────────────────────────────
+# One step function, used by the recency matrix, the gap bars and every
+# threshold line. <=5 yr IS the On Cycle definition, so it wears On Cycle blue.
+RECENCY_NONE  = _GREY
+# Three bands, named in the platform's own vocabulary:
+#   0-5 yr  On Cycle (the status definition)   6-12 yr  Off Cycle   >12 yr  Critical
+# "No record" (never conducted) is NOT critical: it is the grey of absence.
+RECENCY_STEPS = [   # (max gap inclusive, fill, ink, label)
+    (5,    _BLUE,  "#1f5fa8", "On Cycle (0-5 yr)"),
+    (12,   _SAND,  "#7a5c0e", "Off Cycle (6-12 yr)"),
+    (999,  _RED,   "#b13a24", "Critical (>12 yr)"),
+]
+RECENCY_THRESHOLDS = (5, 12)   # band edges drawn as reference lines
+
+def recency_color(gap, ink: bool = False) -> str:
+    if gap is None or gap != gap:   # None or NaN
+        return "#5b6475" if ink else RECENCY_NONE
+    for hi, fill, ink_c, _ in RECENCY_STEPS:
+        if gap <= hi:
+            return ink_c if ink else fill
+    return RECENCY_STEPS[-1][2 if ink else 1]
+
+# ── UI colour palette (legacy keys kept; semantic keys now point at the system)
 C = {
-    "primary":   "#003d82", "secondary": "#006eb6",
-    "accent":    "#4a90e2", "success":   "#00a651",
-    "warning":   "#f7941d", "danger":    "#c0392b",
-    "light":     "#f9fbff", "white":     "#ffffff",
-    "dark":      "#14265c", "text":      "#333e5c",
-    "muted":     "#6b7280", "border":    "#e2e8f0",
+    "primary":   BRAND["navy"], "secondary": "#006eb6",
+    "accent":    BRAND["who_blue"], "success": TIER_INK[1],
+    "warning":   TIER_INK[3],   "danger":    TIER_INK[4],
+    "light":     "#f9fbff",     "white":     "#ffffff",
+    "dark":      BRAND["ink"],  "text":      BRAND["text"],
+    "muted":     BRAND["muted"], "border":   BRAND["border"],
 }
 
 # ── Design-system scale tokens (fonts / radii / motion) - Phase 4 ────────────
@@ -72,7 +143,7 @@ RADIUS = {"sm": "6px", "md": "10px", "lg": "16px"}
 DUR = {"micro": "120ms", "block": "240ms"}
 EASE = "cubic-bezier(.4,0,.2,1)"
 
-FONT = "'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+FONT = "'Source Sans 3', 'Segoe UI', system-ui, -apple-system, sans-serif"
 
 # ── Status mapping ─────────────────────────────────────────────────────────────
 STATUS_MAP = {
@@ -80,24 +151,24 @@ STATUS_MAP = {
     "In progress": "In Progress",
     "Data not usable": "Not Usable",
 }
-STATUS_COLORS = {
-    "Completed":  "#00a651",
-    "In Progress":"#f7941d",
-    "Not Usable": "#c0392b",
+STATUS_COLORS = {   # raw record status, mapped onto the evidence system
+    "Completed":  BRAND["navy"],
+    "In Progress":CYCLE_STATUS_COLORS["Attempt to update"],
+    "Not Usable": CYCLE_STATUS_COLORS["Never Conducted"],
 }
 
 # ── Survey instrument metadata ─────────────────────────────────────────────────
 SURVEY_META = {
     "STEPS":  {"full": "STEPwise Approach to NCD Risk Factor Surveillance",
-               "target": "Adults 18–69",  "domain": "NCD risk factors",   "color": "#003d82"},
+               "target": "Adults 18–69",  "domain": "NCD risk factors",   "color": BRAND["navy"]},
     "GYTS":   {"full": "Global Youth Tobacco Survey",
-               "target": "School-attending students 13–15", "domain": "Youth tobacco",     "color": "#c0392b"},
+               "target": "School-attending students 13–15", "domain": "Youth tobacco",     "color": BRAND["navy"]},
     "GSHS":   {"full": "Global School-based Student Health Survey",
-               "target": "School-attending students 13–17", "domain": "Youth health",      "color": "#f7941d"},
+               "target": "School-attending students 13–17", "domain": "Youth health",      "color": BRAND["navy"]},
     "GATS":   {"full": "Global Adult Tobacco Survey",
-               "target": "Adults 15+",    "domain": "Adult tobacco",      "color": "#8e44ad"},
+               "target": "Adults 15+",    "domain": "Adult tobacco",      "color": BRAND["navy"]},
     "GSHPP":  {"full": "Global School Health Policies and Practices",
-               "target": "School level",  "domain": "School health policy","color": "#00a651"},
+               "target": "School level",  "domain": "School health policy","color": BRAND["navy"]},
 }
 
 # ── ISO codes ──────────────────────────────────────────────────────────────────

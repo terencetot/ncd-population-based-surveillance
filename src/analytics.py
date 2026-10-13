@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 from src.config import (CURRENT_YEAR, CYCLE_YEARS, CURRENT_CYCLE_START,
-                        SPI_W, TIER_LABELS, TIER_COLORS, SURVEY_META, ISO_CODES)
+                        SPI_W, TIER_LABELS, TIER_COLORS, SURVEY_META, ISO_CODES, BRAND)
 
 
 def compute_spi(df: pd.DataFrame) -> pd.DataFrame:
@@ -388,7 +388,7 @@ def compute_exec_kpis(df: pd.DataFrame) -> dict:
         "full_name":          "All Survey Types - System-wide view",
         "target":             "All 48 WHO AFRO entities",
         "domain":             "NCD surveillance system",
-        "color":              "#003d82",
+        "color":              BRAND["navy"],
     }
 
     # ── Validation ────────────────────────────────────────────────────────────
@@ -453,16 +453,16 @@ def build_steps_profile_data(ncd_db_path: Path, spi_df: pd.DataFrame) -> dict:
 
     # ── Section metadata ──────────────────────────────────────────────────────
     _SEC_META = {
-        "S1_TOB": {"color": "#c0392b", "icon": "ti-smoking"},
-        "S1_ALC": {"color": "#8e44ad", "icon": "ti-glass-full"},
-        "S1_DIT": {"color": "#27ae60", "icon": "ti-apple"},
-        "S1_PAC": {"color": "#2980b9", "icon": "ti-run"},
-        "S1_SAL": {"color": "#1a7fc1", "icon": "ti-tools-kitchen-2"},
-        "S2_BPR": {"color": "#e74c3c", "icon": "ti-heartbeat"},
-        "S2_ANT": {"color": "#e67e22", "icon": "ti-weight"},
-        "S3_GLU": {"color": "#d35400", "icon": "ti-droplet"},
-        "S3_CHO": {"color": "#16a085", "icon": "ti-test-pipe"},
-        "S_RISK": {"color": "#2c3e50", "icon": "ti-alert-triangle"},
+        "S1_TOB": {"color": BRAND["navy"], "icon": "ti-smoking"},
+        "S1_ALC": {"color": BRAND["navy"], "icon": "ti-glass-full"},
+        "S1_DIT": {"color": BRAND["navy"], "icon": "ti-apple"},
+        "S1_PAC": {"color": BRAND["navy"], "icon": "ti-run"},
+        "S1_SAL": {"color": BRAND["navy"], "icon": "ti-tools-kitchen-2"},
+        "S2_BPR": {"color": BRAND["navy"], "icon": "ti-heartbeat"},
+        "S2_ANT": {"color": BRAND["navy"], "icon": "ti-weight"},
+        "S3_GLU": {"color": BRAND["navy"], "icon": "ti-droplet"},
+        "S3_CHO": {"color": BRAND["navy"], "icon": "ti-test-pipe"},
+        "S_RISK": {"color": BRAND["navy"], "icon": "ti-alert-triangle"},
     }
     sid_to_code = {}
     sections: dict = {}
@@ -470,7 +470,7 @@ def build_steps_profile_data(ncd_db_path: Path, spi_df: pd.DataFrame) -> dict:
         code = row["section_code"]
         sid  = int(row["section_id"])
         sid_to_code[sid] = code
-        m = _SEC_META.get(code, {"color": "#6b7280", "icon": "ti-circle"})
+        m = _SEC_META.get(code, {"color": BRAND["navy"], "icon": "ti-circle"})
         sections[code] = {
             "id":    sid,
             "name":  row["section_name"],
@@ -590,27 +590,27 @@ def build_steps_profile_data(ncd_db_path: Path, spi_df: pd.DataFrame) -> dict:
 
 _GTSS_SEC_META = {
     "GYTS": {
-        "SMOKED":    {"name": "Smoked Tobacco",              "color": "#c0392b", "icon": "ti-smoking"},
-        "SMOKELESS": {"name": "Smokeless Tobacco",            "color": "#e67e22", "icon": "ti-ban"},
-        "ANY":       {"name": "Any Tobacco Use",              "color": "#8e44ad", "icon": "ti-lungs"},
-        "SUSCEPT":   {"name": "Susceptibility",               "color": "#2c3e50", "icon": "ti-alert-triangle"},
-        "ECIG":      {"name": "Electronic Cigarettes",        "color": "#16a085", "icon": "ti-bolt"},
-        "CESSATION": {"name": "Cessation",                    "color": "#2980b9", "icon": "ti-first-aid-kit"},
-        "SHS":       {"name": "Secondhand Smoke",             "color": "#d35400", "icon": "ti-wind"},
-        "ACCESS":    {"name": "Access & Availability",        "color": "#27ae60", "icon": "ti-building-store"},
-        "ADVERT":    {"name": "Tobacco Advertising",          "color": "#7f8c8d", "icon": "ti-speakerphone"},
-        "KNOW":      {"name": "Knowledge & Attitudes",        "color": "#34495e", "icon": "ti-brain"},
+        "SMOKED":    {"name": "Smoked Tobacco",              "color": BRAND["navy"], "icon": "ti-smoking"},
+        "SMOKELESS": {"name": "Smokeless Tobacco",            "color": BRAND["navy"], "icon": "ti-ban"},
+        "ANY":       {"name": "Any Tobacco Use",              "color": BRAND["navy"], "icon": "ti-lungs"},
+        "SUSCEPT":   {"name": "Susceptibility",               "color": BRAND["navy"], "icon": "ti-alert-triangle"},
+        "ECIG":      {"name": "Electronic Cigarettes",        "color": BRAND["navy"], "icon": "ti-bolt"},
+        "CESSATION": {"name": "Cessation",                    "color": BRAND["navy"], "icon": "ti-first-aid-kit"},
+        "SHS":       {"name": "Secondhand Smoke",             "color": BRAND["navy"], "icon": "ti-wind"},
+        "ACCESS":    {"name": "Access & Availability",        "color": BRAND["navy"], "icon": "ti-building-store"},
+        "ADVERT":    {"name": "Tobacco Advertising",          "color": BRAND["navy"], "icon": "ti-speakerphone"},
+        "KNOW":      {"name": "Knowledge & Attitudes",        "color": BRAND["navy"], "icon": "ti-brain"},
     },
     "GATS": {
-        "USE":       {"name": "Tobacco & E-Cigarette Use",    "color": "#8e44ad", "icon": "ti-smoking"},
-        "SMOKING":   {"name": "Tobacco Smoking",               "color": "#c0392b", "icon": "ti-flame"},
-        "SMOKELESS": {"name": "Smokeless Tobacco Use",         "color": "#e67e22", "icon": "ti-ban"},
-        "HEATED":    {"name": "Heated Tobacco Products",       "color": "#d35400", "icon": "ti-temperature"},
-        "ECIG":      {"name": "Electronic Cigarettes",         "color": "#16a085", "icon": "ti-bolt"},
-        "CESSATION": {"name": "Cessation",                     "color": "#2980b9", "icon": "ti-first-aid-kit"},
-        "SHS":       {"name": "Secondhand Smoke",              "color": "#7f8c8d", "icon": "ti-wind"},
-        "MEDIA":     {"name": "Media & Warning Labels",        "color": "#2c3e50", "icon": "ti-speakerphone"},
-        "KNOW":      {"name": "Knowledge & Attitudes",         "color": "#34495e", "icon": "ti-brain"},
+        "USE":       {"name": "Tobacco & E-Cigarette Use",    "color": BRAND["navy"], "icon": "ti-smoking"},
+        "SMOKING":   {"name": "Tobacco Smoking",               "color": BRAND["navy"], "icon": "ti-flame"},
+        "SMOKELESS": {"name": "Smokeless Tobacco Use",         "color": BRAND["navy"], "icon": "ti-ban"},
+        "HEATED":    {"name": "Heated Tobacco Products",       "color": BRAND["navy"], "icon": "ti-temperature"},
+        "ECIG":      {"name": "Electronic Cigarettes",         "color": BRAND["navy"], "icon": "ti-bolt"},
+        "CESSATION": {"name": "Cessation",                     "color": BRAND["navy"], "icon": "ti-first-aid-kit"},
+        "SHS":       {"name": "Secondhand Smoke",              "color": BRAND["navy"], "icon": "ti-wind"},
+        "MEDIA":     {"name": "Media & Warning Labels",        "color": BRAND["navy"], "icon": "ti-speakerphone"},
+        "KNOW":      {"name": "Knowledge & Attitudes",         "color": BRAND["navy"], "icon": "ti-brain"},
     },
 }
 
@@ -658,7 +658,7 @@ def build_gtss_profile_data(json_path: Path, survey_code: str, spi_df: pd.DataFr
         for code, ind in entry["indicators"].items():
             sc = ind["sec"]
             if sc not in sections:
-                meta = sec_meta.get(sc, {"name": ind.get("sec_name", sc), "color": "#6b7280", "icon": "ti-circle"})
+                meta = sec_meta.get(sc, {"name": ind.get("sec_name", sc), "color": BRAND["navy"], "icon": "ti-circle"})
                 sections[sc] = {"id": len(sections) + 1, "name": meta["name"], "step": survey_code,
                                  "color": meta["color"], "icon": meta["icon"]}
             if code not in indicators:

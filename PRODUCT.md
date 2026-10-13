@@ -1,0 +1,70 @@
+# Product
+
+<!-- impeccable:product-schema 1 -->
+
+## Platform
+
+web
+
+## Users
+
+Three audiences, held equal. When their needs conflict, no one of them takes priority; each tab is shaped around the reader it mainly serves.
+
+- **WHO AFRO senior leadership.** Need a fast, trustworthy read of regional surveillance status: where the region stands, which countries are critical, and where to act.
+- **The Regional NCD team.** Use it as a working tool: SPI rankings, cycle and gap analysis, strategic prioritisation, CSV exports and the methodology behind the numbers.
+- **Country focal points** across the 47 Member States plus Zanzibar. Read their own country's profile and how it compares across the region.
+
+The readership spans Anglophone, Francophone and Lusophone Member States.
+
+## Product Purpose
+
+The NCD Population-based Surveillance Intelligence Platform for the WHO Regional Office for Africa reports the state of NCD population-based surveillance across 48 entities (47 Member States plus Zanzibar). It covers five instruments: STEPS, GYTS, GSHS, GATS and GSHPP. It answers three questions: has each survey happened, how current is it, and which indicators did it produce. It also condenses each country's surveillance into the Surveillance Performance Index (SPI).
+
+Success means a reader can form an accurate view of a country's or the region's surveillance status quickly, and can trust it, because provenance, freshness and method are visible.
+
+## Positioning
+
+It is a surveillance-system instrument, not a disease-burden tool. It measures whether surveillance is broad, current and regular, using the SPI's three equally weighted dimensions (Breadth, Currency and Regularity). It tracks every AFRO entity against the WHO five-year cycle using one shared status vocabulary. A high SPI means a well-run surveillance system, not low NCD risk.
+
+## Operating Context
+
+- Published as a hosted web page. The root `index.html` redirects to `output/NCD_AFRO_Dashboard.html`.
+- One self-contained HTML file built by the Python pipeline `main.py`, which runs ETL → analytics → `src/report.py`. Charts are Plotly. Fonts, icons and Plotly load from CDNs.
+- Six tabs: Executive Overview, Surveillance Performance, Cycle & Gap, Country Profile, Strategic Priority and Methods.
+- CSV export is available for the SPI rankings and Country Profile. A print stylesheet already exists that unfolds every tab, one per page, but print is not a confirmed primary channel.
+
+## Capabilities and Constraints
+
+- **Generated output is never hand-edited.** All UI changes go through `src/report.py`, `src/charts.py` and `src/config.py`, followed by a rebuild. `output/` is regenerated on every run.
+- **Fixed status vocabulary** used everywhere: On Cycle, Attempt to update, Off Cycle, First Attempt, Never Conducted. The SPI tiers are Strong (≥75), Advancing (50–74), Developing (30–49) and Critical (<30).
+- **Colour semantics are reserved.** Colour means evidence quality and nothing else. Blue means current or strong (the WHO anchor), sand means ageing, amber or red means concern or critical, grey means no evidence, and a fill texture means a survey is in progress. SPI tiers, cycle status and recency all draw from this one system, defined in `src/config.py`. Red never stands for a status. Instruments, indicator domains and chrome use WHO navy, not a semantic hue. Status colours must stay distinguishable under protanopia, deuteranopia and tritanopia, and in greyscale print.
+- **Scope limits that must stay visible:** no disease, mortality or burden modelling; no sub-national units; regional averages are unweighted by population; Zanzibar and mainland Tanzania are separate entities that share one ISO3 code. GSHS and GSHPP indicator results are not yet in Country Profile.
+- **Multilingual readership:** French and Portuguese versions are needed for Francophone and Lusophone Member States. Layouts must tolerate longer strings. *Open decision:* whether this means a localised build per language or an in-page switch, and when.
+- **House style:** no em-dashes in user-facing text.
+
+## Brand Commitments
+
+- WHO Regional Office for Africa identity. WHO blue is the brand anchor. Logos: `assets/logos/who_logo.png`, `assets/logos/dpc_logo.png` and `assets/logos/favicon.png`.
+- Voice: authoritative, calm and editorial, in the spirit of Our World in Data or the Financial Times. It is never a marketing site.
+
+## Evidence on Hand
+
+- Surveillance status and cycle metadata come from WHO NCD Country Tracking (`data/NCD_Surveillance_Survey_AFRO_dataset.xlsx`).
+- STEPS indicator values come from the WHO validated STEPS database (`data/STEP.db`).
+- GYTS and GATS indicators were extracted from published country fact sheets on gtssacademy.org (`data/gyts_country_profile.json`, `data/gats_country_profile.json`).
+- There are country map silhouettes for all 47 Member States in `assets/maps/`.
+- The SPI methodology technical note is generated by `generate_spi_doc.py`.
+- **Absent, and must not be fabricated:** GSHS and GSHPP indicator values, consistent response rates, confidence intervals on the SPI, and population-weighted averages.
+
+## Product Principles
+
+1. **Trust before speed.** Every number shows where it came from and how fresh it is. Never imply more certainty than the data holds.
+2. **One vocabulary, one meaning.** A status, tier or colour means the same thing on every tab.
+3. **Surveillance, not burden.** Never let the design suggest the SPI measures health risk.
+4. **Gaps are information.** Missing data, single rounds and first attempts are shown honestly. They are never hidden or filled in.
+5. **Serve every reader without ranking them.** Leadership gets the quick read, analysts get the detail, and country focal points get their own country. No reader's path should get in another's way.
+
+## Accessibility & Inclusion
+
+- Accessibility work is already in place: ARIA tabs, focus handling, contrast fixes and landmarks. Keep it, and treat WCAG 2.1 AA as the working floor (*assumed, not confirmed as a mandated standard*).
+- Must serve French- and Portuguese-reading Member States (see Constraints).
