@@ -740,6 +740,154 @@ button,.tab-btn,.prio-pill,.filter-reset,summary{-webkit-user-select:none;user-s
   .tab-btn{font-size:14px;padding:14px 0 12px!important}
 }
 
+/* ══ SECTIONS (design/sections_v1) ═════════════════════════════════════════
+   Same type and tokens as the header: Schibsted Grotesk, dashboard palette. */
+:root{--good:#1e7f52;--bad:var(--tier-4-ink)}
+.xp-panel,.sp-panel,.it-panel,.cp-panel{font-family:var(--hdr-font);background:#fff;border-radius:20px;border:1px solid rgba(13,31,78,.06);
+  box-shadow:0 1px 2px rgba(13,31,78,.04),0 12px 32px -18px rgba(13,31,78,.18);padding:28px 32px;margin-bottom:var(--gap-block);color:var(--dark)}
+/* 1 status panel */
+.xp-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin-bottom:20px}
+.xp-tabs{display:flex;gap:4px;background:var(--canvas,#f6f7fb);padding:4px;border-radius:12px;overflow-x:auto;max-width:100%}
+.xp-tab{border:0;background:transparent;font:600 13.5px/1 var(--hdr-font);color:var(--muted);padding:9px 14px;border-radius:9px;cursor:pointer;white-space:nowrap;min-height:36px}
+.xp-tab[aria-pressed="true"]{background:#fff;color:var(--dark);box-shadow:0 1px 2px rgba(13,31,78,.14)}
+.xp-cap{font-size:13px;color:var(--muted)}
+.xp-bar{display:flex;gap:4px;height:14px}
+.xp-seg{border-radius:5px;min-width:6px;transition:flex var(--dur-enter) var(--ease-out)}
+.xp-seg.st-on-cycle,.xp-sw.st-on-cycle{background:var(--st-on-cycle)}
+.xp-seg.st-attempt-to-update,.xp-sw.st-attempt-to-update{background:var(--st-attempt-to-update) repeating-linear-gradient(135deg,rgba(31,95,168,.35) 0 1.5px,transparent 1.5px 6px)}
+.xp-seg.st-off-cycle,.xp-sw.st-off-cycle{background:var(--st-off-cycle)}
+.xp-seg.st-first-attempt,.xp-sw.st-first-attempt{background:var(--st-first-attempt) radial-gradient(rgba(255,255,255,.35) 1px,transparent 1.3px) 0 0/5px 5px}
+.xp-seg.st-never-conducted,.xp-sw.st-never-conducted{background:var(--st-never-conducted)}
+.xp-cols{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:24px;margin-top:22px}
+.xp-col{min-width:0;border-left:1px solid var(--border);padding-left:16px}
+.xp-col:first-child{border-left:0;padding-left:0}
+.xp-h{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--muted)}
+.xp-sw{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.xp-n{display:flex;align-items:baseline;gap:4px;margin-top:10px}
+.xp-n b{font-size:44px;font-weight:800;letter-spacing:-.04em;line-height:1;color:var(--dark);font-variant-numeric:lining-nums proportional-nums}
+.xp-of{font-size:14px;color:#687286}
+.xp-col p{margin-top:8px;font-size:13px;color:var(--muted);line-height:1.45}
+/* 2 SPI summary */
+.sp-panel{display:grid;grid-template-columns:200px minmax(0,1fr) 230px;gap:36px;align-items:center}
+.sp-t{font-size:14px;font-weight:600;color:var(--muted)}
+.sp-t i{font-size:12px;opacity:.6}
+.sp-v{font-size:64px;font-weight:800;letter-spacing:-.045em;line-height:1;margin-top:6px;font-variant-numeric:lining-nums proportional-nums}
+.sp-v small{font-size:18px;color:var(--muted);font-weight:500;letter-spacing:0}
+.sp-md{margin-top:10px;font-size:14px;color:var(--muted)} .sp-md b{color:var(--dark)}
+.sp-swarm{width:100%;height:auto;overflow:visible;display:block}
+.sp-swarm circle{stroke:#fff;stroke-width:1.5}
+.sp-swarm circle.t1{fill:var(--tier-1)}.sp-swarm circle.t2{fill:var(--tier-2)}.sp-swarm circle.t3{fill:var(--tier-3)}.sp-swarm circle.t4{fill:var(--tier-4)}
+.sp-swarm .band{opacity:.08}
+.sp-swarm .band.t1{fill:var(--tier-1)}.sp-swarm .band.t2{fill:var(--tier-2)}.sp-swarm .band.t3{fill:var(--tier-3)}.sp-swarm .band.t4{fill:var(--tier-4)}
+.sp-swarm .mean{stroke:var(--dark);stroke-width:1.5;stroke-dasharray:3 3}
+.sp-swarm .tk,.sp-swarm .ml{font-size:12px;fill:var(--muted);font-family:var(--hdr-font)}
+.sp-swarm .tk{text-anchor:middle}
+.sp-swarm .ml{fill:var(--dark);font-weight:600}
+@media (hover:hover) and (pointer:fine){.sp-swarm circle:hover{stroke:var(--dark);stroke-width:2}}
+.sp-tiers{display:flex;flex-direction:column;gap:10px}
+.sp-tr{display:grid;grid-template-columns:12px 1fr auto;gap:10px;align-items:center;font-size:14px}
+.sp-dot{width:12px;height:12px;border-radius:50%}
+.sp-dot.t1{background:var(--tier-1)}.sp-dot.t2{background:var(--tier-2)}.sp-dot.t3{background:var(--tier-3)}.sp-dot.t4{background:var(--tier-4)}
+.sp-tr span{color:var(--muted)} .sp-tr small{color:#687286;margin-left:6px;font-size:12px}
+.sp-tr b{font-size:20px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:lining-nums proportional-nums}
+/* 3 instrument table */
+.it-table{width:100%;border-collapse:collapse}
+.it-table thead th{font-size:13px;font-weight:600;color:#687286;text-align:left;padding:0 0 12px;border-bottom:1px solid var(--border)}
+.it-table thead th.r{text-align:right;padding-right:24px}
+.it-table thead th:last-child{padding-left:4px}
+.it-table td,.it-table tbody th{padding:18px 0;border-bottom:1px solid var(--border);vertical-align:middle;text-align:left}
+.it-table tbody tr:last-child td,.it-table tbody tr:last-child th{border-bottom:0;padding-bottom:4px}
+.it-table tbody th b{display:block;font-size:18px;font-weight:800;letter-spacing:-.01em}
+.it-table tbody th span,.it-pop span{display:block;font-size:13.5px;font-weight:400;color:var(--muted)}
+.it-pop{font-size:14px;color:var(--text);padding-right:16px!important}
+.it-pop span{font-size:12.5px;margin-top:2px}
+.it-num{text-align:right!important;font-size:20px;font-weight:700;padding-right:24px!important;font-family:var(--font);font-variant-numeric:tabular-nums lining-nums}
+.it-rate{width:24%;white-space:nowrap}
+.it-rate b{display:inline-block;width:64px;text-align:right;font-size:15px;font-family:var(--font);font-variant-numeric:tabular-nums lining-nums}
+.it-track{display:inline-block;vertical-align:middle;width:calc(100% - 76px);height:8px;border-radius:4px;background:#eaeff5;overflow:hidden;margin-right:12px}
+.it-track span{display:block;height:100%;border-radius:4px;background:var(--secondary)}
+.it-rate.low .it-track span{background:var(--tier-4)} .it-rate.low b{color:var(--tier-4-ink)}
+/* 4 country profile */
+.cp-filters{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px;background:transparent;border:0;box-shadow:none;padding:0;font-family:var(--hdr-font)}
+.cp-field{display:flex;flex-direction:column;gap:5px}
+.cp-field .filter-label{font-size:12.5px;font-weight:600;color:var(--muted);text-transform:none;letter-spacing:0}
+.cp-field .filter-select{min-width:300px;border-radius:12px;padding:11px 14px;font-weight:600;background:#fff}
+.cp-filters #btn-export-profile{margin-left:auto;background:var(--dark)!important;border-radius:12px!important;padding:12px 18px!important;font-size:14px!important}
+.cp-panel{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:40px;align-items:center}
+.cp-name{display:flex;align-items:baseline;flex-wrap:wrap;gap:14px}
+.cp-name h3{font-size:40px;font-weight:800;letter-spacing:-.035em;line-height:1.05;margin:0}
+.cp-iso{font-size:13px;font-weight:700;color:var(--secondary);background:#e7f0fa;padding:4px 9px;border-radius:7px}
+.cp-meta{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:10px;font-size:13.5px;color:var(--muted)}
+.cp-meta span::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:#8a94a8;margin-right:8px;vertical-align:middle}
+.cp-meta .is-ok::before{background:var(--st-on-cycle)} .cp-meta .is-warn::before{background:var(--tier-3)}
+.cp-tl{position:relative;height:46px;margin-top:22px;max-width:760px}
+.cp-tl::before{content:'';position:absolute;left:0;right:0;top:9px;height:2px;background:var(--border)}
+.cp-tl-y{position:absolute;top:0;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px}
+.cp-tl-y i{width:14px;height:14px;border-radius:50%;background:#fff;border:3px solid var(--secondary);margin-top:3px}
+.cp-tl-y.is-latest i{background:var(--secondary)}
+.cp-tl-y span{font-size:12.5px;font-weight:600;color:var(--muted);font-family:var(--font)}
+.cp-tl-cap{font-size:12.5px;color:#687286;margin-top:2px}
+.cp-tiles{display:flex;gap:14px}
+.cp-tile{border-radius:16px;padding:18px 22px;min-width:170px;background:var(--canvas,#f6f7fb)}
+.cp-tile .cp-t{font-size:13px;font-weight:600;color:var(--muted)}
+.cp-tile b{display:block;font-size:40px;font-weight:800;letter-spacing:-.04em;line-height:1.05;margin-top:6px;color:var(--dark)}
+.cp-tile .cp-sub{margin-top:6px;font-size:12.5px;color:var(--muted)}
+.cp-tag{display:inline-block;margin-top:6px;font-size:12.5px;font-weight:700;padding:3px 9px;border-radius:7px}
+.t1-tile{background:color-mix(in srgb,var(--tier-1) 8%,#fff)}.t2-tile{background:color-mix(in srgb,var(--tier-2) 14%,#fff)}
+.t3-tile{background:color-mix(in srgb,var(--tier-3) 11%,#fff)}.t4-tile{background:color-mix(in srgb,var(--tier-4) 8%,#fff)}
+.cp-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:var(--gap-block);font-family:var(--hdr-font)}
+.cp-card{background:#fff;border-radius:16px;border:1px solid rgba(13,31,78,.06);box-shadow:0 1px 2px rgba(13,31,78,.04);padding:18px 18px 16px;color:var(--dark)}
+.cp-card-n{font-size:13.5px;font-weight:600;color:var(--muted);min-height:36px;line-height:1.3}
+.cp-card-v{font-size:38px;font-weight:800;letter-spacing:-.04em;line-height:1;font-variant-numeric:lining-nums proportional-nums} .cp-card-v small{font-size:20px;margin-left:1px}
+.cp-ci{margin-top:12px}
+.cp-ci-t{position:relative;height:6px;background:#eef2f7;border-radius:3px}
+.cp-ci-r{position:absolute;top:0;height:6px;background:color-mix(in srgb,var(--secondary) 30%,#fff);border-radius:3px}
+.cp-ci-p{position:absolute;top:-3px;width:3px;height:12px;background:var(--secondary);border-radius:2px;transform:translateX(-50%)}
+.cp-ci-l{display:block;margin-top:6px;font-size:12px;color:#687286;font-family:var(--font);font-variant-numeric:tabular-nums lining-nums}
+.cp-delta{margin-top:12px;font-size:13.5px;font-weight:700;color:var(--muted)} .cp-delta span{font-weight:500;color:#687286}
+.cp-delta.is-better{color:var(--good)} .cp-delta.is-worse{color:var(--bad)}
+.cp-mf{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:6px}
+.cp-mf>div{display:grid;grid-template-columns:18px 1fr 34px;gap:8px;align-items:center;font-size:12px;color:var(--muted)}
+.cp-bar{display:block;height:5px;background:#eef2f7;border-radius:3px} .cp-bar i{display:block;height:100%;border-radius:3px}
+.cp-bar .m{background:#5b7bb5} .cp-bar .f{background:#9b6fa8}
+.cp-mf b{text-align:right;color:var(--dark);font-family:var(--font);font-variant-numeric:tabular-nums lining-nums}
+.cp-card.is-na{background:transparent;border:1.5px dashed #cbd3df;box-shadow:none}
+.cp-card.is-na .cp-card-v{color:#aeb7c6}
+/* tablet / phone */
+@media(max-width:1100px){
+  .xp-cols{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .xp-col:nth-child(4){border-left:0;padding-left:0}
+  .sp-panel{grid-template-columns:1fr 1fr}
+  .sp-plot{grid-column:1 / -1;grid-row:2}
+  .cp-panel{grid-template-columns:1fr}
+}
+@media(max-width:640px){
+  .xp-panel,.sp-panel,.it-panel,.cp-panel{padding:20px 16px;border-radius:16px}
+  .xp-cols{grid-template-columns:1fr 1fr;gap:16px}
+  .xp-col,.xp-col:nth-child(4){border-left:0;padding-left:0}
+  .xp-n b{font-size:34px}
+  .xp-tab{padding:8px 9px;font-size:13px}
+  .xp-tabs{gap:2px}
+  .sp-panel{grid-template-columns:1fr;gap:20px}
+  .sp-plot{grid-row:auto;overflow-x:auto}
+  .sp-swarm{min-width:520px}
+  .sp-v{font-size:52px}
+  .it-table thead{display:none}
+  .it-table,.it-table tbody,.it-table tr,.it-table td,.it-table tbody th{display:block;width:100%}
+  .it-table tr{padding:14px 0;border-bottom:1px solid var(--border)}
+  .it-table td,.it-table tbody th{border:0!important;padding:4px 0!important;text-align:left!important}
+  .it-num{display:inline-block!important;width:auto!important;margin-right:18px;font-size:16px}
+  .it-num::before{content:attr(data-l)': ';font-size:12px;font-weight:500;color:var(--muted)}
+  .it-rate{width:100%}
+  .cp-field,.cp-field .filter-select{width:100%;min-width:0}
+  .cp-filters #btn-export-profile{margin-left:0}
+  .cp-name h3{font-size:30px}
+  .cp-tiles{flex-wrap:wrap} .cp-tile{flex:1;min-width:140px}
+  .cp-cards{grid-template-columns:1fr 1fr;gap:10px}
+  .cp-card{padding:14px}
+  .cp-card-v{font-size:30px}
+}
+
 /* Hover only where a real hover-capable pointer exists (no sticky hover on touch) */
 @media (hover:hover) and (pointer:fine){
   #back-to-top:hover{background:var(--dark)}
@@ -1181,6 +1329,8 @@ JS = """
     }
   }
 
+  // Called from inline handlers on the Cycle & Gap filter, so it must be global.
+  window.updateTimeline = function(k){ updateTimeline(k); };
   function updateTimeline(surveyKey) {
     var divId='cycle-timeline-chart';
     var el=document.getElementById(divId);
@@ -1379,6 +1529,11 @@ JS = """
     });
     var badge=document.getElementById('exec-survey-badge');
     if(badge)badge.textContent=surveyKey+' - '+d.full_name;
+    document.querySelectorAll('#exec-status-bar .xp-seg').forEach(function(seg){
+      var v=d[seg.dataset.k]||0; seg.style.flex=String(v); seg.style.display=v>0?'':'none';
+    });
+    document.querySelectorAll('.exec-n-total').forEach(function(el){el.textContent=n;});
+    document.querySelectorAll('.xp-tab').forEach(function(t){t.setAttribute('aria-pressed',String(t.dataset.survey===surveyKey));});
     setTimeout(function(){updateExecDonut(d);},50);
     setTimeout(function(){updateGapChart(surveyKey);},60);
   }
@@ -1387,6 +1542,12 @@ JS = """
   if(execFilter){
     execFilter.addEventListener('change',function(){updateExecKPIs(execFilter.value||'STEPS');});
   }
+  document.querySelectorAll('.xp-tab').forEach(function(t){
+    t.addEventListener('click',function(){
+      if(!execFilter)return;
+      execFilter.value=t.dataset.survey; execFilter.dispatchEvent(new Event('change'));
+    });
+  });
   var execReset=document.getElementById('exec-filter-reset');
   if(execReset){
     execReset.addEventListener('click',function(){
@@ -1539,43 +1700,36 @@ JS = """
     var yrsStr=surveys.map(function(s){return s.year;}).join(' \u00b7 ');
     var nStr=latS.n?latS.n.toLocaleString('en-US'):'N/A';
 
-    // ── Header ─────────────────────────────────────────────────────────────
-    var hdr='<div class="profile-header-card reveal">';
-    hdr+='<div class="prof-head" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:18px;">';
-    hdr+='<div class="prof-id" style="display:flex;align-items:flex-start;gap:18px;min-width:0;">';
-    hdr+='<div class="profile-iso-badge">'+(p.iso3||'???')+'</div>';
-    hdr+='<div>';
-    hdr+='<div style="font-family:var(--font-serif);font-size:24px;font-weight:600;color:var(--dark);letter-spacing:-.005em;">'+country+'</div>';
-    hdr+='<div style="font-size:var(--fs-sm);color:var(--muted);margin-top:5px;display:flex;flex-wrap:wrap;gap:10px;">';
-    hdr+='<span class="profile-survey-pill"><i class="ti ti-flask" aria-hidden="true"></i>&nbsp;'+surveyType+' surveys: <strong>'+yrsStr+'</strong></span>';
-    hdr+='<span class="profile-survey-pill"><i class="ti ti-percentage" aria-hidden="true"></i>&nbsp;Response rate: '+(latS.rr?latS.rr+'%':'not recorded')+'</span>';
+    // ── Header: name, provenance, survey-round timeline, SPI + rounds tiles ──
+    var hdr='<div class="cp-panel reveal"><div class="cp-main">';
+    hdr+='<div class="cp-name"><h3>'+country+'</h3><span class="cp-iso">'+(p.iso3||'')+'</span></div>';
+    hdr+='<div class="cp-meta"><span>Response rate: '+(latS.rr?latS.rr+'%':'not recorded')+'</span>';
     if(surveyType==='STEPS'){
-      hdr+='<span class="profile-survey-pill" style="background:var(--tint);color:var(--tier-1-ink);" title="Sourced from the WHO validated STEPS database">'+
-           '<i class="ti ti-shield-check" aria-hidden="true"></i>&nbsp;Validated database source</span>';
+      hdr+='<span class="is-ok" title="Sourced from the WHO validated STEPS database">Validated database source</span>';
     }else{
       var srcTip='Extracted programmatically from a published '+surveyType+' country fact-sheet PDF via automated table parsing; not independently re-verified against the source document'+
                  (p.source_file?(' (file: '+p.source_file+')'):'');
-      hdr+='<span class="profile-survey-pill" style="background:#fbf3e6;color:var(--warning);border-color:#ecd3a6;" title="'+srcTip.replace(/"/g,'&quot;')+'">'+
-           '<i class="ti ti-alert-triangle" aria-hidden="true"></i>&nbsp;Auto-extracted from PDF - unverified</span>';
+      hdr+='<span class="is-warn" title="'+srcTip.replace(/"/g,'&quot;')+'">Auto-extracted from PDF - unverified</span>';
     }
-    hdr+='</div></div></div>';
-    hdr+='<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">';
+    hdr+='</div>';
+    var y0=Math.min(2000,surveys[0].year-1), y1=Math.max(_CUR_YEAR,surveys[surveys.length-1].year);
+    hdr+='<div class="cp-tl" role="list" aria-label="'+surveyType+' surveys">';
+    surveys.forEach(function(s,i){
+      var left=((s.year-y0)/(y1-y0)*100).toFixed(1);
+      hdr+='<div class="cp-tl-y'+(i===surveys.length-1?' is-latest':'')+'" role="listitem" style="left:'+left+'%"><i></i><span>'+s.year+'</span></div>';
+    });
+    hdr+='</div><div class="cp-tl-cap">'+surveyType+' surveys</div></div>';
+    hdr+='<div class="cp-tiles">';
     if(p.spi!==null&&p.spi!==undefined){
-      hdr+='<div style="text-align:center;padding:12px 20px;background:#fff;border:1px solid '+tc+';border-radius:10px;min-width:90px;">';
-      hdr+='<div style="font-family:var(--font-serif);font-size:1.75rem;font-weight:600;color:'+tc+';line-height:1;">'+p.spi.toFixed(1)+'</div>';
-      hdr+='<div style="font-size:var(--fs-xs);font-weight:700;text-transform:uppercase;letter-spacing:1px;color:'+tc+';margin-top:3px;">SPI Score</div>';
-      hdr+='<div style="font-size:var(--fs-xs);color:'+tc+';font-weight:600;margin-top:2px;">'+( p.tier_label||'')+'</div></div>';
+      hdr+='<div class="cp-tile cp-spi t'+p.tier+'-tile"><div class="cp-t">SPI Score</div><b>'+p.spi.toFixed(1)+'</b>'+
+           (p.tier_label?'<span class="cp-tag t'+p.tier+'-tag">'+p.tier_label+'</span>':'')+'</div>';
     }
-    if(hasMulti){
-      hdr+='<div style="padding:12px 20px;background:#fff;border:1px solid var(--rule);border-radius:10px;text-align:center;min-width:90px;">';
-      hdr+='<div style="font-family:var(--font-serif);font-size:1.5rem;font-weight:600;color:var(--brand);">'+surveys.length+'</div>';
-      hdr+='<div style="font-size:var(--fs-xs);font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--brand);">'+surveyType+' Rounds</div>';
-      hdr+='<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:1px;">Rounds recorded</div></div>';
-    }
-    hdr+='</div></div></div>';
+    hdr+='<div class="cp-tile"><div class="cp-t">'+surveyType+' Rounds</div><b>'+surveys.length+'</b><div class="cp-sub">Rounds recorded</div></div>';
+    hdr+='</div></div>';
 
-    // ── KPI Cards ──────────────────────────────────────────────────────────
-    var kpi='<div class="profile-kpi-row">';
+    // ── Indicator cards: value, CI bar, change vs previous round, M/F bars ──
+    // Bars use one scale per card (largest of value, CI upper, M, F + 15%).
+    var kpi='<div class="cp-cards">';
     kpiCfg.forEach(function(k){
       var d=latData[k.code]||{};
       var pd=prevData[k.code]||{};
@@ -1583,23 +1737,37 @@ JS = """
       var v=d.b!==undefined?d.b:null;
       var pv=pd.b!==undefined?pd.b:null;
       var unit=ki.unit||'%';
-      var valStr=v!==null?v.toFixed(1)+unit:'N/A';
-      var arrow=_trendArrow(v,pv,ki.hib);
-      var mV=d.m!==undefined?d.m:null, fV=d.f!==undefined?d.f:null;
-      var hasCI=(d.lo!==null&&d.lo!==undefined&&d.hi!==null&&d.hi!==undefined);
-      var loStr=hasCI?' title="95% CI: '+d.lo.toFixed(1)+'\u2013'+d.hi.toFixed(1)+unit+'"':'';
-      kpi+='<div class="profile-kpi-card" style="color:'+k.col+';">';
-      kpi+='<div class="profile-kpi-icon"><i class="ti '+k.icon+'" aria-hidden="true" style="color:'+k.col+';"></i></div>';
-      kpi+='<div class="profile-kpi-value" style="color:'+k.col+';"'+loStr+'>'+valStr+'</div>';
-      if(hasCI){kpi+='<div class="profile-kpi-ci">95% CI '+d.lo.toFixed(1)+'\u2013'+d.hi.toFixed(1)+unit+'</div>';}
       var kConf=(d.conf!==undefined&&d.conf!==null&&d.conf<0.7)
         ? ' <i class="ti ti-alert-triangle" aria-hidden="true" style="color:var(--warning);font-size:var(--fs-xs);cursor:help;" title="Low-confidence label match from PDF extraction (score '+d.conf.toFixed(2)+'/1.00) - verify before citing"></i>' : '';
-      kpi+='<div class="profile-kpi-label">'+k.label+kConf+'</div>';
-      if(arrow){kpi+='<div class="profile-kpi-trend">'+arrow+'<span style="font-size:var(--fs-xs);color:var(--muted);font-weight:400;"> vs '+prevYr+'</span></div>';}
+      if(v===null){
+        kpi+='<div class="cp-card is-na"><div class="cp-card-n">'+k.label+kConf+'</div><div class="cp-card-v">N/A</div></div>';
+        return;
+      }
+      var mV=d.m!==undefined?d.m:null, fV=d.f!==undefined?d.f:null;
+      var hasCI=(d.lo!==null&&d.lo!==undefined&&d.hi!==null&&d.hi!==undefined);
+      var mx=(Math.max(v, mV||0, fV||0, hasCI?d.hi:0)*1.15)||1;   // per-card scale with headroom
+      var sc=function(x){return Math.max(0,Math.min(100,x/mx*100)).toFixed(1);};
+      kpi+='<div class="cp-card"><div class="cp-card-n">'+k.label+kConf+'</div>';
+      kpi+='<div class="cp-card-v">'+v.toFixed(1)+'<small>'+unit+'</small></div>';
+      kpi+='<div class="cp-ci"><div class="cp-ci-t">';
+      if(hasCI) kpi+='<span class="cp-ci-r" style="left:'+sc(d.lo)+'%;width:'+(sc(d.hi)-sc(d.lo)).toFixed(1)+'%"></span>';
+      kpi+='<span class="cp-ci-p" style="left:'+sc(v)+'%"></span></div>';
+      if(hasCI) kpi+='<span class="cp-ci-l">95% CI '+d.lo.toFixed(1)+'\u2013'+d.hi.toFixed(1)+unit+'</span>';
+      kpi+='</div>';
+      if(pv!==null&&prevYr){
+        var diff=v-pv, abs=Math.abs(diff), up=diff>0;
+        var cls='', txt;
+        if(abs<0.5){ txt='\u2248'; }
+        else{
+          txt=(up?'\u2191 ':'\u2193 ')+abs.toFixed(1);
+          if(ki.hib!==null&&ki.hib!==undefined){ cls=((ki.hib?up:!up)?' is-better':' is-worse'); }
+        }
+        kpi+='<div class="cp-delta'+cls+'">'+txt+' <span>vs '+prevYr+'</span></div>';
+      }
       if(mV!==null||fV!==null){
-        kpi+='<div class="profile-kpi-sex">';
-        if(mV!==null) kpi+='<span style="background:var(--tint);color:var(--text);">M: '+mV.toFixed(1)+'</span>';
-        if(fV!==null) kpi+='<span style="background:var(--tint);color:var(--text);">F: '+fV.toFixed(1)+'</span>';
+        kpi+='<div class="cp-mf">';
+        if(mV!==null) kpi+='<div><span title="Male">M</span><i class="cp-bar"><i class="m" style="width:'+sc(mV)+'%"></i></i><b>'+mV.toFixed(1)+'</b></div>';
+        if(fV!==null) kpi+='<div><span title="Female">F</span><i class="cp-bar"><i class="f" style="width:'+sc(fV)+'%"></i></i><b>'+fV.toFixed(1)+'</b></div>';
         kpi+='</div>';
       }
       kpi+='</div>';
@@ -1810,6 +1978,7 @@ JS = """
   // ── SPI export ────────────────────────────────────────────────────────────────
   var _SPI_TABLE = __SPI_TABLE_PLACEHOLDER__;
   var _REPORT_DATE = __REPORT_DATE_PLACEHOLDER__;
+  var _CUR_YEAR = __CURRENT_YEAR_PLACEHOLDER__;
 
   function _doExportSPI(btn) {
     var rows = [
@@ -1961,6 +2130,60 @@ def chart_card(chart_html, commentary="", span=12):
     {comm}
   </div>
 </div>"""
+
+
+def spi_swarm_svg(spi_df, mean) -> str:
+    """Dot plot of every country's SPI on a 0-100 axis: tier bands, a dashed
+    mean line, one dot per country (non-overlapping vertical spread)."""
+    W, r, step = 760, 7, 15
+    placed, dots = [], []
+    for row in spi_df.sort_values("spi").itertuples():
+        x = float(row.spi) / 100 * W
+        for k in range(60):
+            y = 0 if k == 0 else ((k + 1) // 2) * step * (1 if k % 2 else -1)
+            if all((x - px) ** 2 + (y - py) ** 2 >= (2 * r + 1) ** 2 for px, py in placed):
+                break
+        placed.append((x, y))
+        dots.append(f'<circle cx="{x:.1f}" cy="{y}" r="{r}" class="t{int(row.tier)}">'
+                     f'<title>{html_escape(row.country)} · {row.spi:.1f}</title></circle>')
+    h = max(abs(y) for _, y in placed) + r + 8
+    cuts = sorted(TIER_CUTS)                                 # 30, 50, 75
+    bands = [(0, cuts[0], 4), (cuts[0], cuts[1], 3), (cuts[1], cuts[2], 2), (cuts[2], 100, 1)]
+    rects = "".join(f'<rect x="{lo / 100 * W:.1f}" y="{-h:.1f}" width="{(hi - lo) / 100 * W:.1f}" height="{2 * h:.1f}" class="band t{t}"/>'
+                    for lo, hi, t in bands)
+    mx = float(mean) / 100 * W
+    ticks = "".join(f'<text x="{v / 100 * W:.1f}" y="{h + 22:.1f}" class="tk">{v}</text>' for v in [0] + cuts + [100])
+    return (f'<svg class="sp-swarm" viewBox="-10 {-h - 30:.1f} {W + 20} {2 * h + 58:.1f}" role="img" '
+            f'aria-label="SPI of all {len(spi_df)} countries on a 0 to 100 scale">'
+            f'{rects}<line x1="{mx:.1f}" x2="{mx:.1f}" y1="{-h - 12:.1f}" y2="{h:.1f}" class="mean"/>'
+            f'<text x="{mx + 6:.1f}" y="{-h - 16:.1f}" class="ml">Mean {fmt_spi(mean)}</text>'
+            f'{"".join(dots)}{ticks}</svg>')
+
+
+def instrument_table(A):
+    """Instrument activity as one table; completion below 50% flagged red."""
+    st_sum = A["survey_type_summary"].set_index("survey_type")
+    rows = ""
+    for code, meta in SURVEY_META.items():
+        if code not in st_sum.index:
+            continue
+        row = st_sum.loc[code]
+        pct = float(row["pct_done"])
+        low = " low" if pct < 50 else ""
+        rows += f"""
+    <tr>
+      <th scope="row"><b>{code}</b><span>{meta['full']}</span></th>
+      <td class="it-pop" data-l="Population">{meta['target']}<span>{meta['domain']}</span></td>
+      <td class="it-num" data-l="Surveys">{int(row['total'])}</td>
+      <td class="it-num" data-l="Completed">{int(row['done'])}</td>
+      <td class="it-num" data-l="Countries">{int(row['countries'])}</td>
+      <td class="it-rate{low}" data-l="Completion rate"><span class="it-track"><span style="width:{min(pct, 100):.1f}%"></span></span><b>{pct}%</b></td>
+    </tr>"""
+    return f"""<div class="it-panel reveal"><table class="it-table">
+  <thead><tr><th scope="col">Instrument</th><th scope="col">Population</th><th scope="col" class="r">Surveys</th>
+  <th scope="col" class="r">Completed</th><th scope="col" class="r">Countries</th><th scope="col">Completion rate</th></tr></thead>
+  <tbody>{rows}
+  </tbody></table></div>"""
 
 
 def instrument_cards(A):
@@ -2221,6 +2444,7 @@ def build_html(A: dict) -> str:
     _tier_n  = {t: int((spi["tier"] == t).sum()) for t in (1, 2, 3, 4)}
     n_instr  = len(SURVEY_META)
     hero_map = hero_tile_map(spi)
+    spi_swarm = spi_swarm_svg(spi, reg_spi)
     _bands   = [(0, TIER_CUTS[2], 4), (TIER_CUTS[2], TIER_CUTS[1], 3), (TIER_CUTS[1], TIER_CUTS[0], 2), (TIER_CUTS[0], 100, 1)]
     _segs    = "".join(f'<span class="t{t}" style="flex:{hi - lo}"></span>' for lo, hi, t in _bands)
     _ticks   = "".join(f'<span style="left:{v}%">{v}</span>' for v in [0] + sorted(TIER_CUTS) + [100])
@@ -2334,7 +2558,8 @@ def build_html(A: dict) -> str:
                       .replace("__PALETTE_PLACEHOLDER__", palette_js())
                       .replace("__PLOTLY_THEME_PLACEHOLDER__", json.dumps(PLOTLY_THEME))
                       .replace("__SPI_TABLE_PLACEHOLDER__", spi_table_json)
-                      .replace("__REPORT_DATE_PLACEHOLDER__", _json.dumps(REPORT_DATE)))
+                      .replace("__REPORT_DATE_PLACEHOLDER__", _json.dumps(REPORT_DATE))
+                      .replace("__CURRENT_YEAR_PLACEHOLDER__", str(CURRENT_YEAR)))
 
     # Build favicon link and logo img tags (empty string if asset not found)
     fav_link = f'<link rel="icon" type="image/png" href="data:image/png;base64,{FAV_LOGO_B64}"/>' if FAV_LOGO_B64 else ""
@@ -2444,24 +2669,6 @@ def build_html(A: dict) -> str:
         </div>
       </div>
 
-      <!-- Filter bar - STEPS default, no "All Survey Types" option -->
-      <div class="filter-bar">
-        <label class="filter-label" for="exec-survey-filter"><i class="ti ti-filter" aria-hidden="true"></i>&nbsp; View by Survey</label>
-        <select id="exec-survey-filter" class="filter-select" style="min-width:240px;">
-          <option value="STEPS" selected>STEPS - NCD Risk Factor Surveillance</option>
-          <option value="GYTS">GYTS - Global Youth Tobacco Survey</option>
-          <option value="GSHS">GSHS - School-based Student Health Survey</option>
-          <option value="GATS">GATS - Global Adult Tobacco Survey</option>
-          <option value="GSHPP">GSHPP - School Health Policies &amp; Practices</option>
-        </select>
-        <button id="exec-filter-reset" class="filter-reset" style="padding:7px 14px;">
-          <i class="ti ti-arrow-back-up" aria-hidden="true"></i>&nbsp; Reset to STEPS
-        </button>
-        <span id="exec-survey-badge" style="font-size:var(--fs-xs);font-weight:600;color:var(--primary);margin-left:6px;padding:5px 12px;background:#eef4ff;border-radius:9999px;border:1px solid #c8d8f8;">
-          STEPS - NCD Risk Factor Surveillance
-        </span>
-      </div>
-
       <!-- Analytical note -->
       <div class="chart-note">
         <p class="chart-takeaway">Every count is a unique country (N&nbsp;=&nbsp;48), with exactly one status per instrument.</p>
@@ -2480,69 +2687,47 @@ def build_html(A: dict) -> str:
         </details>
       </div>
 
-      <!-- ② FIVE DYNAMIC KPI SIGNAL CARDS -->
-      <div class="signal-grid" style="grid-template-columns:repeat(5,1fr);">
-
-        <div class="signal-card reveal" style="color:{st_on};">
-          <div style="font-size:var(--fs-xs);font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:{st_on};margin-bottom:4px;">
-            <i class="ti ti-circle-check" aria-hidden="true"></i>&nbsp; On Cycle
+      <!-- ② STATUS PANEL: instrument tabs, proportional bar, five columns -->
+      <div class="xp-panel reveal">
+        <div class="xp-head">
+          <div class="xp-tabs" role="group" aria-label="Survey instrument"><button type="button" class="xp-tab" data-survey="STEPS" aria-pressed="true">STEPS</button><button type="button" class="xp-tab" data-survey="GYTS" aria-pressed="false">GYTS</button><button type="button" class="xp-tab" data-survey="GSHS" aria-pressed="false">GSHS</button><button type="button" class="xp-tab" data-survey="GATS" aria-pressed="false">GATS</button><button type="button" class="xp-tab" data-survey="GSHPP" aria-pressed="false">GSHPP</button></div>
+          <span id="exec-survey-badge" class="xp-cap">STEPS - NCD Risk Factor Surveillance</span>
+          <select id="exec-survey-filter" class="filter-select" hidden aria-hidden="true" tabindex="-1">
+          <option value="STEPS" selected>STEPS - NCD Risk Factor Surveillance</option>
+          <option value="GYTS">GYTS - Global Youth Tobacco Survey</option>
+          <option value="GSHS">GSHS - School-based Student Health Survey</option>
+          <option value="GATS">GATS - Global Adult Tobacco Survey</option>
+          <option value="GSHPP">GSHPP - School Health Policies &amp; Practices</option>
+        </select>
+        </div>
+        <div class="xp-bar" id="exec-status-bar" aria-hidden="true"><span class="xp-seg st-on-cycle" data-k="n_on_cycle" style="flex:{exec_steps['n_on_cycle']}"></span><span class="xp-seg st-attempt-to-update" data-k="n_attempt_to_update" style="flex:{exec_steps['n_attempt_to_update']}"></span><span class="xp-seg st-off-cycle" data-k="n_off_cycle" style="flex:{exec_steps['n_off_cycle']}"></span><span class="xp-seg st-first-attempt" data-k="n_first_attempt" style="flex:{exec_steps['n_first_attempt']}"></span><span class="xp-seg st-never-conducted" data-k="n_never" style="flex:{exec_steps['n_never']}"></span></div>
+        <div class="xp-cols">
+          <div class="xp-col">
+            <div class="xp-h"><i class="xp-sw st-on-cycle"></i>On Cycle</div>
+            <div class="xp-n"><b id="exec-n-oncycle">{exec_steps['n_on_cycle']}</b><span class="xp-of">of <span class="exec-n-total">{n_ent}</span></span></div>
+            <p id="exec-n-oncycle-def">Completed &#8804;&nbsp;5 years ago - current, usable evidence</p>
           </div>
-          <div class="signal-val" id="exec-n-oncycle" data-count="{exec_steps['n_on_cycle']}">{exec_steps['n_on_cycle']}</div>
-          <div class="signal-lbl">Countries</div>
-          <div class="signal-sub" id="exec-n-oncycle-sub">{exec_steps['n_on_cycle']} of {n_ent} countries</div>
-          <div id="exec-n-oncycle-def" style="font-size:var(--fs-xs);color:var(--muted);margin-top:5px;line-height:1.4;">
-            Completed &#8804;&nbsp;5 years ago - current, usable evidence
+          <div class="xp-col">
+            <div class="xp-h"><i class="xp-sw st-attempt-to-update"></i>Attempt to update</div>
+            <div class="xp-n"><b id="exec-n-implement">{exec_steps['n_attempt_to_update']}</b><span class="xp-of">of <span class="exec-n-total">{n_ent}</span></span></div>
+            <p id="exec-n-implement-def">Prior evidence exists - actively updating with new survey</p>
+          </div>
+          <div class="xp-col">
+            <div class="xp-h"><i class="xp-sw st-off-cycle"></i>Off Cycle</div>
+            <div class="xp-n"><b id="exec-n-offcycle">{exec_steps['n_off_cycle']}</b><span class="xp-of">of <span class="exec-n-total">{n_ent}</span></span></div>
+            <p id="exec-n-offcycle-def">Has prior evidence but surveillance is idle - off-cycle</p>
+          </div>
+          <div class="xp-col">
+            <div class="xp-h"><i class="xp-sw st-first-attempt"></i>First Attempt</div>
+            <div class="xp-n"><b id="exec-n-firstattempt">{exec_steps['n_first_attempt']}</b><span class="xp-of">of <span class="exec-n-total">{n_ent}</span></span></div>
+            <p id="exec-n-firstattempt-def">No prior evidence, but a first-ever survey is in progress now</p>
+          </div>
+          <div class="xp-col">
+            <div class="xp-h"><i class="xp-sw st-never-conducted"></i>Never Conducted</div>
+            <div class="xp-n"><b id="exec-n-never">{exec_steps['n_never']}</b><span class="xp-of">of <span class="exec-n-total">{n_ent}</span></span></div>
+            <p id="exec-n-never-def">Never completed nor attempted - no policy-usable evidence exists</p>
           </div>
         </div>
-
-        <div class="signal-card reveal" style="color:{st_att};">
-          <div style="font-size:var(--fs-xs);font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:{st_att};margin-bottom:4px;">
-            <i class="ti ti-refresh" aria-hidden="true"></i>&nbsp; Attempt to update
-          </div>
-          <div class="signal-val" id="exec-n-implement" data-count="{exec_steps['n_attempt_to_update']}">{exec_steps['n_attempt_to_update']}</div>
-          <div class="signal-lbl">Countries</div>
-          <div class="signal-sub" id="exec-n-implement-sub">{exec_steps['n_attempt_to_update']} of {n_ent} countries</div>
-          <div id="exec-n-implement-def" style="font-size:var(--fs-xs);color:var(--muted);margin-top:5px;line-height:1.4;">
-            Prior evidence exists - actively updating with new survey
-          </div>
-        </div>
-
-        <div class="signal-card reveal" style="color:{st_off};">
-          <div style="font-size:var(--fs-xs);font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:{st_off};margin-bottom:4px;">
-            <i class="ti ti-player-pause" aria-hidden="true"></i>&nbsp; Off Cycle
-          </div>
-          <div class="signal-val" id="exec-n-offcycle" data-count="{exec_steps['n_off_cycle']}">{exec_steps['n_off_cycle']}</div>
-          <div class="signal-lbl">Countries</div>
-          <div class="signal-sub" id="exec-n-offcycle-sub">{exec_steps['n_off_cycle']} of {n_ent} countries</div>
-          <div id="exec-n-offcycle-def" style="font-size:var(--fs-xs);color:var(--muted);margin-top:5px;line-height:1.4;">
-            Has prior evidence but surveillance is idle - off-cycle
-          </div>
-        </div>
-
-        <div class="signal-card reveal" style="color:{st_first};">
-          <div style="font-size:var(--fs-xs);font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:{st_first};margin-bottom:4px;">
-            <i class="ti ti-flag" aria-hidden="true"></i>&nbsp; First Attempt
-          </div>
-          <div class="signal-val" id="exec-n-firstattempt" data-count="{exec_steps['n_first_attempt']}">{exec_steps['n_first_attempt']}</div>
-          <div class="signal-lbl">Countries</div>
-          <div class="signal-sub" id="exec-n-firstattempt-sub">{exec_steps['n_first_attempt']} of {n_ent} countries</div>
-          <div id="exec-n-firstattempt-def" style="font-size:var(--fs-xs);color:var(--muted);margin-top:5px;line-height:1.4;">
-            No prior evidence, but a first-ever survey is in progress now
-          </div>
-        </div>
-
-        <div class="signal-card reveal" style="color:{st_nev};">
-          <div style="font-size:var(--fs-xs);font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:{st_nev};margin-bottom:4px;">
-            <i class="ti ti-ban" aria-hidden="true"></i>&nbsp; Never Conducted
-          </div>
-          <div class="signal-val" id="exec-n-never" data-count="{exec_steps['n_never']}">{exec_steps['n_never']}</div>
-          <div class="signal-lbl">Countries</div>
-          <div class="signal-sub" id="exec-n-never-sub">{exec_steps['n_never']} of {n_ent} countries</div>
-          <div id="exec-n-never-def" style="font-size:var(--fs-xs);color:var(--muted);margin-top:5px;line-height:1.4;">
-            Never completed nor attempted - no policy-usable evidence exists
-          </div>
-        </div>
-
       </div>
 
       <!-- ③ SURVEILLANCE STATUS DISTRIBUTION - Dynamic donut -->
@@ -2595,37 +2780,19 @@ def build_html(A: dict) -> str:
         <p class="section-subtitle">Surveillance Performance Index (SPI) - composite score across Breadth, Currency &amp; Regularity - all {n_ent} countries ranked</p>
       </div>
 
-      <!-- Regional SPI + Tier overview -->
-      <div class="stat-highlight-row reveal">
-        <div class="stat-highlight-item" style="text-align:center;padding:0 24px 0 0;">
-          <div class="stat-hl-val" style="color:{spi_tier_ink};">{fmt_spi(reg_spi)}<span style="font-size:1rem;font-weight:600;opacity:.6;">/100</span></div>
-          <div class="stat-hl-lbl" title="Simple unweighted mean across all {n_ent} entities - not weighted by population. Zanzibar and mainland Tanzania are counted as two separate entities sharing one ISO3 code.">Regional SPI Average&nbsp;<i class="ti ti-info-circle" aria-hidden="true" style="font-size:var(--fs-xs);opacity:.6;"></i></div>
+      <!-- Regional SPI: average, distribution of all countries, tier counts -->
+      <div class="sp-panel reveal">
+        <div class="sp-big">
+          <div class="sp-t" title="Simple unweighted mean across all {n_ent} entities - not weighted by population. Zanzibar and mainland Tanzania are counted as two separate entities sharing one ISO3 code.">Regional SPI Average&nbsp;<i class="ti ti-info-circle" aria-hidden="true"></i></div>
+          <div class="sp-v">{fmt_spi(reg_spi)}<small>/100</small></div>
+          <div class="sp-md" title="Simple unweighted median across all {n_ent} entities - not weighted by population.">Median SPI <b>{A['median_spi']}</b></div>
         </div>
-        <div class="stat-highlight-item" style="text-align:center;padding:0 24px;">
-          <div class="stat-hl-val" style="color:var(--muted);">{A['median_spi']}</div>
-          <div class="stat-hl-lbl" title="Simple unweighted median across all {n_ent} entities - not weighted by population.">Median SPI&nbsp;<i class="ti ti-info-circle" aria-hidden="true" style="font-size:var(--fs-xs);opacity:.6;"></i></div>
-        </div>
-        <div class="stat-tiers" style="flex:1;display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;">
-          <div class="tier-card" style="border-top-color:var(--tier-1);min-width:110px;">
-            <div class="tier-card-val" style="color:var(--tier-1-ink);">{int((spi['tier']==1).sum())}</div>
-            <div class="tier-card-lbl">Strong</div>
-            <div class="tier-card-sub">SPI &#8805; 75</div>
-          </div>
-          <div class="tier-card" style="border-top-color:var(--tier-2);min-width:110px;">
-            <div class="tier-card-val" style="color:var(--tier-2-ink);">{int((spi['tier']==2).sum())}</div>
-            <div class="tier-card-lbl">Advancing</div>
-            <div class="tier-card-sub">SPI 50&#8211;74</div>
-          </div>
-          <div class="tier-card" style="border-top-color:var(--tier-3);min-width:110px;">
-            <div class="tier-card-val" style="color:var(--tier-3-ink);">{int((spi['tier']==3).sum())}</div>
-            <div class="tier-card-lbl">Developing</div>
-            <div class="tier-card-sub">SPI 30&#8211;49</div>
-          </div>
-          <div class="tier-card" style="border-top-color:var(--tier-4);min-width:110px;">
-            <div class="tier-card-val" style="color:var(--tier-4-ink);">{n_crit}</div>
-            <div class="tier-card-lbl">Critical</div>
-            <div class="tier-card-sub">SPI &lt; 30</div>
-          </div>
+        <div class="sp-plot">{spi_swarm}</div>
+        <div class="sp-tiers">
+          <div class="sp-tr"><i class="sp-dot t1"></i><span>Strong<small>SPI &#8805; 75</small></span><b>{int((spi['tier']==1).sum())}</b></div>
+          <div class="sp-tr"><i class="sp-dot t2"></i><span>Advancing<small>SPI 50&#8211;74</small></span><b>{int((spi['tier']==2).sum())}</b></div>
+          <div class="sp-tr"><i class="sp-dot t3"></i><span>Developing<small>SPI 30&#8211;49</small></span><b>{int((spi['tier']==3).sum())}</b></div>
+          <div class="sp-tr"><i class="sp-dot t4"></i><span>Critical<small>SPI &lt; 30</small></span><b>{n_crit}</b></div>
         </div>
       </div>
 
@@ -2740,7 +2907,7 @@ def build_html(A: dict) -> str:
 
       <!-- Instrument completion overview (current cycle) -->
       <div class="section-divider-label">Instrument Activity Cards - Current Cycle {CURRENT_CYCLE_START}&ndash;{CURRENT_YEAR}</div>
-      {instrument_cards(A)}
+      {instrument_table(A)}
 
       <!-- Recency matrix -->
       <div class="section-divider-label" style="margin-top:var(--gap-section);">Surveillance Recency Matrix - Country &times; Instrument</div>
@@ -2784,14 +2951,14 @@ def build_html(A: dict) -> str:
 
       {'<div class="profile-no-data" style="padding:40px;text-align:center;color:var(--muted);"><i class="ti ti-database" aria-hidden="true" style="font-size:36px;opacity:.3;margin-bottom:12px;display:block;"></i><p>No indicator data found. Ensure STEP.db and the GYTS/GATS profile JSON files are present in the data/ folder and run the pipeline.</p></div>' if not _prof_countries else ""}
 
-      <div class="filter-bar" style="{'display:none;' if not _prof_countries else ''}">
-        <label class="filter-label" for="profile-country-select"><i class="ti ti-map-pin" aria-hidden="true"></i>&nbsp; Country</label>
-        <select id="profile-country-select" class="filter-select" style="min-width:270px;">
+      <div class="filter-bar cp-filters" style="{'display:none;' if not _prof_countries else ''}">
+        <div class="cp-field"><label class="filter-label" for="profile-country-select">Country</label>
+        <select id="profile-country-select" class="filter-select">
           {_prof_options}
-        </select>
-        <label class="filter-label" for="profile-survey-select" style="margin-left:6px;">Survey</label>
-        <select id="profile-survey-select" class="filter-select" style="min-width:240px;">
-        </select>
+        </select></div>
+        <div class="cp-field"><label class="filter-label" for="profile-survey-select">Survey</label>
+        <select id="profile-survey-select" class="filter-select">
+        </select></div>
         <button id="btn-export-profile" style="font-family:var(--font);font-size:var(--fs-xs);font-weight:700;padding:7px 16px;border-radius:10px;border:none;background:#003d82;color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:6px;margin-left:auto;"><i class="ti ti-file-type-csv" aria-hidden="true"></i>&nbsp;Export CSV</button>
       </div>
 
