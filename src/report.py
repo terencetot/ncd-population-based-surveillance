@@ -97,10 +97,6 @@ TILE_POS = {
 TILE_COLS = 1 + max(c for c, _ in TILE_POS.values())
 TILE_ROWS = 1 + max(r for _, r in TILE_POS.values())
 
-WHO_MAP_DISCLAIMER = ("The boundaries and names shown and the designations used on this map do not imply the "
-                      "expression of any opinion whatsoever on the part of the World Health Organization concerning "
-                      "the legal status of any country, territory, city or area or of its authorities, or concerning "
-                      "the delimitation of its frontiers or boundaries.")
 
 
 def country_map_css() -> str:
@@ -647,12 +643,14 @@ button,.tab-btn,.prio-pill,.filter-reset,summary{-webkit-user-select:none;user-s
 
 /* ══ HEADER (design/header_v3) ═════════════════════════════════════════════
    Top bar (logos + compile date) -> hero (title, facts, tile map, SPI card,
-   tier legend, WHO disclaimer) -> tabs. Schibsted Grotesk is scoped to the
+   tier legend) -> tabs. Schibsted Grotesk is scoped to the
    header; every colour is a dashboard token. */
-:root{--topnav-h:58px;--hdr-font:'Schibsted Grotesk','Source Sans 3',system-ui,sans-serif;--hdr-gutter:64px}
+:root{--topnav-h:58px;--hdr-font:'Schibsted Grotesk','Source Sans 3',system-ui,sans-serif;--hdr-gutter:28px;--page-max:1400px}
+@media(min-width:1500px){:root{--page-max:1480px}}
+@media(min-width:1800px){:root{--page-max:1600px}}
 .topnav{height:var(--topnav-h);background:var(--dark);box-shadow:none;border-bottom:0}
 .topnav::after{display:none}
-.topnav-inner{max-width:none;padding:0 var(--hdr-gutter)!important;gap:22px}
+.topnav-inner{max-width:var(--page-max);margin:0 auto;padding:0 var(--hdr-gutter)!important;gap:22px}
 .nav-logos{gap:22px}
 .nav-logos a:first-of-type .nav-logo{height:31px!important}
 .nav-logos a:last-of-type .nav-logo{height:27px!important}
@@ -660,10 +658,11 @@ button,.tab-btn,.prio-pill,.filter-reset,summary{-webkit-user-select:none;user-s
 .hero{position:relative;overflow:hidden;background:#fff;border-bottom:1px solid var(--border);font-family:var(--hdr-font);color:var(--dark)}
 .hero::before{content:'';position:absolute;right:-120px;top:-60px;width:820px;height:820px;border-radius:50%;pointer-events:none;
   background:radial-gradient(closest-side,rgba(0,110,182,.10),rgba(0,110,182,.03) 60%,transparent);z-index:0}
-.hero-grid{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1fr) 580px;column-gap:24px;min-height:520px;padding:0 var(--hdr-gutter)}
+.hero-grid{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1fr) minmax(560px,620px);column-gap:40px;min-height:520px;
+  max-width:var(--page-max);margin:0 auto;padding:0 var(--hdr-gutter)}
 .hero-copy{align-self:center;padding:52px 0;min-width:0}
-.hero h1{font-family:var(--hdr-font);font-weight:800;font-size:56px;line-height:1;letter-spacing:-.038em;max-width:600px;color:var(--dark);margin:0;text-wrap:balance}
-.hero-sub{margin:26px 0 0;font-size:18px;line-height:1.55;color:var(--muted);max-width:540px;font-weight:400}
+.hero h1{font-family:var(--hdr-font);font-weight:800;font-size:clamp(56px,3.6vw,68px);line-height:1;letter-spacing:-.038em;max-width:none;color:var(--dark);margin:0;text-wrap:balance}
+.hero-sub{margin:26px 0 0;font-size:18px;line-height:1.55;color:var(--muted);max-width:600px;font-weight:400}
 .hero-sub strong{color:var(--dark);font-weight:600}
 .hero-facts{display:flex;gap:44px;margin-top:44px}
 .hero-fact b{display:block;font-size:40px;font-weight:700;letter-spacing:-.03em;line-height:1;font-variant-numeric:lining-nums proportional-nums}
@@ -671,7 +670,7 @@ button,.tab-btn,.prio-pill,.filter-reset,summary{-webkit-user-select:none;user-s
 .hero-fact.is-current b{color:var(--st-on-cycle-ink)}
 .hero-visual{position:relative;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;padding:8px 0 22px}
 /* tile map */
-.tm-wrap{position:relative;margin-left:auto;width:560px}
+.tm-wrap{position:relative;margin-left:auto;width:100%;max-width:620px}
 .tm-grid{display:grid;grid-template-columns:repeat(var(--cols),minmax(0,1fr));grid-template-rows:repeat(var(--rows),auto);gap:3px}
 .tm-tile{aspect-ratio:1;border-radius:6px;background:color-mix(in srgb,var(--tc) 16%,#fff);display:flex;padding:3px;position:relative}
 .tm-tile span{flex:1;background:var(--tc);-webkit-mask:var(--m) center/contain no-repeat;mask:var(--m) center/contain no-repeat}
@@ -696,21 +695,21 @@ button,.tab-btn,.prio-pill,.filter-reset,summary{-webkit-user-select:none;user-s
 .spi-ticks{position:relative;height:14px;margin-top:8px;font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
 .spi-ticks span{position:absolute;transform:translateX(-50%)}
 .spi-ticks span:first-child{transform:none}.spi-ticks span:last-child{transform:translateX(-100%)}
-/* legend + disclaimer */
+/* legend */
 .tm-legend{display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:6px 16px;margin-top:22px;font-size:13px;color:var(--muted)}
 .tm-legend span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
 .tm-legend i{width:10px;height:10px;border-radius:3px}
 .tm-legend i.t1{background:var(--tier-1)}.tm-legend i.t2{background:var(--tier-2)}.tm-legend i.t3{background:var(--tier-3)}.tm-legend i.t4{background:var(--tier-4)}
 .tm-legend b{color:var(--dark);font-weight:700;font-variant-numeric:tabular-nums}
 .tm-legend-cap{font-size:12.5px}
-.tm-disclaimer{margin:10px 0 0 auto;max-width:560px;font-size:10.5px;line-height:1.45;color:var(--muted);text-align:right;font-family:var(--font)}
 /* tabs: underline style, same buttons/ARIA/handlers */
-.tab-nav{top:var(--topnav-h);background:#fff;box-shadow:none;border-bottom:1px solid var(--border)}
-.tab-nav-inner{max-width:none;gap:36px;padding:0 var(--hdr-gutter)!important}
-.tab-btn{font-family:var(--hdr-font);font-size:15px;font-weight:600;color:var(--muted);padding:18px 0 16px!important;margin:0;
+.tab-nav{top:var(--topnav-h);background:var(--primary);box-shadow:0 2px 10px rgba(13,31,78,.18);border-bottom:0}
+.tab-nav-inner{max-width:var(--page-max);margin:0 auto;gap:36px;padding:0 var(--hdr-gutter)!important}
+.tab-btn{font-family:var(--hdr-font);font-size:15px;font-weight:600;color:rgba(255,255,255,.78);padding:18px 0 16px!important;margin:0;
   border-radius:0;border-bottom:2.5px solid transparent;background:none}
 .tab-btn::before,.tab-btn::after{display:none}
-.tab-btn.active{color:var(--dark);font-weight:600;border-bottom-color:var(--secondary);background:none}
+.tab-btn.active{color:#fff;font-weight:700;border-bottom:3px solid #5cc8f2;background:none}
+.tab-btn:focus-visible{outline-color:#5cc8f2}
 @media print{.hero::before{display:none}.tm-tile,.tm-tile span,.spi-track span{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .spi-card{position:static;margin-top:12px;box-shadow:none;border:1px solid #999}}
 /* tablet: visual drops under the copy */
@@ -719,7 +718,6 @@ button,.tab-btn,.prio-pill,.filter-reset,summary{-webkit-user-select:none;user-s
   .hero-copy{padding:40px 0 8px}
   .tm-wrap{margin:0 auto}
   .tm-legend{justify-content:center}
-  .tm-disclaimer{margin:10px auto 0;text-align:center}
 }
 /* phone: map under the title, SPI card full-width under the map */
 @media(max-width:640px){
@@ -738,7 +736,6 @@ button,.tab-btn,.prio-pill,.filter-reset,summary{-webkit-user-select:none;user-s
   .spi-card{position:static;width:100%;margin-top:16px;padding:18px 18px 16px}
   .spi-card-v b{font-size:48px}
   .tm-legend{justify-content:flex-start;gap:6px 12px}
-  .tm-disclaimer{text-align:left;margin-left:0}
   .tab-nav-inner{gap:22px}
   .tab-btn{font-size:14px;padding:14px 0 12px!important}
 }
@@ -747,7 +744,7 @@ button,.tab-btn,.prio-pill,.filter-reset,summary{-webkit-user-select:none;user-s
 @media (hover:hover) and (pointer:fine){
   #back-to-top:hover{background:var(--dark)}
   .chart-about>summary:hover{color:var(--primary);text-decoration:underline;text-underline-offset:3px}
-  .tab-btn:hover{color:var(--primary)}
+  .tab-btn:hover{color:#fff}
   .tab-btn:hover::before{opacity:.6}
   .tab-btn:hover::after{opacity:.3}
   .tab-btn:hover i{opacity:.9}
@@ -864,7 +861,9 @@ JS = """
   const _hm=location.hash.match(/^#(?:view=)?(tab-[a-z]+)$/);
   const _hashTab=_hm&&document.querySelector('.tab-btn[data-tab="'+_hm[1]+'"]');
   const firstTab=_hashTab||document.querySelector('.tab-btn');
-  window.__tabInit=true; if(firstTab)activateTab(firstTab.dataset.tab); window.__tabInit=false;
+  // A deep link behaves exactly like clicking that tab (so tabs that render on
+  // click, e.g. Country Profile, are populated); otherwise open the first tab.
+  window.__tabInit=true; if(firstTab){ if(_hashTab){ setTimeout(function(){window.__tabInit=true;_hashTab.click();window.__tabInit=false;},0); } activateTab(firstTab.dataset.tab); } window.__tabInit=false;
 
   // ── ARIA tabs: Left/Right/Home/End keyboard navigation ────────────────────
   (function(){
@@ -1614,7 +1613,7 @@ JS = """
       country: country, sectionOrder: sectionOrder
     };
     // ── Section divider label ──────────────────────────────────────────────
-    var sdiv='<div class="section-divider-label" style="margin:28px 0 18px;">Detailed Indicator Dashboard - All '+surveyType+' Sections <span style="font-weight:400;font-size:var(--fs-xs);color:var(--muted);text-transform:none;letter-spacing:0;">(click a section to expand)</span></div>';
+    var sdiv='<div class="section-divider-label" style="margin:28px 0 18px;">Detailed Indicator Dashboard - All '+surveyType+' Sections <span style="font-weight:400;font-size:var(--fs-xs);color:var(--muted);text-transform:none;letter-spacing:0;">(click a section to collapse)</span></div>';
     if(surveyType!=='STEPS'){
       sdiv+='<div style="font-size:var(--fs-xs);color:var(--muted);margin:-10px 0 14px;"><i class="ti ti-alert-triangle" aria-hidden="true" style="color:var(--warning);"></i>&nbsp;Indicators marked with this icon were matched to their label with lower confidence during automated PDF extraction - verify against the source fact sheet before citing.</div>';
     }
@@ -1657,7 +1656,7 @@ JS = """
       // First section (usually the KPI-strip's own domain) opens expanded;
       // the rest start collapsed so the page keeps a scannable top-to-bottom
       // hierarchy instead of nine equal-weight blocks fighting for attention.
-      grid += '<details class="profile-section-card"'+(sIdx===0?' open':'')+'>';
+      grid += '<details class="profile-section-card" open>';   // all sections open: nothing looks missing
       grid += '<summary class="profile-section-head" style="background:'+sv.color+';">';
       grid += '<i class="ti '+sv.icon+'" aria-hidden="true" style="color:rgba(255,255,255,.9);font-size:var(--fs-base);"></i>';
       grid += '<span class="sec-title">'+sv.name+'</span>';
@@ -2398,7 +2397,6 @@ def build_html(A: dict) -> str:
         {hero_spi_card}
       </div>
       {hero_legend}
-      <p class="tm-disclaimer">{WHO_MAP_DISCLAIMER}</p>
     </div>
   </div>
 </div>
